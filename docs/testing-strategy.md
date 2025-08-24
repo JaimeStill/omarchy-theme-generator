@@ -11,7 +11,7 @@ Formal testing is deferred until project completion. During development, we use 
 ### Structure
 
 ```go
-// cmd/examples/test_[concept].go
+// tests/test_[concept].go
 package main
 
 import (
@@ -34,13 +34,42 @@ func main() {
 - **Visual**: Results printed to stdout
 - **Fast**: Immediate feedback loop
 
+### Transparent Test Execution
+
+All tests must provide complete visibility into their execution:
+
+1. **Initial State**: Display starting values of all test variables
+2. **Transformations**: Show operations being performed with parameters
+3. **Expected vs Actual**: Display both values with exact measurements
+4. **Rationale**: Explain WHY the test passes or fails
+
+Example of poor test output:
+```
+AA compliance testing: ✗
+```
+
+Example of transparent test output:
+```
+AA compliance testing:
+  Testing: RGB(119,119,119) on RGB(255,255,255) background
+  Calculated contrast: 4.48:1
+  Required for AA: 4.5:1
+  Result: FAIL ✗ (4.48 < 4.5, difference: 0.02)
+```
+
+This principle ensures:
+- Tests are self-documenting and educational
+- Failures can be diagnosed without additional debugging
+- The test suite serves as living documentation of the system's behavior
+- Anyone running tests understands exactly what is being validated
+
 ## Test Categories
 
 ### 1. Algorithm Validation
 Test specific algorithms with known inputs and expected outputs.
 
 ```go
-// cmd/examples/test_octree_quantization.go
+// tests/test_octree_quantization.go
 func main() {
     colors := generateKnownPalette()
     tree := buildOctree(colors, maxDepth=8)
@@ -56,7 +85,7 @@ func main() {
 Measure execution time against targets.
 
 ```go
-// cmd/examples/test_performance.go
+// tests/test_performance.go
 func main() {
     img := load4KImage()
     start := time.Now()
@@ -73,7 +102,7 @@ func main() {
 Verify palette generation strategies.
 
 ```go
-// cmd/examples/test_triadic.go
+// tests/test_triadic.go
 func main() {
     base := color.NewRGB(255, 128, 0) // Orange
     palette := TriadicStrategy{}.Generate(base, 6)
@@ -95,7 +124,7 @@ func main() {
 Test component interactions.
 
 ```go
-// cmd/examples/test_theme_generation.go
+// tests/test_theme_generation.go
 func main() {
     img := loadTestImage()
     config := ThemeConfig{
@@ -114,36 +143,41 @@ func main() {
 ## Test Organization
 
 ```
-cmd/examples/
+tests/
 ├── README.md                    # Test documentation
-├── test_color.go               # Color type operations
-├── test_conversion.go          # Color space conversions
-├── test_extract.go             # Basic extraction
-├── test_strategies.go          # Palette strategies
-├── test_octree.go              # Octree algorithm
-├── test_dominant.go            # Dominant color detection
-├── test_concurrent.go          # Parallel processing
-├── test_contrast.go            # WCAG validation
-├── test_generate_configs.go    # Config generation
-├── test_theme_overrides.go     # User overrides
-└── test_full_theme.go          # Complete generation
+├── helpers.go                   # Shared test utilities
+├── test-color/
+│   ├── main.go                  # Color type operations
+│   └── README.md                # Test documentation with latest output
+├── test-conversions/
+│   ├── main.go                  # Color space conversions  
+│   └── README.md                # Test documentation with latest output
+├── test-extract/                # Basic extraction (future)
+├── test-strategies/             # Palette strategies (future)
+├── test-octree/                 # Octree algorithm (future)
+├── test-dominant/               # Dominant color detection (future)
+├── test-concurrent/             # Parallel processing (future)
+├── test-contrast/               # WCAG validation (future)
+├── test-generate-configs/       # Config generation (future)
+├── test-theme-overrides/        # User overrides (future)
+└── test-full-theme/             # Complete generation (future)
 ```
 
 ## Running Tests
 
 ### Individual Test
 ```bash
-go run cmd/examples/test_color.go
+go run tests/test-color/main.go
 ```
 
 ### Test with Arguments
 ```bash
-go run cmd/examples/test_extract.go image.jpg
+go run tests/test-extract/main.go image.jpg
 ```
 
 ### Test with Flags
 ```bash
-go run cmd/examples/test_theme_overrides.go \
+go run tests/test-theme-overrides/main.go \
     -image=sunset.jpg \
     -mode=dark \
     -primary=#ff6b35

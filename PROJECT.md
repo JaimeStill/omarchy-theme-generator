@@ -31,20 +31,20 @@ Documentation and release
 - [x] Create project structure
 - [x] Implement Color type with RGBA storage
 - [x] Add HSLA caching mechanism
-- [x] **Test**: `cmd/examples/test_color.go`
+- [x] **Test**: `tests/test-color/main.go`
 - [x] Document decisions
 
 #### Session 2: Color Space Conversions
-- [ ] Implement RGB to HSL conversion
-- [ ] Implement HSL to RGB conversion
-- [ ] Add output format methods (Hex, CSS, HSLA)
-- [ ] **Test**: `cmd/examples/test_conversion.go`
-- [ ] Verify against CSS Color Module Level 3
+- [x] Implement RGB to HSL conversion
+- [x] Implement HSL to RGB conversion
+- [x] Add output format methods (Hex, CSS, HSLA)
+- [x] **Test**: `tests/test-conversions/main.go`
+- [x] Verify against CSS Color Module Level 3
 
 #### Session 3: Basic Image Loading
 - [ ] Image loading from file path
 - [ ] Pixel iteration and color counting
-- [ ] **Test**: `cmd/examples/test_load_image.go`
+- [ ] **Test**: `tests/test-load-image/main.go`
 - [ ] Benchmark performance
 
 #### Session 4: Color Theory-Based Extraction
@@ -52,13 +52,13 @@ Documentation and release
 - [ ] Implement dominant color detection
 - [ ] Add palette strategies (mono, complementary, triadic, analogous)
 - [ ] Handle light/dark mode detection
-- [ ] **Test**: `cmd/examples/test_extract_strategies.go`
+- [ ] **Test**: `tests/test-extract-strategies/main.go`
 
 #### Session 5: First Template Generator
 - [ ] Create template interface
 - [ ] Implement alacritty.toml generator
 - [ ] Add color formatting functions
-- [ ] **Test**: `cmd/examples/test_generate_alacritty.go`
+- [ ] **Test**: `tests/test-generate-alacritty/main.go`
 
 ### Phase 2: Algorithms
 
@@ -66,61 +66,61 @@ Documentation and release
 - [ ] Build octree data structure
 - [ ] Implement color insertion
 - [ ] Add tree reduction
-- [ ] **Test**: `cmd/examples/test_octree.go`
+- [ ] **Test**: `tests/test-octree/main.go`
 
 #### Session 7: Dominant Color Detection
 - [ ] Implement color clustering
 - [ ] Add perceptual distance metrics
 - [ ] Compare detection methods
-- [ ] **Test**: `cmd/examples/test_dominant.go`
+- [ ] **Test**: `tests/test-dominant/main.go`
 
 #### Session 8: Concurrent Processing
 - [ ] Divide image into 64x64 regions
 - [ ] Implement parallel extraction
 - [ ] Add result aggregation
-- [ ] **Test**: `cmd/examples/test_concurrent.go`
+- [ ] **Test**: `tests/test-concurrent/main.go`
 
 #### Session 9: Advanced Palette Strategies
 - [ ] Implement tetradic scheme
 - [ ] Add split-complementary
 - [ ] Create weighted strategies
-- [ ] **Test**: `cmd/examples/test_advanced_harmony.go`
+- [ ] **Test**: `tests/test-advanced-harmony/main.go`
 
 #### Session 10: Accessibility Validation
 - [ ] Implement WCAG contrast calculation
 - [ ] Add automatic adjustment
 - [ ] Create validation reports
-- [ ] **Test**: `cmd/examples/test_contrast.go`
+- [ ] **Test**: `tests/test-contrast/main.go`
 
 ### Phase 3: Configuration Generation
 
 #### Session 11: Multiple Config Generators
 - [ ] Implement mako.ini generator
 - [ ] Add btop.theme generator
-- [ ] **Test**: `cmd/examples/test_generate_configs.go`
+- [ ] **Test**: `tests/test-generate-configs/main.go`
 
 #### Session 12: CSS Generation
 - [ ] Create waybar.css generator
 - [ ] Add walker.css generator
 - [ ] Add swayosd.css generator
-- [ ] **Test**: `cmd/examples/test_generate_css.go`
+- [ ] **Test**: `tests/test-generate-css/main.go`
 
 #### Session 13: Lua Generation
 - [ ] Implement neovim.lua generator
 - [ ] Map syntax highlighting groups
-- [ ] **Test**: `cmd/examples/test_generate_lua.go`
+- [ ] **Test**: `tests/test-generate-lua/main.go`
 
 #### Session 14: Hyprland Configuration
 - [ ] Create hyprland.conf generator
 - [ ] Add hyprlock.conf generator
-- [ ] **Test**: `cmd/examples/test_generate_hypr.go`
+- [ ] **Test**: `tests/test-generate-hypr/main.go`
 
 #### Session 15: Complete Theme Package
 - [ ] Assemble all generators
 - [ ] Create directory structure
 - [ ] Copy image to backgrounds/
 - [ ] Add light.mode marker
-- [ ] **Test**: `cmd/examples/test_full_theme.go`
+- [ ] **Test**: `tests/test-full-theme/main.go`
 
 ### Phase 4: TUI Development
 
@@ -245,7 +245,7 @@ Documentation and release
 ### Session 1: 2025-08-23
 **Completed:**
 - ✅ Go module initialized - `go.mod` created with module name `omarchy-theme-gen`
-- ✅ Project structure established - `pkg/color/` and `cmd/examples/` directories
+- ✅ Project structure established - `pkg/color/` and `tests/` directories
 - ✅ Color type implemented - RGBA storage with lazy-cached HSLA conversion (`pkg/color/color.go`)
 - ✅ Thread-safe caching added - `sync.Once` for HSLA computation
 - ✅ Comprehensive testing - `test_color.go` validates all functionality including concurrency
@@ -262,7 +262,30 @@ Documentation and release
 - Added `roundAlpha()` for consistent 3-decimal display in CSS output
 
 **Next:**
-- Session 2: Complete remaining color space conversions and output format methods
+- Session 3: Basic image loading functionality (completed)
+
+### Session 2: 2025-08-24
+**Completed:**
+- ✅ Complete color manipulation infrastructure - 11 methods in `pkg/color/manipulation.go`
+- ✅ WCAG contrast calculations with gamma correction - `pkg/color/contrast.go`
+- ✅ Color distance metrics in multiple spaces - `pkg/color/distance.go` 
+- ✅ LAB color space with Delta-E calculations - `pkg/color/lab.go`
+- ✅ Transparent testing methodology - `tests/test-conversions/main.go`
+- ✅ Comprehensive documentation - Full godoc coverage for all new functions
+
+**Insights:**
+- Gamma correction essential for accurate WCAG luminance calculation
+- Delta-E CIE76/CIE94 provide perceptually-uniform color differences
+- Transparent testing with detailed explanations improves understanding
+- LAB color space crucial for professional color science applications
+
+**Decision:**  
+- AccessibilityLevel enum with automatic ratio lookup for type safety
+- LAB conversion uses D65 illuminant for standard daylight conditions
+- HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
+
+**Next:**
+- Session 3: Basic image loading with pixel iteration and performance validation
 
 ---
 

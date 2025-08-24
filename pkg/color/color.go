@@ -1,7 +1,6 @@
 package color
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -15,15 +14,11 @@ import (
 // Alpha values are stored as uint8 (0-255) internally but exposed as float64
 // (0.0-1.0) in all public methods for consistency with CSS specifications.
 type Color struct {
-	R, G, B, A uint8
-	hsla       *hslaCache
-	hslaOnce   sync.Once
-}
-
-// hslaCache stores computed HSLA values in normalized [0,1] range.
-// This struct is used internally by Color to cache expensive HSL conversion results.
-type hslaCache struct {
-	H, S, L, A float64
+	R, G, B, A    uint8
+	hsla          *hslaCache
+	hslaOnce      sync.Once
+	luminance     *luminanceCache
+	luminanceOnce sync.Once
 }
 
 // NewRGB creates a new Color from RGB values with full opacity (alpha = 1.0).
@@ -37,51 +32,6 @@ func NewRGBA(r, g, b uint8, a float64) *Color {
 	return &Color{R: r, G: g, B: b, A: alphaToByte(a)}
 }
 
-// NewHSL creates a new Color from HSL values with full opacity (alpha = 1.0).
-// All parameters should be in range [0.0, 1.0].
-func NewHSL(h, s, l float64) *Color {
-	r, g, b := hslToRGB(h, s, l)
-	return NewRGB(r, g, b)
-}
-
-// NewHSLA creates a new Color from HSLA values.
-// All parameters should be in range [0.0, 1.0] and will be clamped if outside this range.
-func NewHSLA(h, s, l, a float64) *Color {
-	r, g, b := hslToRGB(h, s, l)
-	return NewRGBA(r, g, b, a)
-}
-
-// HSLA returns the color's hue, saturation, lightness, and alpha values.
-// All returned values are in the range [0.0, 1.0].
-// Values are computed once per Color instance and cached for performance.
-func (c *Color) HSLA() (h, s, l, a float64) {
-	c.hslaOnce.Do(func() {
-		h, s, l := rgbToHSL(c.R, c.G, c.B)
-		c.hsla = &hslaCache{H: h, S: s, L: l, A: toAlpha(c.A)}
-	})
-
-	return c.hsla.H, c.hsla.S, c.hsla.L, c.hsla.A
-}
-
-// HSL returns the color's hue, saturation, and lightness values.
-// This is a convenience method that calls HSLA() and discards the alpha value.
-func (c *Color) HSL() (h, s, l float64) {
-	h, s, l, _ = c.HSLA()
-	return h, s, l
-}
-
-// HEXA returns the color as an 8-digit hexadecimal string including alpha.
-// Format: #RRGGBBAA where each component is two lowercase hexadecimal digits.
-func (c *Color) HEXA() string {
-	return fmt.Sprintf("#%02x%02x%02x%02x", c.R, c.G, c.B, c.A)
-}
-
-// HEX returns the color as a 6-digit hexadecimal string, ignoring alpha.
-// Format: #RRGGBB where each component is two lowercase hexadecimal digits.
-func (c *Color) HEX() string {
-	return fmt.Sprintf("#%02x%02x%02x", c.R, c.G, c.B)
-}
-
 // RGBA returns the color's red, green, blue, and alpha components as uint8 values.
 // Each component is in the range [0, 255].
 func (c *Color) RGBA() (r, g, b, a uint8) {
@@ -92,33 +42,6 @@ func (c *Color) RGBA() (r, g, b, a uint8) {
 // This is a convenience method that calls RGBA() and discards the alpha value.
 func (c *Color) RGB() (r, g, b uint8) {
 	return c.R, c.G, c.B
-}
-
-// CSSRGBA returns the color as a CSS rgba() function string.
-// Format: rgba(r, g, b, a) where RGB are integers [0-255] and alpha is [0.000-1.000].
-func (c *Color) CSSRGBA() string {
-	alpha := toAlpha(c.A)
-	return fmt.Sprintf("rgba(%d, %d, %d, %.3f)", c.R, c.G, c.B, alpha)
-}
-
-// CSSRGB returns the color as a CSS rgb() function string, ignoring alpha.
-// Format: rgb(r, g, b) where each component is an integer [0-255].
-func (c *Color) CSSRGB() string {
-	return fmt.Sprintf("rgb(%d, %d, %d)", c.R, c.G, c.B)
-}
-
-// CSSHSLA returns the color as a CSS hsla() function string.
-// Format: hsla(h, s%, l%, a) where h is degrees [0.0-360.0], s and l are percentages [0.0-100.0], and a is alpha [0.000-1.000].
-func (c *Color) CSSHSLA() string {
-	h, s, l, a := c.HSLA()
-	return fmt.Sprintf("hsla(%.1f, %.1f, %.1f, %.3f)", h*360, s*100, l*100, a)
-}
-
-// CSSHSL returns the color as a CSS hsl() function string, ignoring alpha.
-// Format: hsl(h, s%, l%) where h is degrees [0.0-360.0] and s, l are percentages [0.0-100.0].
-func (c *Color) CSSHSL() string {
-	h, s, l := c.HSL()
-	return fmt.Sprintf("hsl(%.1f, %.1f, %.1f)", h*360, s*100, l*100)
 }
 
 // WithAlpha returns a new Color with the specified alpha value.

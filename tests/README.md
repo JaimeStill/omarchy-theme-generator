@@ -1,0 +1,105 @@
+# Tests Directory
+
+## Overview
+This directory contains execution tests that validate specific technical concepts immediately with empirical results. Following the "If you didn't run it, it doesn't work" philosophy, these tests provide transparent output showing initial state, transformations, and detailed explanations.
+
+## Testing Philosophy
+- **Minimal Structure**: No test frameworks, direct Go execution
+- **Focused Validation**: One concept per test directory
+- **Immediate Feedback**: Run with simple `go run` commands
+- **Educational Output**: Tests serve as living documentation
+- **Transparent Execution**: Show calculations, expected vs actual, and reasoning
+
+## Available Tests
+
+### Core Functionality Tests
+- **[test-color/](test-color/)** - Core Color type operations and conversions
+- **[test-conversions/](test-conversions/)** - Advanced color manipulation and analysis
+
+### Planned Tests (Future Sessions)
+- **test-image-loading/** - Image loading and pixel iteration (Session 3)
+- **test-extract-strategies/** - Color extraction and palette strategies (Session 4)
+- **test-generate-configs/** - Configuration file generation (Sessions 11-15)
+- **test-performance/** - Benchmarking and optimization validation (Session 28)
+
+## Usage
+
+### Run Individual Tests
+```bash
+# Core color functionality
+go run tests/test-color/main.go
+
+# Advanced color conversions and analysis
+go run tests/test-conversions/main.go
+```
+
+### Run All Current Tests
+```bash
+# Validate all functionality
+go run tests/test-color/main.go && go run tests/test-conversions/main.go
+```
+
+### Code Quality Validation
+```bash
+# Type checking and validation
+go vet ./tests/...
+
+# Code formatting
+go fmt ./tests/...
+```
+
+## Test Structure
+
+Each test directory contains:
+- **main.go** - The executable test implementation
+- **README.md** - Documentation with latest output and validation criteria
+
+## Shared Utilities
+
+The `helpers.go` file provides common test utilities:
+- `CheckMark(condition bool)` - Returns ✓ or ✗ based on test condition
+- Additional formatting and validation helpers as needed
+
+## Expected Outputs
+
+### Successful Test Characteristics
+- **Clear Headers**: Each test section clearly labeled
+- **Step-by-Step Output**: Show initial state, operations, and results
+- **Validation Explanations**: Explain why tests pass or fail with specific values
+- **Performance Metrics**: Include timing where relevant
+- **Checkmark Indicators**: ✓ for passing tests, ✗ for failures with detailed reasons
+
+### Example Test Output Format
+```
+=== Test Section Name ===
+Initial state: [values]
+Operation: [what is being tested]
+Expected: [expected result]
+Actual: [actual result]
+Result: ✓ - [explanation of why it passes]
+```
+
+## Development Workflow
+
+1. **Implementation**: User implements functionality based on Claude's guides
+2. **Test Creation**: Claude creates or updates execution tests
+3. **Validation**: User runs tests and reports results
+4. **Documentation**: Test output captured in README.md files
+
+## Session Integration
+
+Tests are created progressively throughout development sessions:
+- Each session includes relevant execution tests
+- Tests validate session objectives and technical requirements
+- README.md files updated with latest output after successful implementation
+
+## Quality Standards
+
+All tests must meet these criteria:
+- **Correctness**: Output matches expected values and specifications
+- **Performance**: Execution time within established targets
+- **Stability**: No crashes, panics, or inconsistent behavior
+- **Determinism**: Consistent results across multiple runs
+- **Educational Value**: Clear explanations of what is being validated and why
+
+This testing approach ensures immediate validation of implementations while serving as comprehensive documentation of the system's behavior and capabilities.

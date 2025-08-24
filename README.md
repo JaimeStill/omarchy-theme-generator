@@ -114,7 +114,7 @@ omarchy-theme-install ./my-theme
 go vet ./...
 
 # Run examples
-go run cmd/examples/test_extract.go sample.jpg
+go run tests/test-extract/main.go sample.jpg
 
 # Format code
 go fmt ./...

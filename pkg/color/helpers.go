@@ -102,5 +102,14 @@ func alphaToByte(a float64) uint8 {
 
 // roundAlpha rounds alpha values to 3 decimal places for consistent display.
 func roundAlpha(a float64) float64 {
-	return math.Round(a * 1000) / 1000
+	return math.Round(a*1000) / 1000
+}
+
+func hueDistance(h1 float64, h2 float64) float64 {
+	dh := math.Abs(h1 - h2)
+	if dh > 0.5 {
+		dh = 1.0 - dh
+	}
+
+	return dh
 }

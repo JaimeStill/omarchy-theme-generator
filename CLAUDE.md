@@ -20,7 +20,7 @@ Go-based TUI application that generates Omarchy themes from images using color e
 ## Development Rules
 1. Operate in Explanatory mode (`/output-style explanatory`)
 2. Only modify code when explicitly directed
-3. Use `go run cmd/examples/test_*.go` for validation
+3. Use `go run tests/test-*/main.go` for validation
 4. Use `go vet ./...` for type checking
 5. Reference existing implementations: "See pkg/color/space.go"
 6. Keep explanations technically precise
@@ -28,7 +28,7 @@ Go-based TUI application that generates Omarchy themes from images using color e
 ## Current Implementation Status
 - ✅ Project structure established
 - ✅ Core color types complete
-- ⏳ Color space conversions pending (partial - RGB↔HSL done)
+- ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
 - ⏳ Image extraction pending
 - ⏳ Palette strategies pending
 - ⏳ Config generation pending
@@ -36,6 +36,9 @@ Go-based TUI application that generates Omarchy themes from images using color e
 
 ## Key Technical Decisions
 - RGBA with cached HSLA for performance
+- AccessibilityLevel enum with automatic ratio lookup
+- LAB color space with D65 illuminant for color science accuracy
+- HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
 - Octree quantization over k-means
 - Template-based config generation
 - 64x64 pixel regions for concurrency
@@ -46,10 +49,11 @@ Go-based TUI application that generates Omarchy themes from images using color e
 go vet ./...
 
 # Run execution test
-go run cmd/examples/test_[name].go
+go run tests/test-color/main.go
+go run tests/test-conversions/main.go
 
-# Run with arguments
-go run cmd/examples/test_extract.go image.jpg
+# Run with arguments (for future image tests)
+go run tests/test-extract/main.go image.jpg
 
 # Format code
 go fmt ./...
@@ -63,7 +67,7 @@ go fmt ./...
 - `pkg/template/` - Config generators
 - `pkg/theme/` - Theme orchestration
 - `internal/tui/` - UI components
-- `cmd/examples/` - Execution tests
+- `tests/` - Execution tests
 - `cmd/omarchy-theme-gen/` - Main application
 
 ## Performance Targets
@@ -72,12 +76,12 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Next Session Focus
-Session 2: Color Space Conversions
-- Note: RGB↔HSL conversion already implemented in Session 1
-- Add additional color manipulation methods if needed
-- Create comprehensive test_conversion.go execution test
-- Verify all conversions against CSS Color Module Level 3
-- Begin Session 3: Basic Image Loading
+Session 3: Basic Image Loading
+- Implement image loading from file paths (JPEG, PNG support)
+- Add pixel iteration and color extraction infrastructure  
+- Create performance benchmarking for 4K images (<2s target)
+- Implement basic color counting and frequency mapping
+- Test with `tests/test-image-loading/main.go` execution test
 
 ## Remember
 - Start from fundamental understanding

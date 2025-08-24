@@ -13,7 +13,7 @@
 - Your repository is a single source of truth
 - Link to existing code: `See pkg/color/octree.go`
 - Reference decisions: `docs/decisions/001-algorithm.md`
-- Point to test results: `cmd/examples/output.txt`
+- Point to test results: `tests/output.txt`
 
 ### 3. User-Driven Development
 - All code modifications require explicit user direction
@@ -85,7 +85,7 @@ Before starting:
 go vet ./...
 
 # Run execution tests directly
-go run cmd/examples/test_name.go
+go run tests/test-name/main.go
 ```
 
 ## References
