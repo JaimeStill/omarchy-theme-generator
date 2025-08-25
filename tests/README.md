@@ -18,8 +18,10 @@ This directory contains execution tests that validate specific technical concept
 
 ### Planned Tests (Future Sessions)
 - **test-image-loading/** - Image loading and pixel iteration (Session 3)
-- **test-extract-strategies/** - Color extraction and palette strategies (Session 4)
-- **test-generate-configs/** - Configuration file generation (Sessions 11-15)
+- **test-color-synthesis/** - Color synthesis and palette generation (Session 4)
+- **test-palette-strategies/** - Integrated extraction and synthesis pipeline (Session 5)
+- **test-generate-alacritty/** - First template generator (Session 6)
+- **test-generate-configs/** - Multiple configuration generators (Sessions 11-15)
 - **test-performance/** - Benchmarking and optimization validation (Session 28)
 
 ## Usage

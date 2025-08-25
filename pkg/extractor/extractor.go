@@ -1,0 +1,250 @@
+package extractor
+
+import (
+	"fmt"
+	"image"
+
+	otgcolor "github.com/JaimeStill/omarchy-theme-generator/pkg/color"
+	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"
+)
+
+type ExtractionResult struct {
+	Image         image.Image
+	FrequencyMap  *FrequencyMap
+	DominantColor *otgcolor.Color
+	TopColors     []*ColorFrequency
+	UniqueColors  int
+	TotalPixels   uint32
+}
+
+// ExtractionOptions configures the color extraction process.
+// All fields are optional with sensible defaults provided by DefaultOptions().
+type ExtractionOptions struct {
+	TopColorCount     int     // Number of top colors to return (default: 10)
+	MinThreshold      float64 // Minimum percentage for significant colors (default: 0.1%)
+	MaxImageDimension int     // Maximum width or height, 0 = unlimited (default: 8192)
+}
+
+// DefaultOptions returns sensible default values for extraction configuration.
+// Top 10 colors, 0.1% threshold for significance, 8K maximum dimension.
+func DefaultOptions() *ExtractionOptions {
+	return &ExtractionOptions{
+		TopColorCount:     10,
+		MinThreshold:      0.1,
+		MaxImageDimension: 8192,
+	}
+}
+
+// ExtractColors performs complete color extraction from an image file.
+// This is the main entry point for file-based extraction with comprehensive analysis.
+// If options is nil, DefaultOptions() will be used. Supports optional dimension validation.
+func ExtractColors(imagePath string, options *ExtractionOptions) (*ExtractionResult, error) {
+	if options == nil {
+		options = DefaultOptions()
+	}
+
+	var img image.Image
+	var err error
+
+	if options.MaxImageDimension > 0 {
+		img, err = LoadImageWithValidation(imagePath, options.MaxImageDimension, options.MaxImageDimension)
+	} else {
+		img, err = LoadImage(imagePath)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("extraction failed: %w", err)
+	}
+
+	return ExtractFromLoadedImage(img, options)
+}
+
+// ExtractFromLoadedImage performs extraction on an already-loaded image.
+// Useful when the image comes from memory, network, or other non-file sources.
+// Returns complete extraction results with analysis data for synthesis guidance.
+func ExtractFromLoadedImage(img image.Image, options *ExtractionOptions) (*ExtractionResult, error) {
+	if options == nil {
+		options = DefaultOptions()
+	}
+
+	fm, err := ExtractFromImage(img)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build frequency map: %w", err)
+	}
+
+	dominant := fm.GetDominantColor()
+	if dominant == nil {
+		return nil, &errors.ExtractionError{
+			Stage:   "dominant",
+			Details: "no dominant color found",
+			Err:     errors.ErrNoColors,
+		}
+	}
+
+	topColors := fm.GetTopColors(options.TopColorCount)
+
+	result := &ExtractionResult{
+		Image:         img,
+		FrequencyMap:  fm,
+		DominantColor: dominant.Color,
+		TopColors:     topColors,
+		UniqueColors:  fm.Size(),
+		TotalPixels:   fm.Total(),
+	}
+
+	return result, nil
+}
+
+func (r *ExtractionResult) GetSignificantColors(minThreshold float64) []*ColorFrequency {
+	if r.FrequencyMap == nil {
+		return nil
+	}
+
+	return r.FrequencyMap.FilterByThreshold(minThreshold)
+}
+
+func (r *ExtractionResult) GetColorPalette(requestedSize int) ([]*otgcolor.Color, error) {
+	if requestedSize <= 0 {
+		return nil, fmt.Errorf("palette size must be positive, got %d", requestedSize)
+	}
+
+	var colors []*ColorFrequency
+
+	if requestedSize > r.UniqueColors {
+		colors = r.FrequencyMap.GetTopColors(0)
+	} else {
+		colors = r.FrequencyMap.GetTopColors(requestedSize)
+	}
+
+	palette := make([]*otgcolor.Color, len(colors))
+	for i, cf := range colors {
+		palette[i] = cf.Color
+	}
+
+	return palette, nil
+}
+
+type ColorDistribution struct {
+	TotalPixels      uint32
+	UniqueColors     int
+	DominantCoverage float64
+	Top10Coverage    float64
+	DiversityScore   float64
+}
+
+func (r *ExtractionResult) AnalyzeColorDistribution() *ColorDistribution {
+	if r.FrequencyMap == nil || len(r.TopColors) == 0 {
+		return nil
+	}
+
+	dist := &ColorDistribution{
+		TotalPixels:      r.TotalPixels,
+		UniqueColors:     r.UniqueColors,
+		DominantCoverage: 0,
+		Top10Coverage:    0,
+	}
+
+	if r.DominantColor != nil && len(r.TopColors) > 0 {
+		dist.DominantCoverage = r.TopColors[0].Percentage
+	}
+
+	for i, cf := range r.TopColors {
+		if i >= 10 {
+			break
+		}
+		dist.Top10Coverage += cf.Percentage
+	}
+
+	if len(r.TopColors) >= 2 {
+		diversityRatio := float64(r.TopColors[1].Count) / float64(r.TopColors[0].Count)
+		dist.DiversityScore = diversityRatio
+	}
+
+	return dist
+}
+
+// ThemeGenerationAnalysis provides detailed analysis for determining theme generation strategy.
+// It replaces traditional pass/fail validation with actionable guidance for synthesis systems.
+// Note: IsMonochrome currently detects grayscale; Session 4 will add proper monochromatic detection.
+type ThemeGenerationAnalysis struct {
+	CanExtract        bool    // True if sufficient colors exist for direct extraction
+	NeedsSynthesis    bool    // True if color theory synthesis is recommended
+	IsMonochrome      bool    // True if image is grayscale (will be corrected in Session 4)
+	DominantCoverage  float64 // Percentage of pixels in the most frequent color
+	UniqueColors      int     // Total unique colors available for extraction
+	SuggestedStrategy string  // "extract", "synthesize", or "hybrid"
+	AverageSaturation float64 // Average saturation across top colors (0.0-1.0)
+}
+
+// AnalyzeForThemeGeneration analyzes extraction results to determine theme generation strategy.
+// Unlike traditional validation that fails, this always succeeds and provides synthesis guidance.
+// The analysis considers color diversity, dominance patterns, and saturation characteristics.
+func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis {
+	analysis := &ThemeGenerationAnalysis{
+		UniqueColors: r.UniqueColors,
+	}
+
+	if len(r.TopColors) > 0 {
+		analysis.DominantCoverage = r.TopColors[0].Percentage
+	}
+
+	totalSaturation := 0.0
+	sampleSize := min(len(r.TopColors), 100)
+
+	for i := 0; i < sampleSize; i++ {
+		_, s, _ := r.TopColors[i].Color.HSL()
+		totalSaturation += s
+	}
+
+	if sampleSize > 0 {
+		analysis.AverageSaturation = totalSaturation / float64(sampleSize)
+	}
+
+	analysis.IsMonochrome = analysis.AverageSaturation < 0.1
+
+	minColorsForPureExtraction := 8
+	maxDominanceForPureExtraction := 80.0
+
+	if r.UniqueColors >= minColorsForPureExtraction && analysis.DominantCoverage < maxDominanceForPureExtraction {
+		analysis.CanExtract = true
+		analysis.NeedsSynthesis = false
+		analysis.SuggestedStrategy = "extract"
+	} else if r.UniqueColors >= 3 && !analysis.IsMonochrome {
+		analysis.CanExtract = false
+		analysis.NeedsSynthesis = true
+		analysis.SuggestedStrategy = "hybrid"
+	} else {
+		analysis.CanExtract = false
+		analysis.NeedsSynthesis = true
+		analysis.SuggestedStrategy = "synthesize"
+	}
+
+	return analysis
+}
+
+// GetPrimaryNonGrayscale returns the first non-grayscale color found in the top colors.
+// It searches through colors in frequency order and returns the first with saturation >= threshold.
+// Returns nil if all top colors are grayscale. Useful for finding synthesis seed colors.
+func (r *ExtractionResult) GetPrimaryNonGrayscale(saturationThreshold float64) *otgcolor.Color {
+	for _, cf := range r.TopColors {
+		_, s, _ := cf.Color.HSL()
+		if s >= saturationThreshold {
+			return cf.Color
+		}
+	}
+	return nil
+}
+
+// String provides a human-readable summary of extraction results including analysis strategy.
+// The output includes dimensions, color counts, dominant color, and recommended strategy.
+func (r *ExtractionResult) String() string {
+	bounds := r.Image.Bounds()
+	analysis := r.AnalyzeForThemeGeneration()
+	return fmt.Sprintf(
+		"ExtractionResult: %dx%d image, %d unique colors from %d pixels, dominant: %s (%.2f%%), strategy: %s",
+		bounds.Dx(), bounds.Dy(),
+		r.UniqueColors, r.TotalPixels,
+		r.DominantColor.HEX(), r.TopColors[0].Percentage,
+		analysis.SuggestedStrategy,
+	)
+}

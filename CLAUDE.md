@@ -29,8 +29,9 @@ Go-based TUI application that generates Omarchy themes from images using color e
 - ✅ Project structure established
 - ✅ Core color types complete
 - ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
-- ⏳ Image extraction pending
-- ⏳ Palette strategies pending
+- ⏳ Image extraction with synthesis fallback pending
+- ⏳ Color synthesis strategies pending
+- ⏳ Palette generation pipeline pending
 - ⏳ Config generation pending
 - ⏳ TUI interface pending
 
@@ -39,6 +40,8 @@ Go-based TUI application that generates Omarchy themes from images using color e
 - AccessibilityLevel enum with automatic ratio lookup
 - LAB color space with D65 illuminant for color science accuracy
 - HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
+- Extraction → Hybrid → Synthesis pipeline for edge case handling
+- Color synthesis strategies for low-diversity images
 - Octree quantization over k-means
 - Template-based config generation
 - 64x64 pixel regions for concurrency
@@ -76,12 +79,19 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Next Session Focus
-Session 3: Basic Image Loading
+Session 3: Basic Image Loading (Today)
 - Implement image loading from file paths (JPEG, PNG support)
 - Add pixel iteration and color extraction infrastructure  
 - Create performance benchmarking for 4K images (<2s target)
 - Implement basic color counting and frequency mapping
 - Test with `tests/test-image-loading/main.go` execution test
+
+Session 4: Color Synthesis & Palette Generation
+- Create pkg/palette/ with synthesis strategies for edge cases
+- Implement extraction → hybrid → synthesis pipeline architecture
+- Add color theory strategies (monochromatic, analogous, complementary, triadic)
+- Build SynthesisOptions for fallback configuration
+- Test edge cases: grayscale, noir, monochrome images
 
 ## Remember
 - Start from fundamental understanding
