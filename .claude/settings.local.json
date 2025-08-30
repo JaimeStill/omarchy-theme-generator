@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(go vet:*)",
-      "Bash(go run:*)"
+      "Bash(go run:*)",
+      "Bash(go:*)"
     ]
   },
   "outputStyle": "Explanatory"

@@ -24,8 +24,10 @@ This directory contains execution tests that validate specific technical concept
 - **[test-classification/](test-classification/)** - Grayscale vs monochromatic vs full-color classification accuracy
 - **[test-generative/](test-generative/)** - Computational image generation, material simulation, and aesthetic validation
 
+### Theme Orchestration Tests (Session 5)
+- **[test-palette-strategies/](test-palette-strategies/)** - Complete theme generation with mode detection, overrides, and WCAG compliance
+
 ### Planned Tests (Future Sessions)
-- **test-palette-strategies/** - Integrated extraction and synthesis pipeline (Session 5)
 - **test-generate-alacritty/** - First template generator (Session 6)
 - **test-generate-configs/** - Multiple configuration generators (Sessions 11-15)
 - **test-performance/** - Benchmarking and optimization validation (Session 28)
@@ -51,17 +53,21 @@ go run tests/test-classification/main.go
 
 # Computational image generation and material simulation
 go run tests/test-generative/main.go
+
+# Theme generation with mode detection and overrides
+go run tests/test-palette-strategies/main.go
 ```
 
 ### Run All Current Tests
 ```bash
-# Validate all functionality (Core + Synthesis + Classification + Generation)
+# Validate all functionality (Core + Synthesis + Classification + Generation + Theme)
 go run tests/test-color/main.go && \
 go run tests/test-conversions/main.go && \
 go run tests/test-load-image/main.go && \
 go run tests/test-synthesis/main.go && \
 go run tests/test-classification/main.go && \
-go run tests/test-generative/main.go
+go run tests/test-generative/main.go && \
+go run tests/test-palette-strategies/main.go
 ```
 
 ### Test with Custom Images

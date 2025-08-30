@@ -22,16 +22,18 @@ Go-based TUI application that generates Omarchy themes from images using color e
 2. Only modify code when explicitly directed
 3. Use `go run tests/test-*/main.go` for validation
 4. Use `go vet ./...` for type checking
-5. Reference existing implementations: "See pkg/color/space.go"
+5. Reference existing implementations: "See pkg/color/hsl.go, pkg/color/lab.go"
 6. Keep explanations technically precise
 
 ## Current Implementation Status
 - ✅ Project structure established
 - ✅ Core color types complete
 - ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
-- ⏳ Image extraction with synthesis fallback pending
-- ⏳ Color synthesis strategies pending
-- ⏳ Palette generation pipeline pending
+- ✅ Image extraction with synthesis fallback complete
+- ✅ Color synthesis strategies complete (6 strategies: monochromatic, analogous, complementary, triadic, tetradic, split-complementary)
+- ✅ Palette generation pipeline complete (extraction → hybrid → synthesis)
+- ✅ Computational generative system complete (material simulation, mathematical precision)
+- ⏳ Theme orchestration integration pending
 - ⏳ Config generation pending
 - ⏳ TUI interface pending
 
@@ -55,8 +57,8 @@ go vet ./...
 go run tests/test-color/main.go
 go run tests/test-conversions/main.go
 
-# Run with arguments (for future image tests)
-go run tests/test-extract/main.go image.jpg
+# Run with arguments (current image tests)
+go run tests/test-load-image/main.go image.jpg
 
 # Format code
 go fmt ./...
@@ -64,14 +66,15 @@ go fmt ./...
 
 ## Package Structure
 - `pkg/color/` - Color types and conversions
-- `pkg/quantizer/` - Quantization algorithms
+- `pkg/errors/` - Structured error handling
 - `pkg/extractor/` - Image processing
+- `pkg/generative/` - Computational image generation
 - `pkg/palette/` - Color theory strategies
-- `pkg/template/` - Config generators
-- `pkg/theme/` - Theme orchestration
-- `internal/tui/` - UI components
+- `pkg/theme/` - Theme orchestration (Session 5)
+- `pkg/template/` - Config generators (future)
+- `internal/tui/` - UI components (future)
 - `tests/` - Execution tests
-- `cmd/omarchy-theme-gen/` - Main application
+- `cmd/omarchy-theme-gen/` - Main application (future)
 
 ## Performance Targets
 - 4K image: < 2 seconds
@@ -79,19 +82,18 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Next Session Focus
-Session 3: Basic Image Loading (Today)
-- Implement image loading from file paths (JPEG, PNG support)
-- Add pixel iteration and color extraction infrastructure  
-- Create performance benchmarking for 4K images (<2s target)
-- Implement basic color counting and frequency mapping
-- Test with `tests/test-image-loading/main.go` execution test
+Session 5: Theme Orchestration Integration (Current)
+- Integrate extraction + synthesis pipeline with theme generation
+- Implement light/dark mode detection with WCAG-accurate luminance analysis
+- Add user color overrides with synthesis compatibility
+- Complete all palette strategies with accessibility compliance
+- Test with `tests/test-palette-strategies/main.go` execution test
 
-Session 4: Color Synthesis & Palette Generation
-- Create pkg/palette/ with synthesis strategies for edge cases
-- Implement extraction → hybrid → synthesis pipeline architecture
-- Add color theory strategies (monochromatic, analogous, complementary, triadic)
-- Build SynthesisOptions for fallback configuration
-- Test edge cases: grayscale, noir, monochrome images
+Session 6: First Template Generator
+- Create template interface with synthesis-compatible color mapping
+- Implement alacritty.toml generator with synthesized color support
+- Add color formatting functions for all synthesis strategies
+- Test with `tests/test-generate-alacritty/main.go`
 
 ## Remember
 - Start from fundamental understanding

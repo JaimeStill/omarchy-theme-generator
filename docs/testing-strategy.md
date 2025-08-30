@@ -152,7 +152,7 @@ tests/
 ├── test-conversions/
 │   ├── main.go                  # Color space conversions  
 │   └── README.md                # Test documentation with latest output
-├── test-extract/                # Basic extraction (future)
+├── test-load-image/              # Basic extraction (implemented)
 ├── test-strategies/             # Palette strategies (future)
 ├── test-octree/                 # Octree algorithm (future)
 ├── test-dominant/               # Dominant color detection (future)
@@ -172,7 +172,7 @@ go run tests/test-color/main.go
 
 ### Test with Arguments
 ```bash
-go run tests/test-extract/main.go image.jpg
+go run tests/test-load-image/main.go image.jpg
 ```
 
 ### Test with Flags
