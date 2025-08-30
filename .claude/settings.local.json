@@ -1,3 +1,9 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(go vet:*)",
+      "Bash(go run:*)"
+    ]
+  },
   "outputStyle": "Explanatory"
 }

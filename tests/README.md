@@ -16,9 +16,15 @@ This directory contains execution tests that validate specific technical concept
 - **[test-color/](test-color/)** - Core Color type operations and conversions
 - **[test-conversions/](test-conversions/)** - Advanced color manipulation and analysis
 
+### Image Processing & Extraction Tests
+- **[test-load-image/](test-load-image/)** - Image loading, extraction, and synthesis pipeline (Session 3)
+
+### Color Synthesis & Classification Tests (Session 4)
+- **[test-synthesis/](test-synthesis/)** - Color theory algorithms, WCAG compliance, and mathematical validation
+- **[test-classification/](test-classification/)** - Grayscale vs monochromatic vs full-color classification accuracy
+- **[test-generative/](test-generative/)** - Computational image generation, material simulation, and aesthetic validation
+
 ### Planned Tests (Future Sessions)
-- **test-image-loading/** - Image loading and pixel iteration (Session 3)
-- **test-color-synthesis/** - Color synthesis and palette generation (Session 4)
 - **test-palette-strategies/** - Integrated extraction and synthesis pipeline (Session 5)
 - **test-generate-alacritty/** - First template generator (Session 6)
 - **test-generate-configs/** - Multiple configuration generators (Sessions 11-15)
@@ -33,12 +39,35 @@ go run tests/test-color/main.go
 
 # Advanced color conversions and analysis
 go run tests/test-conversions/main.go
+
+# Image loading and synthesis pipeline
+go run tests/test-load-image/main.go
+
+# Color synthesis and mathematical validation
+go run tests/test-synthesis/main.go
+
+# Color classification accuracy
+go run tests/test-classification/main.go
+
+# Computational image generation and material simulation
+go run tests/test-generative/main.go
 ```
 
 ### Run All Current Tests
 ```bash
-# Validate all functionality
-go run tests/test-color/main.go && go run tests/test-conversions/main.go
+# Validate all functionality (Core + Synthesis + Classification + Generation)
+go run tests/test-color/main.go && \
+go run tests/test-conversions/main.go && \
+go run tests/test-load-image/main.go && \
+go run tests/test-synthesis/main.go && \
+go run tests/test-classification/main.go && \
+go run tests/test-generative/main.go
+```
+
+### Test with Custom Images
+```bash
+# Test extraction and synthesis with your own image
+go run tests/test-load-image/main.go path/to/your/image.jpg
 ```
 
 ### Code Quality Validation

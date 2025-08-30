@@ -56,13 +56,13 @@ func ExtractColors(imagePath string, options *ExtractionOptions) (*ExtractionRes
 		return nil, fmt.Errorf("extraction failed: %w", err)
 	}
 
-	return ExtractFromLoadedImage(img, options)
+	return ExtractColorsFromImage(img, options)
 }
 
-// ExtractFromLoadedImage performs extraction on an already-loaded image.
+// ExtractColorsFromImage performs extraction on an already-loaded image.
 // Useful when the image comes from memory, network, or other non-file sources.
 // Returns complete extraction results with analysis data for synthesis guidance.
-func ExtractFromLoadedImage(img image.Image, options *ExtractionOptions) (*ExtractionResult, error) {
+func ExtractColorsFromImage(img image.Image, options *ExtractionOptions) (*ExtractionResult, error) {
 	if options == nil {
 		options = DefaultOptions()
 	}
@@ -165,11 +165,13 @@ func (r *ExtractionResult) AnalyzeColorDistribution() *ColorDistribution {
 
 // ThemeGenerationAnalysis provides detailed analysis for determining theme generation strategy.
 // It replaces traditional pass/fail validation with actionable guidance for synthesis systems.
-// Note: IsMonochrome currently detects grayscale; Session 4 will add proper monochromatic detection.
+// Distinguishes between grayscale (no hue) and monochromatic (single dominant hue).
 type ThemeGenerationAnalysis struct {
 	CanExtract        bool    // True if sufficient colors exist for direct extraction
 	NeedsSynthesis    bool    // True if color theory synthesis is recommended
-	IsMonochrome      bool    // True if image is grayscale (will be corrected in Session 4)
+	IsGrayscale       bool    // True if image has no color information (saturation ≈ 0)
+	IsMonochromatic   bool    // True if image has single dominant hue (±10°) with optional grays
+	DominantHue       float64 // The dominant hue in degrees (0-360) if monochromatic
 	DominantCoverage  float64 // Percentage of pixels in the most frequent color
 	UniqueColors      int     // Total unique colors available for extraction
 	SuggestedStrategy string  // "extract", "synthesize", or "hybrid"
@@ -188,32 +190,96 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 		analysis.DominantCoverage = r.TopColors[0].Percentage
 	}
 
+	// Analyze saturation and hue distribution
 	totalSaturation := 0.0
 	sampleSize := min(len(r.TopColors), 100)
-
+	
+	// Track hues for monochromatic detection (10-degree bins)
+	hueBins := make(map[int]int) // bin index -> count
+	grayscaleCount := 0
+	
 	for i := 0; i < sampleSize; i++ {
-		_, s, _ := r.TopColors[i].Color.HSL()
+		h, s, _ := r.TopColors[i].Color.HSL()
 		totalSaturation += s
+		
+		// Consider colors with saturation < 0.05 as grayscale
+		if s < 0.05 {
+			grayscaleCount++
+		} else {
+			// Bin hues into 10-degree segments
+			bin := int(h * 360 / 10) % 36 // 36 bins of 10 degrees each
+			hueBins[bin]++
+		}
 	}
 
 	if sampleSize > 0 {
 		analysis.AverageSaturation = totalSaturation / float64(sampleSize)
 	}
 
-	analysis.IsMonochrome = analysis.AverageSaturation < 0.1
+	// Determine if image is grayscale (all colors have very low saturation)
+	grayscaleRatio := float64(grayscaleCount) / float64(sampleSize)
+	analysis.IsGrayscale = grayscaleRatio > 0.95 // 95% or more grayscale pixels
+	
+	// Determine if image is monochromatic (single dominant hue with ±10° tolerance)
+	if !analysis.IsGrayscale && len(hueBins) > 0 {
+		// Find the most populated hue bin and its neighbors
+		maxBin := -1
+		maxCount := 0
+		for bin, count := range hueBins {
+			if count > maxCount {
+				maxCount = count
+				maxBin = bin
+			}
+		}
+		
+		if maxBin >= 0 {
+			// Count colors in the dominant bin and adjacent bins (±10° = ±1 bin)
+			monochromaticCount := hueBins[maxBin]
+			prevBin := (maxBin - 1 + 36) % 36
+			nextBin := (maxBin + 1) % 36
+			monochromaticCount += hueBins[prevBin]
+			monochromaticCount += hueBins[nextBin]
+			
+			// Calculate what percentage of colored pixels fall in this hue range
+			coloredPixels := sampleSize - grayscaleCount
+			if coloredPixels > 0 {
+				monochromaticRatio := float64(monochromaticCount) / float64(coloredPixels)
+				analysis.IsMonochromatic = monochromaticRatio > 0.9 // 90% of colored pixels in same hue range
+				
+				if analysis.IsMonochromatic {
+					// Set the dominant hue (center of the bin)
+					analysis.DominantHue = float64(maxBin*10 + 5) // Center of the 10-degree bin
+				}
+			}
+		}
+	}
 
+	// Determine strategy based on analysis
 	minColorsForPureExtraction := 8
 	maxDominanceForPureExtraction := 80.0
 
-	if r.UniqueColors >= minColorsForPureExtraction && analysis.DominantCoverage < maxDominanceForPureExtraction {
+	if analysis.IsGrayscale {
+		// Pure grayscale needs full synthesis
+		analysis.CanExtract = false
+		analysis.NeedsSynthesis = true
+		analysis.SuggestedStrategy = "synthesize"
+	} else if analysis.IsMonochromatic {
+		// Monochromatic can use hybrid approach
+		analysis.CanExtract = false
+		analysis.NeedsSynthesis = true
+		analysis.SuggestedStrategy = "hybrid"
+	} else if r.UniqueColors >= minColorsForPureExtraction && analysis.DominantCoverage < maxDominanceForPureExtraction {
+		// Sufficient diversity for pure extraction
 		analysis.CanExtract = true
 		analysis.NeedsSynthesis = false
 		analysis.SuggestedStrategy = "extract"
-	} else if r.UniqueColors >= 3 && !analysis.IsMonochrome {
+	} else if r.UniqueColors >= 3 {
+		// Some colors but not enough diversity
 		analysis.CanExtract = false
 		analysis.NeedsSynthesis = true
 		analysis.SuggestedStrategy = "hybrid"
 	} else {
+		// Very few colors, need synthesis
 		analysis.CanExtract = false
 		analysis.NeedsSynthesis = true
 		analysis.SuggestedStrategy = "synthesize"
