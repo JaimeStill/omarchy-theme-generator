@@ -46,11 +46,11 @@ func GenerateAndSaveTestImages(outputDir string) error {
 		return fmt.Errorf("failed to save 4K synthetic image: %w", err)
 	}
 
-	// Generate monochrome grayscale image
-	fmt.Println("  Creating monochrome-grayscale.png...")
-	imgMono := GenerateMonochromeTestImage(400, 300)
-	if err := SaveImage(imgMono, filepath.Join(outputDir, "monochrome-grayscale.png")); err != nil {
-		return fmt.Errorf("failed to save monochrome image: %w", err)
+	// Generate grayscale image
+	fmt.Println("  Creating grayscale.png...")
+	imgGrayscale := GenerateGrayscaleTestImage(400, 300)
+	if err := SaveImage(imgGrayscale, filepath.Join(outputDir, "grayscale.png")); err != nil {
+		return fmt.Errorf("failed to save grayscale image: %w", err)
 	}
 
 	// Generate high contrast image

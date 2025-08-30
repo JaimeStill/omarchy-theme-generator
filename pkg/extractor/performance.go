@@ -124,12 +124,12 @@ func RunPerformanceTest() error {
 	fmt.Printf("  Analysis: %s\n", result4K.AnalyzeForThemeGeneration().SuggestedStrategy)
 	fmt.Println()
 
-	// Test 2: Monochrome image (synthesis test case)
-	fmt.Println("Test 2: Monochrome Image (1920x1080)")
-	imgMono := generative.GenerateMonochromeTestImage(1920, 1080)
+	// Test 2: Grayscale image (synthesis test case)
+	fmt.Println("Test 2: Grayscale Image (1920x1080)")
+	imgMono := generative.GenerateGrayscaleTestImage(1920, 1080)
 	benchMono, resultMono, err := BenchmarkExtraction(imgMono, nil)
 	if err != nil {
-		return fmt.Errorf("monochrome test failed: %w", err)
+		return fmt.Errorf("grayscale test failed: %w", err)
 	}
 	
 	fmt.Printf("  %s\n", benchMono.String())

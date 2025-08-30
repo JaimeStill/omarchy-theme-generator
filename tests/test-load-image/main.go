@@ -111,7 +111,7 @@ func testGrayscaleEdgeCase() {
 
 	// Generate grayscale test image
 	fmt.Println("Generating grayscale image (1920x1080)...")
-	imgGray := generative.GenerateMonochromeTestImage(1920, 1080) // Grayscale test image
+	imgGray := generative.GenerateGrayscaleTestImage(1920, 1080) // Grayscale test image
 
 	// Extract with benchmarking
 	benchmark, result, err := extractor.BenchmarkExtraction(imgGray, nil)
@@ -147,10 +147,9 @@ func testMonochromaticEdgeCase() {
 	fmt.Println("🔵 Monochromatic Edge Case Test (single hue)")
 	fmt.Println("=" + repeat("=", 50))
 
-	// Generate monochromatic test image (blue with variations) - will implement later
+	// Generate monochromatic test image (blue with variations)
 	fmt.Println("Generating monochromatic image (1920x1080) - blue theme...")
-	// TODO: Add specific monochromatic generator to generative package
-	imgMono := generative.GenerateMonochromeTestImage(1920, 1080) // Temporary placeholder
+	imgMono := generative.GenerateMonochromaticTestImage(1920, 1080)
 
 	// Extract with benchmarking
 	benchmark, result, err := extractor.BenchmarkExtraction(imgMono, nil)

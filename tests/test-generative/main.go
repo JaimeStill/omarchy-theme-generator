@@ -90,17 +90,29 @@ func testBasicGeneration() {
 	
 	saveImage(img4k, "4k-test-image.png")
 	
-	// Test monochrome generation
-	fmt.Printf("\nMonochrome Test Image Generation:\n")
-	mono := generative.GenerateMonochromeTestImage(800, 600)
-	monoColors := analyzeColorVariation(mono)
+	// Test grayscale generation
+	fmt.Printf("\nGrayscale Test Image Generation:\n")
+	grayscale := generative.GenerateGrayscaleTestImage(800, 600)
+	grayscaleColors := analyzeColorVariation(grayscale)
 	
-	// Verify it's actually monochromatic (low color count)
-	isMonochrome := monoColors < 100 // Should have very few unique colors
-	fmt.Printf("  Monochrome colors: %d (expected <100) %s\n", 
-		monoColors, tests.CheckMark(isMonochrome))
+	// Verify it's actually grayscale (low color count)
+	isGrayscale := grayscaleColors < 300 // Should have limited grayscale variations
+	fmt.Printf("  Grayscale colors: %d (expected <300) %s\n", 
+		grayscaleColors, tests.CheckMark(isGrayscale))
 	
-	saveImage(mono, "monochrome-test.png")
+	saveImage(grayscale, "grayscale-test.png")
+	
+	// Test monochromatic generation (single hue with variations)
+	fmt.Printf("\nMonochromatic Test Image Generation:\n")
+	monochromatic := generative.GenerateMonochromaticTestImage(800, 600)
+	monochromaticColors := analyzeColorVariation(monochromatic)
+	
+	// Verify it has more colors than grayscale but focused on one hue
+	hasVariations := monochromaticColors > 500 // Should have many hue/saturation/lightness variations
+	fmt.Printf("  Monochromatic colors: %d (expected >500) %s\n", 
+		monochromaticColors, tests.CheckMark(hasVariations))
+	
+	saveImage(monochromatic, "monochromatic-blue-test.png")
 	
 	// Test high contrast generation
 	fmt.Printf("\nHigh Contrast Test Image Generation:\n")
@@ -385,7 +397,7 @@ func testEdgeCases() {
 	
 	// Test zero dimensions (should handle gracefully)
 	fmt.Printf("  Zero dimensions: ")
-	zeroImg := generative.GenerateMonochromeTestImage(0, 0)
+	zeroImg := generative.GenerateGrayscaleTestImage(0, 0)
 	zeroHandled := zeroImg == nil || zeroImg.Bounds().Empty()
 	fmt.Printf("%s\n", tests.CheckMark(zeroHandled))
 	

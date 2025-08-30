@@ -44,8 +44,8 @@ func Generate4KTestImage() image.Image {
 	return img
 }
 
-// GenerateMonochromeTestImage creates a grayscale image for testing synthesis edge cases.
-func GenerateMonochromeTestImage(width, height int) image.Image {
+// GenerateGrayscaleTestImage creates a grayscale image for testing synthesis edge cases.
+func GenerateGrayscaleTestImage(width, height int) image.Image {
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 
 	// Create grayscale gradient with subtle variations
@@ -60,6 +60,51 @@ func GenerateMonochromeTestImage(width, height int) image.Image {
 			}
 
 			img.Set(x, y, stdcolor.RGBA{gray, gray, gray, 255})
+		}
+	}
+
+	return img
+}
+
+// GenerateMonochromaticTestImage creates an image with a single hue but varying saturation and lightness.
+// This is for testing monochromatic color detection (single dominant hue vs grayscale).
+func GenerateMonochromaticTestImage(width, height int) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	// Base hue: 220° (blue) to match expected documentation
+	baseHue := 220.0 / 360.0 // Convert to 0-1 range for HSL
+
+	// Create variations within monochromatic range (±10° tolerance)
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			// Vary hue slightly within ±10° (±0.028 in 0-1 range)
+			hueVariation := (float64((x+y)%20) - 10.0) * 0.0028 // ±10° in normalized range
+			hue := baseHue + hueVariation
+			
+			// Normalize hue to 0-1 range
+			if hue < 0 {
+				hue += 1.0
+			} else if hue > 1 {
+				hue -= 1.0
+			}
+			
+			// Vary saturation and lightness for visual interest
+			saturation := 0.3 + (float64((x*3+y*2)%100)/100.0)*0.7  // 30%-100%
+			lightness := 0.2 + (float64((x*2+y*3)%100)/100.0)*0.6   // 20%-80%
+			
+			// Add very few grayscale elements (about 5% gray) to test edge case detection
+			if (x+y*3)%37 == 0 {
+				// Add minimal gray pixels to create slight complexity
+				grayValue := 0.3 + (float64((x+y)%100)/100.0)*0.4 // 30%-70% lightness
+				c := color.NewHSL(0, 0, grayValue) // Pure grayscale
+				r, g, b, a := c.RGBA()
+				img.Set(x, y, stdcolor.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
+			} else {
+				// Monochromatic blue variations (95% of pixels)
+				c := color.NewHSL(hue, saturation, lightness)
+				r, g, b, a := c.RGBA()
+				img.Set(x, y, stdcolor.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)})
+			}
 		}
 	}
 
