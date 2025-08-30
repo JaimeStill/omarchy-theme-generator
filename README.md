@@ -25,6 +25,16 @@ cd omarchy-theme-generator
 go run cmd/omarchy-theme-gen/main.go
 ```
 
+## Auto-pilot Prompting
+
+```sh
+Prompt: prompts/session-autopilot.md                                                                 │
+│   Be sure to conduct comprehensive planning to ensure your execution plan implements the intended      │
+│   features with the least friction possible. Ensure proper separation of concerns and make sure each   │
+│   implementation is in its optimal format. Once you have your execution plan established, have all of  │
+│   the subagents available in .claude/agents/ review and optimize your plan. Ultrathink.
+```
+
 ## Usage
 
 ### Interactive TUI

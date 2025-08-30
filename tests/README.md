@@ -27,8 +27,12 @@ This directory contains execution tests that validate specific technical concept
 ### Theme Orchestration Tests (Session 5)
 - **[test-palette-strategies/](test-palette-strategies/)** - Complete theme generation with mode detection, overrides, and WCAG compliance
 
+### Template Generation Tests (Session 6)
+- **[test-generate-alacritty/](test-generate-alacritty/)** - Alacritty terminal template generation with strategy-aware color mapping, WCAG compliance, and performance validation
+- **[test-generate-alacritty/](test-generate-alacritty/)** - Alacritty TOML generator with strategy-aware color mapping and WCAG compliance
+
 ### Planned Tests (Future Sessions)
-- **test-generate-alacritty/** - First template generator (Session 6)
+- **test-octree/** - Octree quantization implementation (Session 7)
 - **test-generate-configs/** - Multiple configuration generators (Sessions 11-15)
 - **test-performance/** - Benchmarking and optimization validation (Session 28)
 
@@ -56,18 +60,22 @@ go run tests/test-generative/main.go
 
 # Theme generation with mode detection and overrides
 go run tests/test-palette-strategies/main.go
+
+# Template generation with Alacritty TOML output
+go run tests/test-generate-alacritty/main.go
 ```
 
 ### Run All Current Tests
 ```bash
-# Validate all functionality (Core + Synthesis + Classification + Generation + Theme)
+# Validate all functionality (Core + Synthesis + Classification + Generation + Theme + Template)
 go run tests/test-color/main.go && \
 go run tests/test-conversions/main.go && \
 go run tests/test-load-image/main.go && \
 go run tests/test-synthesis/main.go && \
 go run tests/test-classification/main.go && \
 go run tests/test-generative/main.go && \
-go run tests/test-palette-strategies/main.go
+go run tests/test-palette-strategies/main.go && \
+go run tests/test-generate-alacritty/main.go
 ```
 
 ### Test with Custom Images

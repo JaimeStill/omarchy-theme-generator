@@ -101,7 +101,7 @@ color harmony algorithms to produce WCAG-compliant terminal themes.
 ## Key Technical Decisions
 - Octree over k-means: docs/decisions/001-quantization-algorithm.md
 - HSL over HSV: docs/decisions/002-color-space-choice.md  
-- Template approach: See pkg/template/engine.go for rationale
+- Template approach: See pkg/template/generator.go for ConfigGenerator interface rationale
 
 ## Current Working Context
 Implementing triadic palette generation using 120° hue rotation
