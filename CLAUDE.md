@@ -90,10 +90,11 @@ go fmt ./...
 
 ## Next Session Focus
 Session 5: Color Theory Schemes Implementation
-- Create pkg/palette/ package with color theory scheme generators
-- Implement monochromatic, analogous, complementary, and triadic schemes
-- Build SynthesisOptions configuration for fallback scenarios
-- Integrate schemes with extraction→hybrid→synthesis pipeline
+- Create pkg/palette/ package with extensible scheme generator architecture
+- Implement all 7 color theory schemes (monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square)
+- Build SchemeOptions configuration for flexible palette generation
+- Design extensible SchemeGenerator interface for future additions
+- Integrate schemes with extraction→hybrid→scheme pipeline
 - Test color theory schemes with grayscale and monochromatic images
 
 ## CLI Architecture

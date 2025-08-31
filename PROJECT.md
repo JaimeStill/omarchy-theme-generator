@@ -52,19 +52,27 @@ Documentation and release
 
 #### Session 4: Color Synthesis & Palette Generation
 - [x] **Vocabulary Correction**: Replace IsMonochrome with proper IsGrayscale and IsMonochromatic detection
-- [ ] Create pkg/palette/ with color theory schemes (monochromatic, analogous, complementary, triadic)
-- [ ] Implement SynthesisOptions configuration for fallback scenarios
-- [ ] Build extraction → hybrid → scheme pipeline with automatic failover
-- [ ] Add color theory scheme validation for edge cases (grayscale, noir, monochrome images)
-- [ ] **Re-validate**: Update `tests/test-load-image/main.go` results after vocabulary corrections
-- [ ] **Test**: `tests/test-color-schemes/main.go`
+- [x] Hue tolerance algorithm implemented - 15-degree tolerance with wraparound handling
+- [x] Strategy decision logic updated - Grayscale images properly use color-based strategy
+- [x] All references corrected in tests and documentation
+- [x] **Test**: Empirical validation complete via `tests/test-load-image/main.go`
 
-#### Session 5: Palette Strategies & Theme Modes
-- [ ] Integrate extraction + color theory scheme pipeline with intelligent fallback
-- [ ] Implement light/dark mode detection with color theory scheme support
-- [ ] Add user color overrides with color theory scheme compatibility
-- [ ] Complete all color theory schemes with WCAG compliance
-- [ ] **Test**: `tests/test-color-theory-schemes/main.go`
+#### Session 5: Color Theory Schemes Implementation
+- [ ] Create pkg/palette/ package with extensible SchemeGenerator interface
+- [ ] Implement SchemeOptions configuration for flexible palette generation
+- [ ] Build all 7 color theory scheme generators:
+  - [ ] Monochromatic - Single hue with saturation/lightness variations
+  - [ ] Analogous - Adjacent hues (±30° on color wheel)
+  - [ ] Complementary - Opposite hues (180° separation)
+  - [ ] Split-Complementary - Base hue + two adjacent to complement
+  - [ ] Triadic - Three hues equally spaced (120° separation)
+  - [ ] Tetradic - Rectangle pattern (60°, 120°, 180°)
+  - [ ] Square - Four hues equally spaced (90° separation)
+- [ ] Create scheme registry for dynamic selection
+- [ ] Build extraction → hybrid → scheme pipeline integration
+- [ ] Implement light/dark mode palette variations
+- [ ] Add WCAG compliance validation for all schemes
+- [ ] **Test**: `tests/test-color-schemes/main.go`
 
 ### Phase 2: Algorithms
 
@@ -92,12 +100,13 @@ Documentation and release
 - [ ] Add result aggregation and performance optimization
 - [ ] **Test**: `tests/test-concurrent/main.go`
 
-#### Session 10: Advanced Synthesis & Accessibility
-- [ ] Implement tetradic and split-complementary color theory schemes
-- [ ] Add weighted color theory schemes with user preferences
-- [ ] Integrate WCAG contrast validation for synthesized colors
-- [ ] Create accessibility compliance reports for all generation modes
-- [ ] **Test**: `tests/test-advanced-color-schemes/main.go`
+#### Session 10: Advanced Schemes & Custom Generators
+- [ ] Implement custom scheme builders for edge cases
+- [ ] Add weighted color schemes with user preferences
+- [ ] Create double-complementary and other advanced schemes
+- [ ] Build accessibility compliance reports for all generation modes
+- [ ] Add scheme mutation and refinement capabilities
+- [ ] **Test**: `tests/test-advanced-schemes/main.go`
 
 ### Phase 3: Configuration Generation
 
@@ -313,8 +322,9 @@ Implement extraction → hybrid → color theory scheme pipeline with automatic 
 
 **Technical Implementation:**
 - `pkg/palette/` package for color theory schemes
-- `SynthesisOptions` configuration for fallback behavior
-- Color theory schemes: monochromatic, analogous, complementary, triadic
+- `SchemeOptions` configuration for flexible palette generation
+- Color theory schemes: all 7 standard schemes (monochromatic through square)
+- Extensible `SchemeGenerator` interface for future additions
 - Edge case testing for low-diversity images
 
 **Vocabulary Correction Required:**
@@ -439,18 +449,25 @@ Implement extraction → hybrid → color theory scheme pipeline with automatic 
 - ✅ All references corrected - Tests, documentation, and internal suite updated with precise vocabulary (`tests/internal/suite.go:54`, `tests/test-load-image/main.go:111-115`)
 - ✅ Empirical validation complete - Test execution confirms correct grayscale/monochromatic classification (`tests/test-load-image/README.md`)
 
+**Not Completed (moved to Session 5):**
+- pkg/palette/ package creation with color theory schemes
+- SchemeOptions configuration implementation
+- Extraction → hybrid → scheme pipeline integration
+- Color scheme validation and testing
+
 **Insights:**
 - Early termination algorithm more elegant than accumulation for monochromatic detection
-- Proper color science vocabulary critical for extraction→hybrid→synthesis pipeline accuracy
-- User-Driven Development with staged implementation phases highly effective for complex logic changes
+- Proper color science vocabulary critical for extraction→hybrid→scheme pipeline accuracy
+- Session focused on foundational vocabulary corrections rather than full implementation
 
 **Decision:**
 - Monochromatic detection uses ±15° hue tolerance with 80% threshold requirement
 - Grayscale threshold tightened from 0.1 to 0.05 saturation for precision
-- Strategy logic distinguishes grayscale (synthesis candidate) from monochromatic (extraction viable)
+- Strategy logic distinguishes grayscale (scheme candidate) from monochromatic (extraction viable)
+- Session 5 expanded to include all 7 standard color theory schemes with extensible architecture
 
 **Next:**
-- Session 5: Color theory schemes implementation (pkg/palette/ package creation)
+- Session 5: Complete color theory schemes implementation with all 7 standard schemes
 
 ---
 

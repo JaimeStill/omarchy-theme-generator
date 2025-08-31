@@ -7,7 +7,7 @@ import (
 
 func main() {
 	fmt.Println("Regenerating test samples with correct vocabulary...")
-	
+
 	// Generate individual samples
 	samples := map[string]func() error{
 		"grayscale": func() error {
@@ -35,6 +35,6 @@ func main() {
 			return
 		}
 	}
-	
+
 	fmt.Println("Test samples regenerated successfully!")
 }

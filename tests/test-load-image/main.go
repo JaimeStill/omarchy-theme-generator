@@ -32,7 +32,7 @@ func main() {
 		test4KSynthetic()
 	}
 
-	// Test 2: Grayscale edge case  
+	// Test 2: Grayscale edge case
 	testGrayscaleEdgeCase()
 
 	// Test 3: Monochromatic edge case

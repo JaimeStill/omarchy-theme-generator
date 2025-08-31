@@ -75,7 +75,7 @@ func GenerateMonochromaticTestImage(width, height int) image.Image {
 		for x := 0; x < width; x++ {
 			// Calculate base lightness (0.2 to 0.8 range)
 			lightness := 0.2 + (float64(x)/float64(width))*0.6
-			
+
 			// Calculate saturation (0.3 to 1.0 range)
 			saturation := 0.3 + (float64(y)/float64(height))*0.7
 
@@ -277,7 +277,7 @@ func GenerateAllTestSamples() error {
 	for _, sample := range samples {
 		fmt.Printf("  Generating %s.png...\n", sample.name)
 		img := sample.generator()
-		
+
 		path := fmt.Sprintf("tests/samples/%s.png", sample.name)
 		if err := SaveImage(img, path); err != nil {
 			return fmt.Errorf("failed to save %s: %w", sample.name, err)
