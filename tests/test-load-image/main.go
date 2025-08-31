@@ -32,13 +32,16 @@ func main() {
 		test4KSynthetic()
 	}
 
-	// Test 2: Monochrome edge case
-	testMonochromeEdgeCase()
+	// Test 2: Grayscale edge case  
+	testGrayscaleEdgeCase()
 
-	// Test 3: High contrast edge case  
+	// Test 3: Monochromatic edge case
+	testMonochromaticEdgeCase()
+
+	// Test 4: High contrast edge case
 	testHighContrastEdgeCase()
 
-	// Test 4: Performance summary
+	// Test 5: Performance summary
 	testPerformanceSuite()
 
 	fmt.Println("=== All Tests Complete ===")
@@ -88,36 +91,78 @@ func test4KSynthetic() {
 	fmt.Println()
 }
 
-func testMonochromeEdgeCase() {
-	fmt.Println("⬜ Monochrome Edge Case Test")
+func testGrayscaleEdgeCase() {
+	fmt.Println("⬜ Grayscale Edge Case Test")
 	fmt.Println("=" + repeat("=", 50))
 
-	// Generate monochrome test image
-	fmt.Println("Generating monochrome image (1920x1080)...")
-	imgMono := internal.GenerateMonochromeTestImage(1920, 1080)
+	// Generate grayscale test image
+	fmt.Println("Generating grayscale image (1920x1080)...")
+	imgGray := internal.GenerateGrayscaleTestImage(1920, 1080)
 
 	// Extract with benchmarking
-	benchmark, result, err := internal.BenchmarkExtraction(imgMono, nil)
+	benchmark, result, err := internal.BenchmarkExtraction(imgGray, nil)
 	if err != nil {
-		fmt.Printf("❌ Monochrome extraction failed: %v\n", err)
+		fmt.Printf("❌ Grayscale extraction failed: %v\n", err)
 		return
 	}
 
-	displayResults("Monochrome", result, benchmark)
+	displayResults("Grayscale", result, benchmark)
 
 	// Synthesis analysis
 	analysis := result.AnalyzeForThemeGeneration()
 	fmt.Printf("Synthesis Analysis:\n")
-	fmt.Printf("  Is Monochrome: %v\n", analysis.IsMonochrome)
+	fmt.Printf("  Is Grayscale: %v\n", analysis.IsGrayscale)
+	fmt.Printf("  Is Monochromatic: %v\n", analysis.IsMonochromatic)
+	if analysis.IsMonochromatic {
+		fmt.Printf("  Dominant Hue: %.1f°\n", analysis.DominantHue)
+	}
 	fmt.Printf("  Average Saturation: %.3f\n", analysis.AverageSaturation)
 	fmt.Printf("  Strategy: %s\n", analysis.SuggestedStrategy)
-	
+
 	// Test primary non-grayscale detection
 	primaryColor := result.GetPrimaryNonGrayscale(0.1)
 	if primaryColor != nil {
 		fmt.Printf("  Primary Non-Grayscale: %s\n", primaryColor.HEX())
 	} else {
 		fmt.Printf("  Primary Non-Grayscale: None found (pure grayscale)\n")
+	}
+	fmt.Println()
+}
+
+func testMonochromaticEdgeCase() {
+	fmt.Println("🔵 Monochromatic Edge Case Test")
+	fmt.Println("=" + repeat("=", 50))
+
+	// Generate monochromatic test image
+	fmt.Println("Generating monochromatic image (1920x1080)...")
+	imgMono := internal.GenerateMonochromaticTestImage(1920, 1080)
+
+	// Extract with benchmarking
+	benchmark, result, err := internal.BenchmarkExtraction(imgMono, nil)
+	if err != nil {
+		fmt.Printf("❌ Monochromatic extraction failed: %v\n", err)
+		return
+	}
+
+	displayResults("Monochromatic", result, benchmark)
+
+	// Synthesis analysis
+	analysis := result.AnalyzeForThemeGeneration()
+	fmt.Printf("Synthesis Analysis:\n")
+	fmt.Printf("  Is Grayscale: %v\n", analysis.IsGrayscale)
+	fmt.Printf("  Is Monochromatic: %v\n", analysis.IsMonochromatic)
+	if analysis.IsMonochromatic {
+		fmt.Printf("  Dominant Hue: %.1f°\n", analysis.DominantHue)
+	}
+	fmt.Printf("  Average Saturation: %.3f\n", analysis.AverageSaturation)
+	fmt.Printf("  Strategy: %s\n", analysis.SuggestedStrategy)
+
+	// Test primary non-grayscale detection
+	primaryColor := result.GetPrimaryNonGrayscale(0.1)
+	if primaryColor != nil {
+		fmt.Printf("  Primary Non-Grayscale: %s\n", primaryColor.HEX())
+	} else {
+		fmt.Printf("  Primary Non-Grayscale: None found\n")
 	}
 	fmt.Println()
 }

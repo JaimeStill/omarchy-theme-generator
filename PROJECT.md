@@ -51,7 +51,7 @@ Documentation and release
 - [x] Benchmark performance
 
 #### Session 4: Color Synthesis & Palette Generation
-- [ ] **Vocabulary Correction**: Replace IsMonochrome with proper IsGrayscale and IsMonochromatic detection
+- [x] **Vocabulary Correction**: Replace IsMonochrome with proper IsGrayscale and IsMonochromatic detection
 - [ ] Create pkg/palette/ with color theory schemes (monochromatic, analogous, complementary, triadic)
 - [ ] Implement SynthesisOptions configuration for fallback scenarios
 - [ ] Build extraction → hybrid → scheme pipeline with automatic failover
@@ -393,8 +393,64 @@ Implement extraction → hybrid → color theory scheme pipeline with automatic 
 - **Enhanced Maintainability**: Centralized testing infrastructure and clear documentation structure
 - **Foundation Strengthened**: Solid architectural base established for Session 4 color theory scheme implementation
 
+**Completed:**
+- ✅ Testing infrastructure reorganization - Moved `pkg/extractor/performance.go` utilities to `tests/internal/` with proper separation (`tests/internal/benchmark.go`, `tests/internal/generators.go`, `tests/internal/suite.go`)
+- ✅ Centralized test samples - Created `tests/samples/` directory with 6 reusable test images for consistent benchmarking across all tests
+- ✅ HEXA color format support - Implemented `ParseHEXA()`, `ParseHEX()`, and `ParseHexString()` with comprehensive test coverage (Tests 12-13 in `test-color`)
+- ✅ CLI-first architecture transition - Updated all documentation from TUI-first to CLI-first approach with optional future TUI enhancement
+- ✅ Color theory terminology standardization - Fixed 21+ instances of "synthesis/strategies" → "color theory schemes" across all documentation
+- ✅ CLI command structure refinement - Established proper command architecture with color theory scheme terminology
+- ✅ Omarchy integration documentation - Created comprehensive `OMARCHY.md` style guide with theme format standards, color conversion requirements, and validation criteria
+- ✅ Documentation consistency review - Engaged docs-consistency-checker to identify and fix inconsistencies across all project documents
+
+**Architectural Decisions:**
+- **CLI Commands**: Finalized structure with `generate`, `set-scheme`, `set-mode`, `clone` sub-commands
+- **Color Storage**: HEXA format (#RRGGBBAA) for `theme-gen.json` metadata with format-specific conversion
+- **Testing Strategy**: Centralized utilities in `tests/internal/` with reusable samples in `tests/samples/`
+- **Terminology**: Proper color theory academic terminology (schemes vs strategies) throughout project
+- **Integration Approach**: Direct Omarchy theme system compatibility without separate apply command
+
+**Scope Refinements:**
+- **Primary Focus**: Clean, reliable CLI implementation over premature performance optimization
+- **Theme Refinement**: Cached extraction data in `theme-gen.json` enables iterative scheme adjustments
+- **Phase Restructure**: Updated PROJECT.md phases to reflect CLI-first with optional TUI in Phase 6
+- **Documentation Structure**: Moved style guide to `OMARCHY.md` as core reference document alongside `CLAUDE.md`
+
+**Technical Improvements:**
+- **Color Precision**: Full HEXA support preserves alpha channel information without conversion losses
+- **Test Infrastructure**: Benchmark utilities properly separated from production code with importable test functions
+- **Error Handling**: Enhanced validation with proper color parsing error messages and format verification
+- **Cross-references**: Updated all internal documentation references to reflect new structure and terminology
+
+**Impact on Development:**
+- **Simplified Scope**: CLI-first approach reduces complexity while maintaining extensibility for future TUI
+- **Consistent Terminology**: Proper color theory language aligns with academic standards and improves communication
+- **Enhanced Maintainability**: Centralized testing infrastructure and clear documentation structure
+- **Foundation Strengthened**: Solid architectural base established for Session 4 color theory scheme implementation
+
 **Next:**
 - Session 4: Color theory schemes with vocabulary corrections and CLI foundation
+
+### Session 4: 2025-08-31
+**Completed:**
+- ✅ Vocabulary correction complete - `IsMonochrome` → `IsGrayscale` + `IsMonochromatic` with proper color science terminology (See `pkg/extractor/extractor.go:169-180`)
+- ✅ Hue tolerance algorithm implemented - 15-degree tolerance with wraparound handling for monochromatic detection (`pkg/extractor/extractor.go:254-260`)
+- ✅ Strategy decision logic updated - Grayscale images properly use color-based strategy logic (`pkg/extractor/extractor.go:244`)
+- ✅ All references corrected - Tests, documentation, and internal suite updated with precise vocabulary (`tests/internal/suite.go:54`, `tests/test-load-image/main.go:111-115`)
+- ✅ Empirical validation complete - Test execution confirms correct grayscale/monochromatic classification (`tests/test-load-image/README.md`)
+
+**Insights:**
+- Early termination algorithm more elegant than accumulation for monochromatic detection
+- Proper color science vocabulary critical for extraction→hybrid→synthesis pipeline accuracy
+- User-Driven Development with staged implementation phases highly effective for complex logic changes
+
+**Decision:**
+- Monochromatic detection uses ±15° hue tolerance with 80% threshold requirement
+- Grayscale threshold tightened from 0.1 to 0.05 saturation for precision
+- Strategy logic distinguishes grayscale (synthesis candidate) from monochromatic (extraction viable)
+
+**Next:**
+- Session 5: Color theory schemes implementation (pkg/palette/ package creation)
 
 ---
 

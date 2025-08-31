@@ -23,7 +23,7 @@
 //	if err != nil {
 //	    return err
 //	}
-//	
+//
 //	analysis := result.AnalyzeForThemeGeneration()
 //	fmt.Printf("Strategy: %s", analysis.SuggestedStrategy)
 //
@@ -76,7 +76,7 @@
 //
 // Analysis results provide essential information for Session 4's synthesis implementation:
 //   - Primary non-grayscale color detection for synthesis seeds
-//   - Color distribution metrics for strategy selection  
+//   - Color distribution metrics for strategy selection
 //   - Dominance analysis for hybrid approaches
 //   - Performance benchmarking for synthesis target validation
 package extractor

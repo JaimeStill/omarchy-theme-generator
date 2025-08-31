@@ -3,6 +3,7 @@ package extractor
 import (
 	"fmt"
 	"image"
+	"math"
 
 	otgcolor "github.com/JaimeStill/omarchy-theme-generator/pkg/color"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"
@@ -165,15 +166,17 @@ func (r *ExtractionResult) AnalyzeColorDistribution() *ColorDistribution {
 
 // ThemeGenerationAnalysis provides detailed analysis for determining theme generation strategy.
 // It replaces traditional pass/fail validation with actionable guidance for synthesis systems.
-// Note: IsMonochrome currently detects grayscale; Session 4 will add proper monochromatic detection.
 type ThemeGenerationAnalysis struct {
 	CanExtract        bool    // True if sufficient colors exist for direct extraction
 	NeedsSynthesis    bool    // True if color theory synthesis is recommended
-	IsMonochrome      bool    // True if image is grayscale (will be corrected in Session 4)
+	IsGrayscale       bool    // True if image has no color information (saturation ≈ 0)
+	IsMonochromatic   bool    // True if image uses single hue with variations (within hue tolerance)
 	DominantCoverage  float64 // Percentage of pixels in the most frequent color
 	UniqueColors      int     // Total unique colors available for extraction
 	SuggestedStrategy string  // "extract", "synthesize", or "hybrid"
 	AverageSaturation float64 // Average saturation across top colors (0.0-1.0)
+	DominantHue       float64 // Primary hue for monochromatic images (0.0-360, NaN if grayscale)
+	HueTolerance      float64 // Tolerance in degrees for monochromatic detection (typically 15°)
 }
 
 // AnalyzeForThemeGeneration analyzes extraction results to determine theme generation strategy.
@@ -200,7 +203,37 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 		analysis.AverageSaturation = totalSaturation / float64(sampleSize)
 	}
 
-	analysis.IsMonochrome = analysis.AverageSaturation < 0.1
+	analysis.HueTolerance = 15.0
+	analysis.DominantHue = math.NaN()
+
+	analysis.IsGrayscale = analysis.AverageSaturation < 0.05
+
+	if !analysis.IsGrayscale {
+		var dominantHue float64
+		foundDominant := false
+		foundConflicting := false
+
+		for _, cf := range r.TopColors {
+			h, s, _ := cf.Color.HSL()
+			if s > 0.05 {
+				hueInDegrees := h * 360.0
+
+				if !foundDominant {
+					dominantHue = hueInDegrees
+					analysis.DominantHue = dominantHue
+					foundDominant = true
+				} else if !isWithinHueTolerance(dominantHue, hueInDegrees, analysis.HueTolerance) {
+					foundConflicting = true
+					analysis.IsMonochromatic = false
+					break
+				}
+			}
+		}
+
+		if !foundConflicting && foundDominant {
+			analysis.IsMonochromatic = true
+		}
+	}
 
 	minColorsForPureExtraction := 8
 	maxDominanceForPureExtraction := 80.0
@@ -209,7 +242,7 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 		analysis.CanExtract = true
 		analysis.NeedsSynthesis = false
 		analysis.SuggestedStrategy = "extract"
-	} else if r.UniqueColors >= 3 && !analysis.IsMonochrome {
+	} else if r.UniqueColors >= 3 && !analysis.IsGrayscale {
 		analysis.CanExtract = false
 		analysis.NeedsSynthesis = true
 		analysis.SuggestedStrategy = "hybrid"
@@ -247,4 +280,12 @@ func (r *ExtractionResult) String() string {
 		r.DominantColor.HEX(), r.TopColors[0].Percentage,
 		analysis.SuggestedStrategy,
 	)
+}
+
+func isWithinHueTolerance(hue1, hue2, tolerance float64) bool {
+	diff := math.Abs(hue1 - hue2)
+	if diff > 180.0 {
+		diff = 360.0 - diff
+	}
+	return diff <= tolerance
 }

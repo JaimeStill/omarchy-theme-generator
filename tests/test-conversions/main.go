@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/JaimeStill/omarchy-theme-generator/tests"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/color"
+	"github.com/JaimeStill/omarchy-theme-generator/tests"
 )
 
 func main() {

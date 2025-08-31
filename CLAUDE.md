@@ -30,8 +30,9 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 - ✅ Project structure established
 - ✅ Core color types complete
 - ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
-- ⏳ Image extraction with scheme fallback pending
-- ⏳ Color theory schemes pending  
+- ✅ Image extraction with vocabulary corrections complete
+- ✅ Grayscale vs monochromatic classification implemented
+- ⏳ Color theory schemes pending (pkg/palette/ package)
 - ⏳ Palette generation pipeline pending
 - ⏳ Config generation pending
 - ⏳ CLI interface pending
@@ -43,6 +44,8 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 - LAB color space with D65 illuminant for color science accuracy
 - HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
 - Extraction → Hybrid → Scheme Generation pipeline for edge case handling
+- Vocabulary precision: IsGrayscale (saturation < 0.05) vs IsMonochromatic (±15° hue tolerance)
+- Early termination algorithm for monochromatic detection with 80% threshold
 - Color theory schemes for low-diversity images (monochromatic, analogous, complementary, etc.)
 - Octree quantization over k-means
 - Template-based config generation
@@ -86,12 +89,12 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Next Session Focus
-Session 4: Color Vocabulary & CLI Foundation
-- Fix IsMonochrome → IsGrayscale vocabulary corrections
-- Implement basic CLI structure with sub-commands
-- Create theme-gen.json metadata format with HEXA colors
-- Build color theory schemes for edge cases
-- Test color scheme pipeline with CLI interface
+Session 5: Color Theory Schemes Implementation
+- Create pkg/palette/ package with color theory scheme generators
+- Implement monochromatic, analogous, complementary, and triadic schemes
+- Build SynthesisOptions configuration for fallback scenarios
+- Integrate schemes with extraction→hybrid→synthesis pipeline
+- Test color theory schemes with grayscale and monochromatic images
 
 ## CLI Architecture
 Commands planned:

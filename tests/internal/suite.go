@@ -34,24 +34,24 @@ func RunPerformanceTest() error {
 	fmt.Printf("  Analysis: %s\n", result4K.AnalyzeForThemeGeneration().SuggestedStrategy)
 	fmt.Println()
 
-	// Test 2: Monochrome image (synthesis test case)
-	fmt.Println("Test 2: Monochrome Image (1920x1080)")
-	imgMono, err := GetOrGenerateTestImage("monochrome-grayscale", func() image.Image {
-		return GenerateMonochromeTestImage(1920, 1080)
+	// Test 2: Grayscale image (synthesis test case)
+	fmt.Println("Test 2: Grayscale Image (1920x1080)")
+	imgGray, err := GetOrGenerateTestImage("grayscale", func() image.Image {
+		return GenerateGrayscaleTestImage(1920, 1080)
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get monochrome test image: %w", err)
+		return fmt.Errorf("failed to get grayscale test image: %w", err)
 	}
 
-	benchMono, resultMono, err := BenchmarkExtraction(imgMono, nil)
+	benchGray, resultGray, err := BenchmarkExtraction(imgGray, nil)
 	if err != nil {
-		return fmt.Errorf("monochrome test failed: %w", err)
+		return fmt.Errorf("grayscale test failed: %w", err)
 	}
 
-	fmt.Printf("  %s\n", benchMono.String())
-	analysis := resultMono.AnalyzeForThemeGeneration()
-	fmt.Printf("  Analysis: %s (monochrome: %v, avg saturation: %.3f)\n",
-		analysis.SuggestedStrategy, analysis.IsMonochrome, analysis.AverageSaturation)
+	fmt.Printf("  %s\n", benchGray.String())
+	analysis := resultGray.AnalyzeForThemeGeneration()
+	fmt.Printf("  Analysis: %s (grayscale: %v, monochromatic: %v, avg saturation: %.3f)\n",
+		analysis.SuggestedStrategy, analysis.IsGrayscale, analysis.IsMonochromatic, analysis.AverageSaturation)
 	fmt.Println()
 
 	// Test 3: High contrast image
@@ -88,10 +88,12 @@ func GenerateTestSamples() error {
 		generator func() image.Image
 	}{
 		{"4k-synthetic", Generate4KTestImage},
-		{"monochrome-grayscale", func() image.Image { return GenerateMonochromeTestImage(1920, 1080) }},
+		{"grayscale", func() image.Image { return GenerateGrayscaleTestImage(1920, 1080) }},
+		{"monochromatic", func() image.Image { return GenerateMonochromaticTestImage(1920, 1080) }},
 		{"high-contrast", func() image.Image { return GenerateHighContrastTestImage(1920, 1080) }},
-		{"small-monochrome", func() image.Image { return GenerateMonochromeTestImage(400, 300) }},
-		{"small-high-contrast", func() image.Image { return GenerateHighContrastTestImage(400, 300) }},
+		{"grayscale-small", func() image.Image { return GenerateGrayscaleTestImage(400, 300) }},
+		{"monochromatic-small", func() image.Image { return GenerateMonochromaticTestImage(400, 300) }},
+		{"high-contrast-small", func() image.Image { return GenerateHighContrastTestImage(400, 300) }},
 	}
 
 	for _, sample := range samples {

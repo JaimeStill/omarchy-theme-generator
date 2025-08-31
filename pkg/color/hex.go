@@ -24,33 +24,33 @@ func (c *Color) HEX() string {
 func ParseHEXA(hexa string) (*Color, error) {
 	// Remove # prefix if present
 	hexa = strings.TrimPrefix(hexa, "#")
-	
+
 	// Validate length
 	if len(hexa) != 8 {
 		return nil, fmt.Errorf("invalid HEXA format: expected 8 characters, got %d", len(hexa))
 	}
-	
+
 	// Parse each component
 	r, err := strconv.ParseUint(hexa[0:2], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid red component in HEXA: %w", err)
 	}
-	
+
 	g, err := strconv.ParseUint(hexa[2:4], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid green component in HEXA: %w", err)
 	}
-	
+
 	b, err := strconv.ParseUint(hexa[4:6], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid blue component in HEXA: %w", err)
 	}
-	
+
 	a, err := strconv.ParseUint(hexa[6:8], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid alpha component in HEXA: %w", err)
 	}
-	
+
 	return &Color{
 		R: uint8(r),
 		G: uint8(g),
@@ -65,28 +65,28 @@ func ParseHEXA(hexa string) (*Color, error) {
 func ParseHEX(hex string) (*Color, error) {
 	// Remove # prefix if present
 	hex = strings.TrimPrefix(hex, "#")
-	
+
 	// Validate length
 	if len(hex) != 6 {
 		return nil, fmt.Errorf("invalid HEX format: expected 6 characters, got %d", len(hex))
 	}
-	
+
 	// Parse each component
 	r, err := strconv.ParseUint(hex[0:2], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid red component in HEX: %w", err)
 	}
-	
+
 	g, err := strconv.ParseUint(hex[2:4], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid green component in HEX: %w", err)
 	}
-	
+
 	b, err := strconv.ParseUint(hex[4:6], 16, 8)
 	if err != nil {
 		return nil, fmt.Errorf("invalid blue component in HEX: %w", err)
 	}
-	
+
 	return &Color{
 		R: uint8(r),
 		G: uint8(g),
@@ -99,7 +99,7 @@ func ParseHEX(hex string) (*Color, error) {
 // This is a convenience function that determines the format based on string length.
 func ParseHexString(hexStr string) (*Color, error) {
 	hexStr = strings.TrimPrefix(hexStr, "#")
-	
+
 	switch len(hexStr) {
 	case 6:
 		return ParseHEX("#" + hexStr)

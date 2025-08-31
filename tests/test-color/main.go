@@ -5,8 +5,8 @@ import (
 	"math"
 	"sync"
 
-	"github.com/JaimeStill/omarchy-theme-generator/tests"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/color"
+	"github.com/JaimeStill/omarchy-theme-generator/tests"
 )
 
 func main() {
@@ -210,7 +210,7 @@ func main() {
 
 	// Test 12: HEXA Parsing
 	fmt.Println("\nTest 12: HEXA Parsing")
-	
+
 	hexaTests := []struct {
 		name        string
 		input       string
@@ -233,11 +233,11 @@ func main() {
 
 	for _, test := range hexaTests {
 		fmt.Printf("  %s: %s\n", test.name, test.input)
-		
+
 		parsed, err := color.ParseHEXA(test.input)
 		if test.shouldError {
 			hasError := err != nil
-			fmt.Printf("    Expected error: %s %s\n", 
+			fmt.Printf("    Expected error: %s %s\n",
 				tests.CheckMark(hasError),
 				map[bool]string{true: "✓ Got expected error", false: "✗ Should have errored"}[hasError])
 			if err != nil {
@@ -248,15 +248,15 @@ func main() {
 				fmt.Printf("    ✗ Unexpected error: %v\n", err)
 				continue
 			}
-			
+
 			r, g, b, a := parsed.RGBA()
 			rgbaMatch := r == test.expectedR && g == test.expectedG && b == test.expectedB && a == test.expectedA
 			fmt.Printf("    Expected: R=%d, G=%d, B=%d, A=%d\n", test.expectedR, test.expectedG, test.expectedB, test.expectedA)
 			fmt.Printf("    Got:      R=%d, G=%d, B=%d, A=%d\n", r, g, b, a)
-			fmt.Printf("    Result:   %s RGBA values %s\n", 
+			fmt.Printf("    Result:   %s RGBA values %s\n",
 				tests.CheckMark(rgbaMatch),
 				map[bool]string{true: "match", false: "don't match"}[rgbaMatch])
-			
+
 			// Test round-trip conversion
 			roundTrip := parsed.HEXA()
 			expected := test.input
@@ -264,7 +264,7 @@ func main() {
 				expected = "#" + expected
 			}
 			roundTripMatch := roundTrip == expected
-			fmt.Printf("    Round-trip: %s → %s %s\n", 
+			fmt.Printf("    Round-trip: %s → %s %s\n",
 				expected, roundTrip,
 				tests.CheckMark(roundTripMatch))
 		}
@@ -273,7 +273,7 @@ func main() {
 
 	// Test 13: HEX Parsing (6-digit)
 	fmt.Println("Test 13: HEX Parsing (6-digit)")
-	
+
 	hexTests := []struct {
 		name        string
 		input       string
@@ -295,11 +295,11 @@ func main() {
 
 	for _, test := range hexTests {
 		fmt.Printf("  %s: %s\n", test.name, test.input)
-		
+
 		parsed, err := color.ParseHEX(test.input)
 		if test.shouldError {
 			hasError := err != nil
-			fmt.Printf("    Expected error: %s %s\n", 
+			fmt.Printf("    Expected error: %s %s\n",
 				tests.CheckMark(hasError),
 				map[bool]string{true: "✓ Got expected error", false: "✗ Should have errored"}[hasError])
 		} else {
@@ -307,12 +307,12 @@ func main() {
 				fmt.Printf("    ✗ Unexpected error: %v\n", err)
 				continue
 			}
-			
+
 			r, g, b, a := parsed.RGBA()
 			rgbaMatch := r == test.expectedR && g == test.expectedG && b == test.expectedB && a == 255
 			fmt.Printf("    Expected: R=%d, G=%d, B=%d, A=255\n", test.expectedR, test.expectedG, test.expectedB)
 			fmt.Printf("    Got:      R=%d, G=%d, B=%d, A=%d\n", r, g, b, a)
-			fmt.Printf("    Result:   %s RGBA values %s\n", 
+			fmt.Printf("    Result:   %s RGBA values %s\n",
 				tests.CheckMark(rgbaMatch),
 				map[bool]string{true: "match", false: "don't match"}[rgbaMatch])
 		}
