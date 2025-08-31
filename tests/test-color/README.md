@@ -8,6 +8,7 @@ This test validates the fundamental color type implementation that serves as the
 
 - **Color Creation**: RGBA and HSLA constructors work correctly
 - **Format Output**: Hex, CSS RGB/RGBA, and CSS HSL/HSLA formats
+- **Color Parsing**: HEXA (8-digit) and HEX (6-digit) string parsing with validation
 - **Thread Safety**: Cached HSLA conversion works safely across goroutines
 - **Alpha Handling**: Proper alpha storage, manipulation, and immutability
 - **Conversion Accuracy**: Round-trip RGB↔HSLA conversions maintain precision
@@ -18,10 +19,13 @@ go run tests/test-color/main.go
 ```
 
 ## Expected Results
-- ✅ All 11 test sections should pass with checkmarks
+- ✅ All 13 test sections should pass with checkmarks
 - ✅ Round-trip conversions should show ≤1 unit differences (within tolerance)
 - ✅ Thread safety test should show identical HSLA values across all goroutines
 - ✅ Immutability tests should confirm original colors remain unchanged
+- ✅ HEXA parsing should correctly handle 8-digit hex strings with alpha
+- ✅ HEX parsing should correctly handle 6-digit hex strings (full opacity)
+- ✅ Color parsing error handling should catch invalid formats
 
 ## Latest Test Output
 ```
@@ -145,6 +149,59 @@ After WithAlpha(0.5):
   Modified: rgba(255, 128, 64, 0.498) (α=0.498)
 Result: ✓ - Original unchanged (immutable)
 
+Test 12: HEXA Parsing
+  Standard HEXA with #: #ff8000c0
+    Expected: R=255, G=128, B=0, A=192
+    Got:      R=255, G=128, B=0, A=192
+    Result:   ✓ RGBA values match
+    Round-trip: #ff8000c0 → #ff8000c0 ✓
+
+  Standard HEXA without #: ff8000c0
+    Expected: R=255, G=128, B=0, A=192
+    Got:      R=255, G=128, B=0, A=192
+    Result:   ✓ RGBA values match
+    Round-trip: #ff8000c0 → #ff8000c0 ✓
+
+  Full opacity: #00ff00ff
+    Expected: R=0, G=255, B=0, A=255
+    Got:      R=0, G=255, B=0, A=255
+    Result:   ✓ RGBA values match
+    Round-trip: #00ff00ff → #00ff00ff ✓
+
+  Full transparency: #0000ff00
+    Expected: R=0, G=0, B=255, A=0
+    Got:      R=0, G=0, B=255, A=0
+    Result:   ✓ RGBA values match
+    Round-trip: #0000ff00 → #0000ff00 ✓
+
+  Too short: #ff800
+    Expected error: ✓ ✓ Got expected error
+    Error: invalid HEXA format: expected 8 characters, got 5
+
+  Invalid characters: #gghhiijj
+    Expected error: ✓ ✓ Got expected error
+    Error: invalid red component in HEXA: strconv.ParseUint: parsing "gg": invalid syntax
+
+Test 13: HEX Parsing (6-digit)
+  Red: #ff0000
+    Expected: R=255, G=0, B=0, A=255
+    Got:      R=255, G=0, B=0, A=255
+    Result:   ✓ RGBA values match
+
+  Green without #: 00ff00
+    Expected: R=0, G=255, B=0, A=255
+    Got:      R=0, G=255, B=0, A=255
+    Result:   ✓ RGBA values match
+
+  Too short: #ff00
+    Expected error: ✓ ✓ Got expected error
+
+  Too long: #ff0000ff
+    Expected error: ✓ ✓ Got expected error
+
+  Invalid: #gghhii
+    Expected error: ✓ ✓ Got expected error
+
 === Color Type Test Complete ===
 ```
 
@@ -153,4 +210,8 @@ Result: ✓ - Original unchanged (immutable)
 ✅ **Round-trip accuracy**: RGB↔HSLA conversions maintain ≤1 unit precision  
 ✅ **Thread safety**: Identical HSLA values across all concurrent goroutines  
 ✅ **Immutability**: Original colors unchanged after operations  
-✅ **Format consistency**: All CSS and hex output formats properly formatted
+✅ **Format consistency**: All CSS and hex output formats properly formatted  
+✅ **HEXA parsing accuracy**: 8-digit hex strings correctly parsed with alpha channel  
+✅ **HEX parsing accuracy**: 6-digit hex strings correctly parsed (full opacity)  
+✅ **Error handling**: Invalid hex formats properly rejected with clear error messages  
+✅ **Round-trip hex conversion**: Parsed colors regenerate identical hex strings

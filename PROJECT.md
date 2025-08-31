@@ -5,19 +5,22 @@
 ### Phase 1: Foundation (5 sessions)
 Core types and basic functionality
 
-### Phase 2: Algorithms (5 sessions)
-Advanced color extraction and palette generation
+### Phase 2: Color Theory Schemes (5 sessions)  
+Advanced color extraction and color theory scheme generation
 
 ### Phase 3: Configuration Generation (5 sessions)
-All Omarchy file formats
+All Omarchy file formats with theme-gen.json metadata
 
-### Phase 4: TUI Development (7 sessions)
-Interactive interface with Bubble Tea
+### Phase 4: CLI Development (4 sessions)
+Command-line interface with sub-commands
 
-### Phase 5: Polish & Features (6 sessions)
-Advanced capabilities and optimization
+### Phase 5: Polish & Integration (4 sessions)
+Advanced capabilities and Omarchy integration
 
-### Phase 6: Finalization (2 sessions)
+### Phase 6: Optional TUI Enhancement (4 sessions)
+Interactive interface with Bubble Tea (future enhancement)
+
+### Phase 7: Finalization (2 sessions)
 Documentation and release
 
 ---
@@ -49,26 +52,26 @@ Documentation and release
 
 #### Session 4: Color Synthesis & Palette Generation
 - [ ] **Vocabulary Correction**: Replace IsMonochrome with proper IsGrayscale and IsMonochromatic detection
-- [ ] Create pkg/palette/ with synthesis strategies (monochromatic, analogous, complementary, triadic)
+- [ ] Create pkg/palette/ with color theory schemes (monochromatic, analogous, complementary, triadic)
 - [ ] Implement SynthesisOptions configuration for fallback scenarios
-- [ ] Build extraction → hybrid → synthesis pipeline with automatic failover
-- [ ] Add synthesis validation for edge cases (grayscale, noir, monochrome images)
+- [ ] Build extraction → hybrid → scheme pipeline with automatic failover
+- [ ] Add color theory scheme validation for edge cases (grayscale, noir, monochrome images)
 - [ ] **Re-validate**: Update `tests/test-load-image/main.go` results after vocabulary corrections
-- [ ] **Test**: `tests/test-color-synthesis/main.go`
+- [ ] **Test**: `tests/test-color-schemes/main.go`
 
 #### Session 5: Palette Strategies & Theme Modes
-- [ ] Integrate extraction + synthesis pipeline with intelligent fallback
-- [ ] Implement light/dark mode detection with synthesis color support
-- [ ] Add user color overrides with synthesis compatibility
-- [ ] Complete all palette strategies with WCAG compliance
-- [ ] **Test**: `tests/test-palette-strategies/main.go`
+- [ ] Integrate extraction + color theory scheme pipeline with intelligent fallback
+- [ ] Implement light/dark mode detection with color theory scheme support
+- [ ] Add user color overrides with color theory scheme compatibility
+- [ ] Complete all color theory schemes with WCAG compliance
+- [ ] **Test**: `tests/test-color-theory-schemes/main.go`
 
 ### Phase 2: Algorithms
 
 #### Session 6: First Template Generator
-- [ ] Create template interface with synthesis-compatible color mapping
+- [ ] Create template interface with color theory scheme-compatible color mapping
 - [ ] Implement alacritty.toml generator with synthesized color support
-- [ ] Add color formatting functions for all synthesis strategies
+- [ ] Add color formatting functions for all color theory schemes
 - [ ] **Test**: `tests/test-generate-alacritty/main.go`
 
 #### Session 7: Octree Implementation (Optimization)
@@ -78,23 +81,23 @@ Documentation and release
 - [ ] **Test**: `tests/test-octree/main.go`
 
 #### Session 8: Dominant Color Detection (Optimization)
-- [ ] Implement advanced color clustering with synthesis integration
+- [ ] Implement advanced color clustering with color theory scheme integration
 - [ ] Add perceptual distance metrics for better color selection
-- [ ] Compare extraction vs synthesis quality metrics
+- [ ] Compare extraction vs color theory scheme quality metrics
 - [ ] **Test**: `tests/test-dominant/main.go`
 
 #### Session 9: Concurrent Processing
 - [ ] Divide image into 64x64 regions for parallel processing
-- [ ] Implement parallel extraction with synthesis fallback coordination
+- [ ] Implement parallel extraction with color theory scheme fallback coordination
 - [ ] Add result aggregation and performance optimization
 - [ ] **Test**: `tests/test-concurrent/main.go`
 
 #### Session 10: Advanced Synthesis & Accessibility
-- [ ] Implement tetradic and split-complementary synthesis schemes
-- [ ] Add weighted synthesis strategies with user preferences
+- [ ] Implement tetradic and split-complementary color theory schemes
+- [ ] Add weighted color theory schemes with user preferences
 - [ ] Integrate WCAG contrast validation for synthesized colors
 - [ ] Create accessibility compliance reports for all generation modes
-- [ ] **Test**: `tests/test-advanced-synthesis/main.go`
+- [ ] **Test**: `tests/test-advanced-color-schemes/main.go`
 
 ### Phase 3: Configuration Generation
 
@@ -289,29 +292,29 @@ Documentation and release
 - HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
 
 **Next:**
-- Session 4: Color synthesis with vocabulary corrections
+- Session 4: Color theory schemes with vocabulary corrections
 
 ### Architectural Decision: Color Synthesis Pipeline (Session 3)
 **Context:**
 Images may lack sufficient color diversity for theme generation (grayscale, noir, monochrome cases).
 
 **Decision:**
-Implement extraction → hybrid → synthesis pipeline with automatic failover:
+Implement extraction → hybrid → color theory scheme pipeline with automatic failover:
 1. **Extraction**: Traditional image-based color extraction
 2. **Hybrid**: Combine extracted colors with synthesized ones when insufficient diversity
 3. **Synthesis**: Pure color theory-based generation when extraction fails
 
 **Impact:**
-- Sessions 4-5 restructured to prioritize synthesis architecture
-- Sessions 6-10 reordered with synthesis integration
-- All palette strategies must support synthesis modes
+- Sessions 4-5 restructured to prioritize color theory scheme architecture
+- Sessions 6-10 reordered with color theory scheme integration
+- All color theory schemes must support color generation modes
 - Template generators must handle synthesized color palettes
 - WCAG compliance required for both extracted and synthesized colors
 
 **Technical Implementation:**
-- `pkg/palette/` package for synthesis strategies
+- `pkg/palette/` package for color theory schemes
 - `SynthesisOptions` configuration for fallback behavior
-- Color theory strategies: monochromatic, analogous, complementary, triadic
+- Color theory schemes: monochromatic, analogous, complementary, triadic
 - Edge case testing for low-diversity images
 
 **Vocabulary Correction Required:**
@@ -336,15 +339,15 @@ Implement extraction → hybrid → synthesis pipeline with automatic failover:
 - Edge case handling: Proper detection of grayscale and high-contrast scenarios
 
 **Insights:**
-- Analysis-based validation eliminates hard failures while providing synthesis guidance
+- Analysis-based validation eliminates hard failures while providing color theory scheme guidance
 - Type-specific pixel access (RGBA vs generic) provides significant performance improvements
 - Visual test documentation dramatically improves comprehension of edge cases
 - Vocabulary precision (monochromatic vs grayscale) is critical for accurate classification
 
 **Architectural Decision:**
-- Replaced strict validation with intelligent analysis that guides synthesis strategies
+- Replaced strict validation with intelligent analysis that guides color theory schemes
 - Extraction → Hybrid → Synthesis pipeline architecture established
-- Sessions 4-10 restructured to prioritize synthesis integration
+- Sessions 4-10 restructured to prioritize color theory scheme integration
 
 **Vocabulary Correction Identified:**
 - Current `IsMonochrome` detects grayscale (no color information)
@@ -352,7 +355,46 @@ Implement extraction → hybrid → synthesis pipeline with automatic failover:
 - Strategy logic must distinguish: grayscale → synthesize, monochromatic → extract/hybrid
 
 **Next:**
-- Session 4: Implement vocabulary corrections and synthesis strategies
+- Session 4: Implement vocabulary corrections and color theory schemes
+
+### Maintenance Session: 2025-08-31
+**Completed:**
+- ✅ Testing infrastructure reorganization - Moved `pkg/extractor/performance.go` utilities to `tests/internal/` with proper separation (`tests/internal/benchmark.go`, `tests/internal/generators.go`, `tests/internal/suite.go`)
+- ✅ Centralized test samples - Created `tests/samples/` directory with 6 reusable test images for consistent benchmarking across all tests
+- ✅ HEXA color format support - Implemented `ParseHEXA()`, `ParseHEX()`, and `ParseHexString()` with comprehensive test coverage (Tests 12-13 in `test-color`)
+- ✅ CLI-first architecture transition - Updated all documentation from TUI-first to CLI-first approach with optional future TUI enhancement
+- ✅ Color theory terminology standardization - Fixed 21+ instances of "synthesis/strategies" → "color theory schemes" across all documentation
+- ✅ CLI command structure refinement - Established proper command architecture with color theory scheme terminology
+- ✅ Omarchy integration documentation - Created comprehensive `OMARCHY.md` style guide with theme format standards, color conversion requirements, and validation criteria
+- ✅ Documentation consistency review - Engaged docs-consistency-checker to identify and fix inconsistencies across all project documents
+
+**Architectural Decisions:**
+- **CLI Commands**: Finalized structure with `generate`, `set-scheme`, `set-mode`, `clone` sub-commands
+- **Color Storage**: HEXA format (#RRGGBBAA) for `theme-gen.json` metadata with format-specific conversion
+- **Testing Strategy**: Centralized utilities in `tests/internal/` with reusable samples in `tests/samples/`
+- **Terminology**: Proper color theory academic terminology (schemes vs strategies) throughout project
+- **Integration Approach**: Direct Omarchy theme system compatibility without separate apply command
+
+**Scope Refinements:**
+- **Primary Focus**: Clean, reliable CLI implementation over premature performance optimization
+- **Theme Refinement**: Cached extraction data in `theme-gen.json` enables iterative scheme adjustments
+- **Phase Restructure**: Updated PROJECT.md phases to reflect CLI-first with optional TUI in Phase 6
+- **Documentation Structure**: Moved style guide to `OMARCHY.md` as core reference document alongside `CLAUDE.md`
+
+**Technical Improvements:**
+- **Color Precision**: Full HEXA support preserves alpha channel information without conversion losses
+- **Test Infrastructure**: Benchmark utilities properly separated from production code with importable test functions
+- **Error Handling**: Enhanced validation with proper color parsing error messages and format verification
+- **Cross-references**: Updated all internal documentation references to reflect new structure and terminology
+
+**Impact on Development:**
+- **Simplified Scope**: CLI-first approach reduces complexity while maintaining extensibility for future TUI
+- **Consistent Terminology**: Proper color theory language aligns with academic standards and improves communication
+- **Enhanced Maintainability**: Centralized testing infrastructure and clear documentation structure
+- **Foundation Strengthened**: Solid architectural base established for Session 4 color theory scheme implementation
+
+**Next:**
+- Session 4: Color theory schemes with vocabulary corrections and CLI foundation
 
 ---
 
@@ -363,10 +405,10 @@ Implement extraction → hybrid → synthesis pipeline with automatic failover:
 | 4K Processing | < 2s | 241ms | ✅ |
 | Memory Usage | < 100MB | 72MB | ✅ |
 | WCAG Compliance | AA (4.5:1) | Infrastructure ready | ⏳ |
-| Synthesis Strategies | 4+ | 0 (Session 4) | ⏳ |
+| Color Theory Schemes | 7+ | 0 (Session 4) | ⏳ |
 | Extraction Strategies | 3+ | 3 (frequency, type-specific, generic) | ✅ |
 | Config Formats | 9 | 0 (Sessions 6+) | ⏳ |
-| Edge Case Support | 100% | Analysis ready (needs synthesis) | ⏳ |
+| Edge Case Support | 100% | Analysis ready (needs color theory schemes) | ⏳ |
 | Test Coverage | 80% | Extraction pipeline covered | ⏳ |
 
 ---

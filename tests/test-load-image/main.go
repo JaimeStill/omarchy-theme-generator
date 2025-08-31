@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/extractor"
+	"github.com/JaimeStill/omarchy-theme-generator/tests/internal"
 )
 
 func main() {
@@ -64,10 +65,10 @@ func test4KSynthetic() {
 
 	// Generate 4K test image
 	fmt.Println("Generating 4K synthetic image (3840x2160)...")
-	img4K := extractor.Generate4KTestImage()
+	img4K := internal.Generate4KTestImage()
 
 	// Extract with benchmarking
-	benchmark, result, err := extractor.BenchmarkExtraction(img4K, nil)
+	benchmark, result, err := internal.BenchmarkExtraction(img4K, nil)
 	if err != nil {
 		fmt.Printf("❌ 4K extraction failed: %v\n", err)
 		return
@@ -93,10 +94,10 @@ func testMonochromeEdgeCase() {
 
 	// Generate monochrome test image
 	fmt.Println("Generating monochrome image (1920x1080)...")
-	imgMono := extractor.GenerateMonochromeTestImage(1920, 1080)
+	imgMono := internal.GenerateMonochromeTestImage(1920, 1080)
 
 	// Extract with benchmarking
-	benchmark, result, err := extractor.BenchmarkExtraction(imgMono, nil)
+	benchmark, result, err := internal.BenchmarkExtraction(imgMono, nil)
 	if err != nil {
 		fmt.Printf("❌ Monochrome extraction failed: %v\n", err)
 		return
@@ -127,10 +128,10 @@ func testHighContrastEdgeCase() {
 
 	// Generate high contrast test image
 	fmt.Println("Generating high contrast image (1920x1080)...")
-	imgContrast := extractor.GenerateHighContrastTestImage(1920, 1080)
+	imgContrast := internal.GenerateHighContrastTestImage(1920, 1080)
 
 	// Extract with benchmarking
-	benchmark, result, err := extractor.BenchmarkExtraction(imgContrast, nil)
+	benchmark, result, err := internal.BenchmarkExtraction(imgContrast, nil)
 	if err != nil {
 		fmt.Printf("❌ High contrast extraction failed: %v\n", err)
 		return
@@ -152,14 +153,14 @@ func testPerformanceSuite() {
 	fmt.Println("=" + repeat("=", 50))
 
 	fmt.Println("Running comprehensive performance test...")
-	err := extractor.RunPerformanceTest()
+	err := internal.RunPerformanceTest()
 	if err != nil {
 		fmt.Printf("❌ Performance suite failed: %v\n", err)
 		return
 	}
 }
 
-func loadAndAnalyzeImage(path string) (*extractor.ExtractionResult, *extractor.BenchmarkResult, error) {
+func loadAndAnalyzeImage(path string) (*extractor.ExtractionResult, *internal.BenchmarkResult, error) {
 	// Benchmark the extraction
 	result, err := extractor.ExtractColors(path, nil)
 	if err != nil {
@@ -172,7 +173,7 @@ func loadAndAnalyzeImage(path string) (*extractor.ExtractionResult, *extractor.B
 		return result, nil, err
 	}
 
-	benchmark, _, err := extractor.BenchmarkExtraction(img, nil)
+	benchmark, _, err := internal.BenchmarkExtraction(img, nil)
 	if err != nil {
 		return result, nil, err
 	}
@@ -180,7 +181,7 @@ func loadAndAnalyzeImage(path string) (*extractor.ExtractionResult, *extractor.B
 	return result, benchmark, nil
 }
 
-func displayResults(testName string, result *extractor.ExtractionResult, benchmark *extractor.BenchmarkResult) {
+func displayResults(testName string, result *extractor.ExtractionResult, benchmark *internal.BenchmarkResult) {
 	fmt.Printf("Results for %s:\n", testName)
 	fmt.Println(result.String())
 	fmt.Println(benchmark.String())

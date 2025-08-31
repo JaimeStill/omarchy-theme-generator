@@ -208,5 +208,116 @@ func main() {
 		tests.CheckMark(immutabilityOK),
 		map[bool]string{true: "unchanged (immutable)", false: "modified (mutable)"}[immutabilityOK])
 
-	fmt.Println("\n=== Color Type Test Complete ===")
+	// Test 12: HEXA Parsing
+	fmt.Println("\nTest 12: HEXA Parsing")
+	
+	hexaTests := []struct {
+		name        string
+		input       string
+		expectedR   uint8
+		expectedG   uint8
+		expectedB   uint8
+		expectedA   uint8
+		shouldError bool
+	}{
+		{"Standard HEXA with #", "#ff8000c0", 255, 128, 0, 192, false},
+		{"Standard HEXA without #", "ff8000c0", 255, 128, 0, 192, false},
+		{"Full opacity", "#00ff00ff", 0, 255, 0, 255, false},
+		{"Full transparency", "#0000ff00", 0, 0, 255, 0, false},
+		{"White semi-transparent", "#ffffff80", 255, 255, 255, 128, false},
+		{"Black opaque", "#000000ff", 0, 0, 0, 255, false},
+		{"Too short", "#ff800", 0, 0, 0, 0, true},
+		{"Too long", "#ff8000c0ff", 0, 0, 0, 0, true},
+		{"Invalid characters", "#gghhiijj", 0, 0, 0, 0, true},
+	}
+
+	for _, test := range hexaTests {
+		fmt.Printf("  %s: %s\n", test.name, test.input)
+		
+		parsed, err := color.ParseHEXA(test.input)
+		if test.shouldError {
+			hasError := err != nil
+			fmt.Printf("    Expected error: %s %s\n", 
+				tests.CheckMark(hasError),
+				map[bool]string{true: "✓ Got expected error", false: "✗ Should have errored"}[hasError])
+			if err != nil {
+				fmt.Printf("    Error: %v\n", err)
+			}
+		} else {
+			if err != nil {
+				fmt.Printf("    ✗ Unexpected error: %v\n", err)
+				continue
+			}
+			
+			r, g, b, a := parsed.RGBA()
+			rgbaMatch := r == test.expectedR && g == test.expectedG && b == test.expectedB && a == test.expectedA
+			fmt.Printf("    Expected: R=%d, G=%d, B=%d, A=%d\n", test.expectedR, test.expectedG, test.expectedB, test.expectedA)
+			fmt.Printf("    Got:      R=%d, G=%d, B=%d, A=%d\n", r, g, b, a)
+			fmt.Printf("    Result:   %s RGBA values %s\n", 
+				tests.CheckMark(rgbaMatch),
+				map[bool]string{true: "match", false: "don't match"}[rgbaMatch])
+			
+			// Test round-trip conversion
+			roundTrip := parsed.HEXA()
+			expected := test.input
+			if len(expected) > 0 && expected[0] != '#' {
+				expected = "#" + expected
+			}
+			roundTripMatch := roundTrip == expected
+			fmt.Printf("    Round-trip: %s → %s %s\n", 
+				expected, roundTrip,
+				tests.CheckMark(roundTripMatch))
+		}
+		fmt.Println()
+	}
+
+	// Test 13: HEX Parsing (6-digit)
+	fmt.Println("Test 13: HEX Parsing (6-digit)")
+	
+	hexTests := []struct {
+		name        string
+		input       string
+		expectedR   uint8
+		expectedG   uint8
+		expectedB   uint8
+		shouldError bool
+	}{
+		{"Red", "#ff0000", 255, 0, 0, false},
+		{"Green without #", "00ff00", 0, 255, 0, false},
+		{"Blue", "#0000ff", 0, 0, 255, false},
+		{"White", "#ffffff", 255, 255, 255, false},
+		{"Black", "#000000", 0, 0, 0, false},
+		{"Gray", "#808080", 128, 128, 128, false},
+		{"Too short", "#ff00", 0, 0, 0, true},
+		{"Too long", "#ff0000ff", 0, 0, 0, true},
+		{"Invalid", "#gghhii", 0, 0, 0, true},
+	}
+
+	for _, test := range hexTests {
+		fmt.Printf("  %s: %s\n", test.name, test.input)
+		
+		parsed, err := color.ParseHEX(test.input)
+		if test.shouldError {
+			hasError := err != nil
+			fmt.Printf("    Expected error: %s %s\n", 
+				tests.CheckMark(hasError),
+				map[bool]string{true: "✓ Got expected error", false: "✗ Should have errored"}[hasError])
+		} else {
+			if err != nil {
+				fmt.Printf("    ✗ Unexpected error: %v\n", err)
+				continue
+			}
+			
+			r, g, b, a := parsed.RGBA()
+			rgbaMatch := r == test.expectedR && g == test.expectedG && b == test.expectedB && a == 255
+			fmt.Printf("    Expected: R=%d, G=%d, B=%d, A=255\n", test.expectedR, test.expectedG, test.expectedB)
+			fmt.Printf("    Got:      R=%d, G=%d, B=%d, A=%d\n", r, g, b, a)
+			fmt.Printf("    Result:   %s RGBA values %s\n", 
+				tests.CheckMark(rgbaMatch),
+				map[bool]string{true: "match", false: "don't match"}[rgbaMatch])
+		}
+		fmt.Println()
+	}
+
+	fmt.Println("=== Color Type Test Complete ===")
 }

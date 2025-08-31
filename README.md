@@ -6,10 +6,10 @@ Generate beautiful, cohesive terminal themes from any image using intelligent co
 
 - 🎨 **Smart Color Extraction** - Automatically identifies dominant colors using octree quantization
 - 🎭 **Light/Dark Mode** - Auto-detects or manually specify theme brightness
-- 🎯 **Color Theory** - Generates harmonious palettes (monochromatic, complementary, triadic, analogous)
+- 🎯 **Color Theory** - Generates harmonious color schemes (monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square)
 - ♿ **WCAG Compliant** - Ensures text readability with AA contrast ratios
 - 🖼️ **Wallpaper Included** - Source image automatically included in theme package
-- ⚡ **Fast** - Processes 4K images in under 2 seconds
+- ⚡ **Reliable** - Clean implementation with solid error handling
 
 ## Installation
 
@@ -27,26 +27,39 @@ go run cmd/omarchy-theme-gen/main.go
 
 ## Usage
 
-### Interactive TUI
+### CLI Usage
 
 ```bash
-omarchy-theme-gen
+omarchy-theme-gen generate --image photo.jpg [options]
 ```
 
-Navigate the interactive interface to:
+Generate themes directly from command line:
 
-1. Select your source image
-2. Choose theme mode (light/dark/auto)
-3. Optionally override colors
-4. Select palette strategy
-5. Preview and adjust
-6. Export complete theme
+1. **Generate theme from image**
+   ```bash
+   omarchy-theme-gen generate --image sunset.jpg --mode dark --name "sunset-dark"
+   ```
 
-### Command Line
+2. **Adjust color scheme after generation**
+   ```bash
+   omarchy-theme-gen set-scheme sunset-dark --scheme complementary
+   ```
+
+3. **Switch between light and dark modes**
+   ```bash
+   omarchy-theme-gen set-mode sunset-dark --mode light
+   ```
+
+4. **Clone existing theme**
+   ```bash
+   omarchy-theme-gen clone sunset-dark sunset-variant
+   ```
+
+### Advanced Usage
 
 ```bash
-# Auto-generate from image
-omarchy-theme-gen sunset.jpg
+# Generate with specific options
+omarchy-theme-gen generate --image sunset.jpg --scheme monochromatic --mode dark
 
 # Specify theme mode
 omarchy-theme-gen sunset.jpg --mode dark
@@ -75,20 +88,31 @@ my-theme/
 ├── waybar.css          # Status bar
 ├── walker.css          # App launcher
 ├── swayosd.css         # On-screen display
+├── theme-gen.json      # Theme metadata for refinement
 ├── backgrounds/        # Wallpapers
 │   └── wallpaper.jpg
 └── light.mode          # (if light theme)
 ```
 
-## Installing Generated Themes
+## Generated Theme Integration
 
-```bash
-# Copy to Omarchy themes directory
-cp -r my-theme ~/.config/omarchy/themes/
+Generated themes integrate directly with Omarchy's theme system and include a `theme-gen.json` file for refinement:
 
-# Or use Omarchy's theme installer
-omarchy-theme-install ./my-theme
+```json
+{
+  "version": "1.0.0",
+  "source_image": "backgrounds/sunset.jpg",
+  "generation": {
+    "mode": "dark",
+    "scheme": "complementary",
+    "primary": "#88c0d0ff",
+    "background": "#2e3440ff",
+    "foreground": "#eceff4ff"
+  }
+}
 ```
+
+Themes are automatically available in Omarchy after generation.
 
 ## Supported Formats
 

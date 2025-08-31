@@ -1,7 +1,7 @@
 # Omarchy Theme Generator
 
 ## Project Context
-Go-based TUI application that generates Omarchy themes from images using color extraction and palette generation based on color theory principles.
+Go-based CLI tool that generates Omarchy themes from images using color extraction and palette generation based on color theory principles. Optional TUI interface planned for future enhancement.
 
 ## Development Philosophy
 - **User-driven**: All code modifications require explicit user direction
@@ -14,6 +14,7 @@ Go-based TUI application that generates Omarchy themes from images using color e
 - **Technical details**: `docs/technical-specification.md` - Algorithms, architecture, performance targets
 - **Development process**: `docs/development-methodology.md` - Intelligent Development principles
 - **Testing approach**: `docs/testing-strategy.md` - Execution test patterns
+- **Omarchy integration**: `OMARCHY.md` - Theme format standards and requirements
 - **Progress tracking**: `PROJECT.md` - Roadmap and session logs
 - **Public overview**: `README.md` - User-facing documentation
 
@@ -29,22 +30,25 @@ Go-based TUI application that generates Omarchy themes from images using color e
 - ✅ Project structure established
 - ✅ Core color types complete
 - ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
-- ⏳ Image extraction with synthesis fallback pending
-- ⏳ Color synthesis strategies pending
+- ⏳ Image extraction with scheme fallback pending
+- ⏳ Color theory schemes pending  
 - ⏳ Palette generation pipeline pending
 - ⏳ Config generation pending
-- ⏳ TUI interface pending
+- ⏳ CLI interface pending
+- ⏳ TUI interface (optional future enhancement)
 
 ## Key Technical Decisions
 - RGBA with cached HSLA for performance
 - AccessibilityLevel enum with automatic ratio lookup
 - LAB color space with D65 illuminant for color science accuracy
 - HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
-- Extraction → Hybrid → Synthesis pipeline for edge case handling
-- Color synthesis strategies for low-diversity images
+- Extraction → Hybrid → Scheme Generation pipeline for edge case handling
+- Color theory schemes for low-diversity images (monochromatic, analogous, complementary, etc.)
 - Octree quantization over k-means
 - Template-based config generation
 - 64x64 pixel regions for concurrency
+- HEXA color format for theme-gen.json metadata
+- CLI sub-commands for theme refinement
 
 ## Commands
 ```bash
@@ -63,15 +67,18 @@ go fmt ./...
 ```
 
 ## Package Structure
-- `pkg/color/` - Color types and conversions
+- `pkg/color/` - Color types, conversions, and HEXA parsing
 - `pkg/quantizer/` - Quantization algorithms
-- `pkg/extractor/` - Image processing
-- `pkg/palette/` - Color theory strategies
-- `pkg/template/` - Config generators
-- `pkg/theme/` - Theme orchestration
-- `internal/tui/` - UI components
+- `pkg/extractor/` - Image processing and color extraction
+- `pkg/palette/` - Color theory schemes
+- `pkg/template/` - Config generators and theme-gen.json
+- `pkg/theme/` - Theme orchestration and CLI commands
+- `pkg/metadata/` - Theme metadata serialization
+- `tests/internal/` - Centralized test utilities and benchmarks
+- `tests/samples/` - Reusable test images
 - `tests/` - Execution tests
-- `cmd/omarchy-theme-gen/` - Main application
+- `cmd/omarchy-theme-gen/` - CLI application
+- `internal/tui/` - UI components (future enhancement)
 
 ## Performance Targets
 - 4K image: < 2 seconds
@@ -79,19 +86,23 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Next Session Focus
-Session 3: Basic Image Loading (Today)
-- Implement image loading from file paths (JPEG, PNG support)
-- Add pixel iteration and color extraction infrastructure  
-- Create performance benchmarking for 4K images (<2s target)
-- Implement basic color counting and frequency mapping
-- Test with `tests/test-image-loading/main.go` execution test
+Session 4: Color Vocabulary & CLI Foundation
+- Fix IsMonochrome → IsGrayscale vocabulary corrections
+- Implement basic CLI structure with sub-commands
+- Create theme-gen.json metadata format with HEXA colors
+- Build color theory schemes for edge cases
+- Test color scheme pipeline with CLI interface
 
-Session 4: Color Synthesis & Palette Generation
-- Create pkg/palette/ with synthesis strategies for edge cases
-- Implement extraction → hybrid → synthesis pipeline architecture
-- Add color theory strategies (monochromatic, analogous, complementary, triadic)
-- Build SynthesisOptions for fallback configuration
-- Test edge cases: grayscale, noir, monochrome images
+## CLI Architecture
+Commands planned:
+```bash
+omarchy-theme-gen generate --image photo.[jpg|png] [options]
+omarchy-theme-gen set-scheme <theme-name> --scheme [monochromatic|analogous|complementary|split-complementary|triadic|tetradic|square]
+omarchy-theme-gen set-mode <theme-name> --mode [light|dark]
+omarchy-theme-gen clone <theme-name> <new-name>
+```
+
+Note: No `apply` command needed - themes integrate directly with Omarchy's system theme selection.
 
 ## Remember
 - Start from fundamental understanding
