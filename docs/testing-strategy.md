@@ -4,35 +4,50 @@
 
 **"If you didn't run it, it doesn't work."**
 
-Formal testing is deferred until project completion. During development, we use execution tests that validate specific technical concepts immediately with empirical results.
+The testing strategy combines focused unit tests using `go test` with real-world validation using diverse wallpaper images. Tests provide immediate feedback and serve as living documentation of system behavior.
 
-## Execution Test Pattern
+## Current Testing Approach
 
-### Structure
+### Real-World Unit Tests
 
 ```go
-// tests/test_[concept].go
-package main
+// tests/strategies_test.go
+package extractor_test
 
 import (
-    "fmt"
-    "github.com/JaimeStill/omarchy-theme-generator/pkg/[package]"
+    "testing"
+    "github.com/JaimeStill/omarchy-theme-generator/pkg/extractor"
 )
 
-func main() {
-    // Minimal setup - no frameworks
-    // Direct function call - immediate feedback
-    // Clear output - visual validation
-    fmt.Printf("Result: %v\n", result)
+func TestStrategySelection(t *testing.T) {
+    testCases := []struct {
+        image    string
+        expected string
+    }{
+        {"nebula.jpeg", "saliency"},
+        {"night-city.jpeg", "saliency"}, 
+        {"grayscale.jpeg", "frequency"},
+    }
+    
+    for _, tc := range testCases {
+        t.Run(tc.image, func(t *testing.T) {
+            result, err := extractor.ExtractColors(tc.image, options)
+            if err != nil {
+                t.Fatalf("Failed: %v", err)
+            }
+            if result.SelectedStrategy != tc.expected {
+                t.Errorf("Expected %s, got %s", tc.expected, result.SelectedStrategy)
+            }
+        })
+    }
 }
 ```
 
 ### Characteristics
-- **Minimal**: No test framework overhead
-- **Focused**: One concept per test
-- **Direct**: Run with `go run`
-- **Visual**: Results printed to stdout
-- **Fast**: Immediate feedback loop
+- **Standard Go testing**: Uses built-in `testing` package
+- **Real images**: 15 diverse wallpaper samples provide validation
+- **Empirical validation**: Tests actual behavior with real-world data
+- **Comprehensive coverage**: Strategy selection, theme analysis, benchmarks
 
 ### Transparent Test Execution
 
@@ -66,77 +81,89 @@ This principle ensures:
 ## Test Categories
 
 ### 1. Algorithm Validation
-Test specific algorithms with known inputs and expected outputs.
+Test core algorithms with known inputs and expected outputs.
 
 ```go
-// tests/test_octree_quantization.go
-func main() {
-    colors := generateKnownPalette()
-    tree := buildOctree(colors, maxDepth=8)
-    reduced := tree.GetPalette(16)
+func TestAlgorithmBehavior(t *testing.T) {
+    testCases := []struct {
+        name     string
+        input    InputType
+        expected OutputType
+    }{
+        // Test cases with predictable results
+    }
     
-    fmt.Printf("Input: %d colors\n", len(colors))
-    fmt.Printf("Output: %d colors\n", len(reduced))
-    fmt.Printf("Valid distribution? %v\n", validateDistribution(reduced))
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            result := Algorithm(tc.input)
+            if !reflect.DeepEqual(result, tc.expected) {
+                t.Errorf("Expected %v, got %v", tc.expected, result)
+            }
+        })
+    }
 }
 ```
 
 ### 2. Performance Verification
-Measure execution time against targets.
+Measure execution time against requirements.
 
 ```go
-// tests/test_performance.go
-func main() {
-    img := load4KImage()
-    start := time.Now()
+func BenchmarkSystemPerformance(b *testing.B) {
+    input := prepareTestInput()
     
-    palette := extractPalette(img)
-    
-    elapsed := time.Since(start)
-    fmt.Printf("4K processing: %v (target: <2s)\n", elapsed)
-    fmt.Printf("Pass? %v\n", elapsed < 2*time.Second)
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        result := ProcessInput(input)
+        if result == nil {
+            b.Fatal("Unexpected nil result")
+        }
+    }
 }
 ```
 
-### 3. Color Theory Validation
-Verify palette generation strategies.
+### 3. Behavioral Validation
+Verify system behavior with real-world scenarios.
 
 ```go
-// tests/test_triadic.go
-func main() {
-    base := color.NewRGB(255, 128, 0) // Orange
-    palette := TriadicStrategy{}.Generate(base, 6)
+func TestSystemBehavior(t *testing.T) {
+    // Test with diverse inputs that represent actual usage
+    testInputs := prepareRealWorldInputs()
     
-    for i, c := range palette {
-        h, s, l := c.HSL()
-        fmt.Printf("%d: H=%.0f° S=%.0f%% L=%.0f%%\n", 
-                   i, h*360, s*100, l*100)
+    for _, input := range testInputs {
+        t.Run(input.Name, func(t *testing.T) {
+            result, err := ProcessInput(input.Data)
+            if err != nil {
+                t.Fatalf("Processing failed: %v", err)
+            }
+            
+            if !validateOutput(result) {
+                t.Error("Output validation failed")
+            }
+        })
     }
-    
-    // Verify 120° separation
-    h0, _, _ := palette[0].HSL()
-    h1, _, _ := palette[2].HSL()
-    fmt.Printf("Angle separation: %.0f°\n", (h1-h0)*360)
 }
 ```
 
 ### 4. Integration Tests
-Test component interactions.
+Test interactions between major components.
 
 ```go
-// tests/test_theme_generation.go
-func main() {
-    img := loadTestImage()
-    config := ThemeConfig{
-        SourceImage: img,
-        Mode: ModeAuto,
+func TestComponentIntegration(t *testing.T) {
+    // Setup test environment
+    system := SetupTestSystem()
+    defer system.Cleanup()
+    
+    // Test full workflow
+    input := prepareTestInput()
+    result, err := system.ProcessComplete(input)
+    
+    if err != nil {
+        t.Fatalf("Integration failed: %v", err)
     }
     
-    theme := GenerateTheme(config)
-    err := theme.Export("./test-output")
-    
-    fmt.Printf("Files generated: %v\n", listFiles("./test-output"))
-    fmt.Printf("Valid structure? %v\n", validateStructure("./test-output"))
+    if !validateIntegrationResult(result) {
+        t.Error("Integration result validation failed")
+    }
 }
 ```
 
@@ -144,48 +171,48 @@ func main() {
 
 ```
 tests/
-├── README.md                    # Test documentation
-├── helpers.go                   # Shared test utilities
-├── test-color/
-│   ├── main.go                  # Color type operations
-│   └── README.md                # Test documentation with latest output
-├── test-conversions/
-│   ├── main.go                  # Color space conversions  
-│   └── README.md                # Test documentation with latest output
-├── test-extract/                # Basic extraction (future)
-├── test-strategies/             # Palette strategies (future)
-├── test-octree/                 # Octree algorithm (future)
-├── test-dominant/               # Dominant color detection (future)
-├── test-concurrent/             # Parallel processing (future)
-├── test-contrast/               # WCAG validation (future)
-├── test-generate-configs/       # Config generation (future)
-├── test-theme-overrides/        # User overrides (future)
-└── test-full-theme/             # Complete generation (future)
+├── README.md                    # Test documentation and results
+├── *_test.go                    # Unit test files using standard Go testing
+├── images/                      # Test assets and data files
+│   ├── README.md                # Generated analysis documentation
+│   └── *.jpeg, *.png           # Test images for validation
+├── analyze-images/              # Utility tools for test data analysis
+│   ├── main.go                  # Image analysis utility
+│   └── README.md                # Utility documentation
+└── helpers/                     # Shared test utilities (optional)
+    └── common.go                # Helper functions for tests
 ```
 
 ## Running Tests
 
-### Individual Test
+### Standard Go Testing
 ```bash
-go run tests/test-color/main.go
+# Run all tests
+go test ./tests -v
+
+# Run specific test suites
+go test ./tests -run TestSpecificFunction -v
+
+# Run benchmarks
+go test ./tests -bench=. -v
+
+# Run with race detection
+go test ./tests -race -v
 ```
 
-### Test with Arguments
+### Code Validation
 ```bash
-go run tests/test-extract/main.go image.jpg
-```
-
-### Test with Flags
-```bash
-go run tests/test-theme-overrides/main.go \
-    -image=sunset.jpg \
-    -mode=dark \
-    -primary=#ff6b35
-```
-
-### Validation Only
-```bash
+# Check for compilation errors and vet issues
 go vet ./...
+
+# Format code consistently
+go fmt ./...
+```
+
+### Utility Tools
+```bash
+# Generate test documentation
+go run tests/analyze-images/main.go
 ```
 
 ## Expected Outputs

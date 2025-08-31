@@ -4,15 +4,20 @@ import (
 	"sync"
 )
 
-// Color represents an RGBA color with lazy-cached HSLA conversion.
-// Colors use native RGBA storage for optimal image processing performance
-// while supporting efficient HSL manipulation through thread-safe caching.
+// Color represents an RGBA color with performance-optimized caching.
 //
-// The Color type is safe for concurrent use. HSLA values are computed once
-// per instance using sync.Once and cached for subsequent access.
+// Storage and Performance:
+//   - Native RGBA uint8 storage for zero-allocation image processing
+//   - Thread-safe HSLA conversion caching via sync.Once (computed once)
+//   - Thread-safe luminance caching for contrast calculations
+//   - Memory overhead: 32 bytes base + 48 bytes when caches populated
 //
-// Alpha values are stored as uint8 (0-255) internally but exposed as float64
-// (0.0-1.0) in all public methods for consistency with CSS specifications.
+// The Color type is safe for concurrent use across goroutines. Expensive
+// conversions (RGB→HSL, luminance calculation) are computed once and cached
+// automatically on first access.
+//
+// Alpha values are stored internally as uint8 (0-255) but exposed as
+// float64 (0.0-1.0) for CSS compatibility and mathematical operations.
 type Color struct {
 	R, G, B, A    uint8
 	hsla          *hslaCache

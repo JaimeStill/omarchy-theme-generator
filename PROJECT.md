@@ -3,10 +3,10 @@
 ## Development Phases
 
 ### Phase 1: Foundation (5 sessions)
-Core types and basic functionality
+Core color types, image loading, and multi-strategy extraction system
 
 ### Phase 2: Color Theory Schemes (5 sessions)  
-Advanced color extraction and color theory scheme generation
+Color theory scheme generation and template-based theme file creation
 
 ### Phase 3: Configuration Generation (5 sessions)
 All Omarchy file formats with theme-gen.json metadata
@@ -50,12 +50,18 @@ Documentation and release
 - [x] **Test**: `tests/test-load-image/main.go`
 - [x] Benchmark performance
 
-#### Session 4: Color Synthesis & Palette Generation
-- [x] **Vocabulary Correction**: Replace IsMonochrome with proper IsGrayscale and IsMonochromatic detection
-- [x] Hue tolerance algorithm implemented - 15-degree tolerance with wraparound handling
-- [x] Strategy decision logic updated - Grayscale images properly use color-based strategy
-- [x] All references corrected in tests and documentation
-- [x] **Test**: Empirical validation complete via `tests/test-load-image/main.go`
+#### Session 4: Multi-Strategy Color Extraction System
+- [x] **Multi-Strategy Architecture**: Implemented frequency vs saliency strategy selection
+- [x] **SaliencyStrategy**: Local contrast, edge detection, and color uniqueness analysis
+- [x] **FrequencyStrategy**: Enhanced with perceptual scoring and visual importance weighting  
+- [x] **Settings-Driven Configuration**: Centralized, empirically-derived thresholds in `pkg/extractor/settings.go`
+- [x] **Image Analysis**: Edge density, color complexity, saturation-based classification
+- [x] **Strategy Selector**: Automatic optimal strategy selection based on image characteristics
+- [x] **Empirical Validation**: Thresholds derived from 15 diverse wallpaper images
+- [x] **Nebula Problem Solved**: Saliency strategy extracts colorful regions over dark backgrounds
+- [x] **Performance Optimized**: <2s for 4K images, ~200ms for simple images
+- [x] **Comprehensive Testing**: Real wallpaper validation with `tests/strategies_test.go`
+- [x] **Documentation**: Complete analysis in `tests/images/README.md` and `docs/palette-generation.md`
 
 #### Session 5: Color Theory Schemes Implementation
 - [ ] Create pkg/palette/ package with extensible SchemeGenerator interface
@@ -74,28 +80,31 @@ Documentation and release
 - [ ] Add WCAG compliance validation for all schemes
 - [ ] **Test**: `tests/test-color-schemes/main.go`
 
-### Phase 2: Algorithms
+### Phase 2: Color Theory Schemes
 
-#### Session 6: First Template Generator
+#### Session 6: Template Generation System
 - [ ] Create template interface with color theory scheme-compatible color mapping
 - [ ] Implement alacritty.toml generator with synthesized color support
 - [ ] Add color formatting functions for all color theory schemes
 - [ ] **Test**: `tests/test-generate-alacritty/main.go`
 
-#### Session 7: Octree Implementation (Optimization)
-- [ ] Build octree data structure for efficient color quantization
-- [ ] Implement color insertion and tree reduction algorithms
-- [ ] Optimize memory usage and processing speed
-- [ ] **Test**: `tests/test-octree/main.go`
+#### Session 7: Multiple Template Support
+- [ ] Implement additional template generators (kitty, tmux, etc.)
+- [ ] Add template registry and dynamic selection
+- [ ] Support custom template creation
+- [ ] **Test**: `tests/test-multi-templates/main.go`
 
-#### Session 8: Dominant Color Detection (Optimization)
-- [ ] Implement advanced color clustering with color theory scheme integration
-- [ ] Add perceptual distance metrics for better color selection
-- [ ] Compare extraction vs color theory scheme quality metrics
-- [ ] **Test**: `tests/test-dominant/main.go`
+#### Session 8: Theme Metadata Integration
+- [ ] Implement theme-gen.json metadata generation
+- [ ] Add Omarchy-specific configuration files
+- [ ] Build theme validation and verification
+- [ ] **Test**: `tests/test-theme-metadata/main.go`
 
-#### Session 9: Concurrent Processing
-- [ ] Divide image into 64x64 regions for parallel processing
+#### Session 9: Advanced Color Theory Features
+- [ ] Implement accessibility-aware palette generation
+- [ ] Add color harmony validation and scoring
+- [ ] Support custom color theory parameters
+- [ ] **Test**: `tests/test-advanced-theory/main.go`
 - [ ] Implement parallel extraction with color theory scheme fallback coordination
 - [ ] Add result aggregation and performance optimization
 - [ ] **Test**: `tests/test-concurrent/main.go`

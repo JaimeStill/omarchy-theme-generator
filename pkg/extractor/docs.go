@@ -11,9 +11,10 @@
 // The package is organized into several focused modules:
 //
 //   - Loading (loader.go): Image file loading with format validation and error handling
-//   - Frequency Analysis (frequency.go): Efficient color counting with optimized pixel access
-//   - Extraction Pipeline (extractor.go): Complete extraction workflow with analysis
-//   - Performance Testing (performance.go): Benchmarking and test image generation
+//   - Frequency Analysis (strategy_frequency.go): Frequency-based extraction with visual importance scoring
+//   - Saliency Analysis (strategy_saliency.go): Saliency-based extraction for high-detail images
+//   - Strategy Selection (strategies.go): Multi-strategy extraction system with empirical thresholds
+//   - Extraction Pipeline (extractor.go): Complete extraction workflow with strategy selection
 //
 // # Usage Patterns
 //
@@ -72,11 +73,11 @@
 //   - Monochromatic images: Distinguished from grayscale
 //   - Large images: Processed efficiently within memory constraints
 //
-// # Integration with Synthesis
+// # Integration with Palette Generation
 //
-// Analysis results provide essential information for Session 4's synthesis implementation:
-//   - Primary non-grayscale color detection for synthesis seeds
-//   - Color distribution metrics for strategy selection
-//   - Dominance analysis for hybrid approaches
-//   - Performance benchmarking for synthesis target validation
+// Analysis results provide essential information for palette generation systems:
+//   - Primary non-grayscale color detection for color theory seed generation
+//   - Color distribution metrics for strategy selection  
+//   - Dominance analysis for hybrid extraction approaches
+//   - Multi-strategy selection based on image characteristics
 package extractor

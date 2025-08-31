@@ -13,7 +13,7 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 ## Core Documents
 - **Technical details**: `docs/technical-specification.md` - Algorithms, architecture, performance targets
 - **Development process**: `docs/development-methodology.md` - Intelligent Development principles
-- **Testing approach**: `docs/testing-strategy.md` - Execution test patterns
+- **Testing approach**: `docs/testing-strategy.md` - Unit test patterns
 - **Omarchy integration**: `OMARCHY.md` - Theme format standards and requirements
 - **Progress tracking**: `PROJECT.md` - Roadmap and session logs
 - **Public overview**: `README.md` - User-facing documentation
@@ -21,22 +21,24 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 ## Development Rules
 1. Operate in Explanatory mode (`/output-style explanatory`)
 2. Only modify code when explicitly directed
-3. Use `go run tests/test-*/main.go` for validation
+3. Use `go test ./tests -v` for validation
 4. Use `go vet ./...` for type checking
-5. Reference existing implementations: "See pkg/color/space.go"
+5. Reference existing implementations: "See pkg/color/hsl.go"
 6. Keep explanations technically precise
 
 ## Current Implementation Status
 - ✅ Project structure established
-- ✅ Core color types complete
+- ✅ Core color types complete (pkg/color/)
 - ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
-- ✅ Image extraction with vocabulary corrections complete
+- ✅ Multi-strategy image extraction complete (frequency/saliency algorithms)
+- ✅ Strategy selection with empirical thresholds implemented
 - ✅ Grayscale vs monochromatic classification implemented
+- ✅ Unit test suite with real wallpaper validation
 - ⏳ Color theory schemes pending (pkg/palette/ package)
-- ⏳ Palette generation pipeline pending
-- ⏳ Config generation pending
-- ⏳ CLI interface pending
-- ⏳ TUI interface (optional future enhancement)
+- ⏳ Template-based config generation pending (pkg/template/)
+- ⏳ Theme orchestration pending (pkg/theme/)
+- ⏳ CLI interface pending (cmd/omarchy-theme-gen/)
+- 📋 TUI interface (optional future enhancement)
 
 ## Key Technical Decisions
 - RGBA with cached HSLA for performance
@@ -58,12 +60,14 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 # Validate code
 go vet ./...
 
-# Run execution test
-go run tests/test-color/main.go
-go run tests/test-conversions/main.go
+# Run tests
+go test ./tests -v
 
-# Run with arguments (for future image tests)
-go run tests/test-extract/main.go image.jpg
+# Run specific test suites
+go test ./tests -run TestStrategySelection -v
+
+# Generate image analysis documentation
+go run tests/analyze-images/main.go
 
 # Format code
 go fmt ./...
@@ -79,7 +83,7 @@ go fmt ./...
 - `pkg/metadata/` - Theme metadata serialization
 - `tests/internal/` - Centralized test utilities and benchmarks
 - `tests/samples/` - Reusable test images
-- `tests/` - Execution tests
+- `tests/` - Unit tests and validation
 - `cmd/omarchy-theme-gen/` - CLI application
 - `internal/tui/` - UI components (future enhancement)
 
@@ -90,12 +94,12 @@ go fmt ./...
 
 ## Next Session Focus
 Session 5: Color Theory Schemes Implementation
-- Create pkg/palette/ package with extensible scheme generator architecture
-- Implement all 7 color theory schemes (monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square)
-- Build SchemeOptions configuration for flexible palette generation
-- Design extensible SchemeGenerator interface for future additions
-- Integrate schemes with extraction→hybrid→scheme pipeline
-- Test color theory schemes with grayscale and monochromatic images
+- Create pkg/palette/ package with color theory scheme generators
+- Implement core schemes: monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square
+- Build SchemeOptions configuration for flexible palette generation  
+- Design SchemeGenerator interface for extensibility
+- Integrate schemes with existing multi-strategy extraction system
+- Validate scheme generation with test suite
 
 ## CLI Architecture
 Commands planned:
@@ -103,8 +107,23 @@ Commands planned:
 omarchy-theme-gen generate --image photo.[jpg|png] [options]
 omarchy-theme-gen set-scheme <theme-name> --scheme [monochromatic|analogous|complementary|split-complementary|triadic|tetradic|square]
 omarchy-theme-gen set-mode <theme-name> --mode [light|dark]
-omarchy-theme-gen clone <theme-name> <new-name>
+omarchy-theme-gen clone <theme-name> <new-name> [options]
 ```
+
+Command Options:
+
+| Command | Option | Description | Default |
+|---------|--------|-------------|---------|
+| **generate** | `background` | background color | derived from image |
+| | `foreground` | foreground color | derived from image |
+| | `primary` | primary theme color, used as basis for color scheme operations | derived from image |
+| | `mode` | light vs. dark mode | derived from image luminescence |
+| | `scheme` | color scheme to apply | derived from image analysis |
+| **clone** | `background` | background color | inherited from source theme |
+| | `foreground` | foreground color | inherited from source theme |
+| | `primary` | primary theme color, used as basis for color scheme operations | inherited from source theme |
+| | `mode` | light vs. dark mode | inherited from source theme |
+| | `scheme` | color scheme to apply | inherited from source theme |
 
 Note: No `apply` command needed - themes integrate directly with Omarchy's system theme selection.
 

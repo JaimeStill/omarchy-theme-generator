@@ -1,107 +1,105 @@
-# Tests Directory
+# Test Suite Documentation
 
-## Overview
-This directory contains execution tests that validate specific technical concepts immediately with empirical results. Following the "If you didn't run it, it doesn't work" philosophy, these tests provide transparent output showing initial state, transformations, and detailed explanations.
-
-## Testing Philosophy
-- **Minimal Structure**: No test frameworks, direct Go execution
-- **Focused Validation**: One concept per test directory
-- **Immediate Feedback**: Run with simple `go run` commands
-- **Educational Output**: Tests serve as living documentation
-- **Transparent Execution**: Show calculations, expected vs actual, and reasoning
-
-## Available Tests
-
-### Core Functionality Tests
-- **[test-color/](test-color/)** - Core Color type operations and conversions
-- **[test-conversions/](test-conversions/)** - Advanced color manipulation and analysis
-
-### Planned Tests (Future Sessions)
-- **test-image-loading/** - Image loading and pixel iteration (Session 3)
-- **test-color-synthesis/** - Color synthesis and palette generation (Session 4)
-- **test-palette-strategies/** - Integrated extraction and synthesis pipeline (Session 5)
-- **test-generate-alacritty/** - First template generator (Session 6)
-- **test-generate-configs/** - Multiple configuration generators (Sessions 11-15)
-- **test-performance/** - Benchmarking and optimization validation (Session 28)
-
-## Usage
-
-### Run Individual Tests
-```bash
-# Core color functionality
-go run tests/test-color/main.go
-
-# Advanced color conversions and analysis
-go run tests/test-conversions/main.go
-```
-
-### Run All Current Tests
-```bash
-# Validate all functionality
-go run tests/test-color/main.go && go run tests/test-conversions/main.go
-```
-
-### Code Quality Validation
-```bash
-# Type checking and validation
-go vet ./tests/...
-
-# Code formatting
-go fmt ./tests/...
-```
+Integration tests for the omarchy-theme-generator color extraction system using real wallpaper images.
 
 ## Test Structure
 
-Each test directory contains:
-- **main.go** - The executable test implementation
-- **README.md** - Documentation with latest output and validation criteria
+### Strategy Selection Tests (`strategies_test.go`)
 
-## Shared Utilities
+#### TestStrategySelection
+Validates that images trigger the expected extraction strategies based on their visual characteristics.
 
-The `helpers.go` file provides common test utilities:
-- `CheckMark(condition bool)` - Returns ✓ or ✗ based on test condition
-- Additional formatting and validation helpers as needed
+| Image | Strategy | Colors | Dominant Color | Percentage |
+|-------|----------|---------|----------------|------------|
+| ![nebula](images/nebula.jpeg) | saliency | 69,489 | #200b1e | 0.4% |
+| ![night-city](images/night-city.jpeg) | saliency | 121,176 | #000101 | 1.6% |
+| ![grayscale](images/grayscale.jpeg) | frequency | 256 | #0e0e0e | 2.0% |
+| ![mountains](images/mountains.jpeg) | saliency | 199,953 | #000400 | 0.7% |
+| ![abstract](images/abstract.jpeg) | saliency | 127,756 | #f39c71 | 0.3% |
 
-## Expected Outputs
-
-### Successful Test Characteristics
-- **Clear Headers**: Each test section clearly labeled
-- **Step-by-Step Output**: Show initial state, operations, and results
-- **Validation Explanations**: Explain why tests pass or fail with specific values
-- **Performance Metrics**: Include timing where relevant
-- **Checkmark Indicators**: ✓ for passing tests, ✗ for failures with detailed reasons
-
-### Example Test Output Format
 ```
-=== Test Section Name ===
-Initial state: [values]
-Operation: [what is being tested]
-Expected: [expected result]
-Actual: [actual result]
-Result: ✓ - [explanation of why it passes]
+=== RUN   TestStrategySelection
+=== RUN   TestStrategySelection/nebula.jpeg
+    strategies_test.go:58: nebula.jpeg: strategy=saliency, colors=69489, dominant=#200b1e (0.4%)
+=== RUN   TestStrategySelection/night-city.jpeg
+    strategies_test.go:58: night-city.jpeg: strategy=saliency, colors=121176, dominant=#000101 (1.6%)
+=== RUN   TestStrategySelection/grayscale.jpeg
+    strategies_test.go:58: grayscale.jpeg: strategy=frequency, colors=256, dominant=#0e0e0e (2.0%)
+=== RUN   TestStrategySelection/mountains.jpeg
+    strategies_test.go:58: mountains.jpeg: strategy=saliency, colors=199953, dominant=#000400 (0.7%)
+=== RUN   TestStrategySelection/abstract.jpeg
+    strategies_test.go:58: abstract.jpeg: strategy=saliency, colors=127756, dominant=#f39c71 (0.3%)
+--- PASS: TestStrategySelection (5.19s)
 ```
 
-## Development Workflow
+#### TestThemeGenerationAnalysis
+Validates theme generation analysis for different image types.
 
-1. **Implementation**: User implements functionality based on Claude's guides
-2. **Test Creation**: Claude creates or updates execution tests
-3. **Validation**: User runs tests and reports results
-4. **Documentation**: Test output captured in README.md files
+| Image | Strategy | Grayscale | Monochromatic | Saturation |
+|-------|----------|-----------|---------------|------------|
+| ![nebula](images/nebula.jpeg) | extract | false | true | 0.474 |
+| ![grayscale](images/grayscale.jpeg) | extract | true | false | 0.000 |
+| ![mountains](images/mountains.jpeg) | extract | false | false | 0.600 |
 
-## Session Integration
+```
+=== RUN   TestThemeGenerationAnalysis
+=== RUN   TestThemeGenerationAnalysis/nebula.jpeg
+    strategies_test.go:101: nebula.jpeg: strategy=extract, grayscale=false, monochromatic=true, sat=0.474
+=== RUN   TestThemeGenerationAnalysis/grayscale.jpeg
+    strategies_test.go:101: grayscale.jpeg: strategy=extract, grayscale=true, monochromatic=false, sat=0.000
+=== RUN   TestThemeGenerationAnalysis/mountains.jpeg
+    strategies_test.go:101: mountains.jpeg: strategy=extract, grayscale=false, monochromatic=false, sat=0.600
+--- PASS: TestThemeGenerationAnalysis (2.86s)
+```
 
-Tests are created progressively throughout development sessions:
-- Each session includes relevant execution tests
-- Tests validate session objectives and technical requirements
-- README.md files updated with latest output after successful implementation
+#### TestSaliencyVsFrequency
+Validates that saliency strategy extracts saturated colors from complex images.
 
-## Quality Standards
+![nebula](images/nebula.jpeg)
 
-All tests must meet these criteria:
-- **Correctness**: Output matches expected values and specifications
-- **Performance**: Execution time within established targets
-- **Stability**: No crashes, panics, or inconsistent behavior
-- **Determinism**: Consistent results across multiple runs
-- **Educational Value**: Clear explanations of what is being validated and why
+```
+=== RUN   TestSaliencyVsFrequency
+--- PASS: TestSaliencyVsFrequency (2.09s)
+```
 
-This testing approach ensures immediate validation of implementations while serving as comprehensive documentation of the system's behavior and capabilities.
+### Benchmark Tests
+
+Performance benchmarks for extraction strategies.
+
+| Strategy | Target Image | Performance | Operations |
+|----------|-------------|-------------|------------|
+| Saliency | ![nebula](images/nebula.jpeg) | 2.07 seconds | 1 |
+| Frequency | ![grayscale](images/grayscale.jpeg) | 206ms | 5 |
+
+```
+goos: linux
+goarch: amd64
+pkg: github.com/JaimeStill/omarchy-theme-generator/tests
+cpu: Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz
+BenchmarkSaliencyStrategy
+BenchmarkSaliencyStrategy-8    	       1	2070687429 ns/op
+BenchmarkFrequencyStrategy
+BenchmarkFrequencyStrategy-8   	       5	 206148251 ns/op
+```
+
+## Test Images
+
+The `images/` directory contains wallpaper samples for validation. See `images/README.md` for detailed characteristics analysis.
+
+## Utilities
+
+- `analyze-images/` - Generates comprehensive image analysis documentation
+
+## Running Tests
+
+```bash
+# Run all tests
+go test ./tests -v
+
+# Run specific test suites
+go test ./tests -run TestStrategySelection -v
+go test ./tests -run TestThemeGeneration -v
+
+# Run benchmarks
+go test ./tests -bench=. -v
+```

@@ -135,10 +135,8 @@ Themes are automatically available in Omarchy after generation.
 
 ```bash
 # Run tests
+go test ./tests -v
 go vet ./...
-
-# Run examples
-go run tests/test-extract/main.go sample.jpg
 
 # Format code
 go fmt ./...
