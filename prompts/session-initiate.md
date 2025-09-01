@@ -28,30 +28,61 @@ This prompt establishes the development methodology and role distribution for im
 5. **Test Phase**: Claude creates/updates execution tests
 6. **Validation Phase**: User runs tests and reports results
 
-### Execution Test Requirements
-All functionality must be validated with execution tests following these principles:
+### Testing Requirements
+All functionality must be validated with standard Go tests following these principles:
 
-- **Transparent Output**: Show initial state, transformations, expected vs actual results
-- **Minimal Structure**: No frameworks, direct `go run` execution
-- **Educational Value**: Tests serve as living documentation
-- **Immediate Feedback**: Run with `go run tests/test-[concept]/main.go`
+- **Standard Go Testing**: Use `*_test.go` files in tests/ directory
+- **Layered Testing**: Each package tested in isolation with clear dependencies
+- **Transparent Output**: Clear test failures showing expected vs actual results
+- **Real-World Validation**: Integration tests with actual image samples
+- **Immediate Feedback**: Run with `go test ./tests -v`
 
-Example transparent test output:
+Example Go test structure:
+```go
+func TestColorConversion(t *testing.T) {
+    input := color.RGBA{255, 128, 64, 255}
+    h, s, l := formats.RGBToHSL(input)
+    
+    expectedH, expectedS, expectedL := 0.083, 1.0, 0.627
+    if h != expectedH || s != expectedS || l != expectedL {
+        t.Errorf("Expected HSL(%.3f, %.3f, %.3f), got HSL(%.3f, %.3f, %.3f)", 
+                 expectedH, expectedS, expectedL, h, s, l)
+    }
+}
 ```
-AA compliance testing:
-  Testing: RGB(119,119,119) on RGB(255,255,255) background
-  Calculated contrast: 4.48:1
-  Required for AA: 4.5:1
-  Result: FAIL ✗ (4.48 < 4.5, difference: 0.02)
-```
+
+## Architecture Context
+
+The project uses a layered architecture with clear dependencies:
+
+### Package Layers
+1. **Foundation** (formats, settings, config) - No dependencies
+2. **Analysis** (analysis) - Depends on foundation
+3. **Processing** (strategies, extractor) - Depends on analysis
+4. **Generation** (schemes, theme) - Depends on processing
+5. **Application** (cmd) - Depends on all
+
+### Key Principles
+- Use standard library types (`color.RGBA` not custom types)
+- Settings-driven (no hardcoded values)
+- Purpose-driven extraction (role-based, not frequency)
+- Clear separation of concerns
+
+### Current Implementation Status
+- ✅ Multi-strategy extraction (frequency/saliency)
+- ✅ Settings-driven configuration
+- 🔄 Architecture refactoring in progress
+- ⏳ Purpose-driven extraction pending
+- ⏳ Color scheme generation pending
 
 ## Implementation Guidelines
 
 ### Technical Precision
-- Reference existing implementations: "See `pkg/color/space.go`"
-- Use correct domain terminology consistently
+- Reference existing implementations: "See `pkg/formats/color.go`"
+- Use correct domain terminology from docs/glossary.md
+- Follow layered architecture dependencies
 - Validate against established standards (CSS Color Module, WCAG)
-- Maintain Go idioms and performance considerations
+- Maintain Go idioms and standard library usage
 
 ### Context Management
 - Link to relevant methodology documents
@@ -100,10 +131,11 @@ Session considered successful when:
 
 ## References
 
-- **Development Process**: `/home/jaime/code/omarchy-theme-generator/docs/development-methodology.md`
-- **Testing Strategy**: `/home/jaime/code/omarchy-theme-generator/docs/testing-strategy.md`  
-- **Technical Specification**: `/home/jaime/code/omarchy-theme-generator/docs/technical-specification.md`
-- **Project Context**: `/home/jaime/code/omarchy-theme-generator/CLAUDE.md`
-- **Progress Tracking**: `/home/jaime/code/omarchy-theme-generator/PROJECT.md`
+- **Architecture Overview**: `../docs/architecture.md`
+- **Development Process**: `../docs/development-methodology.md`
+- **Testing Strategy**: `../docs/testing-strategy.md`  
+- **Terminology Reference**: `../docs/glossary.md`
+- **Project Context**: `../CLAUDE.md`
+- **Progress Tracking**: `../PROJECT.md`
 
 Begin session by reviewing current objectives and establishing clear implementation goals.

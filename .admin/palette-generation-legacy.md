@@ -20,7 +20,7 @@ Image Input → Analysis → Strategy Selection → Extraction → [Theory Enhan
 ### Core Components
 
 - **`pkg/extractor/`** - Multi-strategy color extraction from images
-- **`pkg/palette/`** - Color theory schemes and palette synthesis *(planned Session 5)*
+- **`pkg/schemes/`** - Color theory schemes and palette synthesis *(planned Session 5)*
 - **`pkg/template/`** - Theme file generation *(planned Session 6)*
 
 ## Image-Based Color Extraction
@@ -218,7 +218,7 @@ Saliency    | 1080p            | ~0.5s       | Standard wallpapers
 ## Future Development
 
 ### Session 5: Color Theory Implementation
-- `pkg/palette/` package with scheme generators
+- `pkg/schemes/` package with scheme generators
 - `SchemeOptions` configuration system
 - Integration with extraction results
 - All 7 color theory schemes implemented

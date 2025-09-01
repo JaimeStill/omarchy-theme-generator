@@ -26,7 +26,7 @@ You are a technical documentation specialist focused on maintaining consistency,
 - **CLAUDE.md**: Development memory and quick reference (primary context)
 - **README.md**: Public-facing documentation and installation guide
 - **PROJECT.md**: Roadmap, session logs, and progress tracking
-- **docs/technical-specification.md**: Detailed algorithms and architecture
+- **docs/architecture.md**: Layered architecture and technical decisions
 - **docs/development-methodology.md**: Process and principles
 - **docs/testing-strategy.md**: Testing approach and patterns
 

@@ -11,7 +11,7 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 - **Reference, don't repeat**: Link to existing code and docs
 
 ## Core Documents
-- **Technical details**: `docs/technical-specification.md` - Algorithms, architecture, performance targets
+- **Architecture design**: `docs/architecture.md` - Layered architecture and technical decisions
 - **Development process**: `docs/development-methodology.md` - Intelligent Development principles
 - **Testing approach**: `docs/testing-strategy.md` - Unit test patterns
 - **Omarchy integration**: `OMARCHY.md` - Theme format standards and requirements
@@ -27,33 +27,28 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 6. Keep explanations technically precise
 
 ## Current Implementation Status
-- ✅ Project structure established
-- ✅ Core color types complete (pkg/color/)
-- ✅ Color space conversions complete (RGB↔HSL, manipulation, WCAG, LAB)
 - ✅ Multi-strategy image extraction complete (frequency/saliency algorithms)
 - ✅ Strategy selection with empirical thresholds implemented
 - ✅ Grayscale vs monochromatic classification implemented
 - ✅ Unit test suite with real wallpaper validation
-- ⏳ Color theory schemes pending (pkg/palette/ package)
-- ⏳ Template-based config generation pending (pkg/template/)
-- ⏳ Theme orchestration pending (pkg/theme/)
+- ✅ Documentation infrastructure refactoring complete
+- 🔄 Foundation layer refactoring in progress (pkg/color → pkg/formats)
+- ⏳ Purpose-driven extraction pending (role-based color organization)
+- ⏳ Color theory schemes pending (pkg/schemes/ package)
+- ⏳ Theme generation pending (pkg/theme/)
 - ⏳ CLI interface pending (cmd/omarchy-theme-gen/)
-- 📋 TUI interface (optional future enhancement)
 
 ## Key Technical Decisions
-- RGBA with cached HSLA for performance
-- AccessibilityLevel enum with automatic ratio lookup
-- LAB color space with D65 illuminant for color science accuracy
-- HSL distance weighting: lightness(2.0) > saturation(1.0) > hue(0.5)
-- Extraction → Hybrid → Scheme Generation pipeline for edge case handling
-- Vocabulary precision: IsGrayscale (saturation < 0.05) vs IsMonochromatic (±15° hue tolerance)
-- Early termination algorithm for monochromatic detection with 80% threshold
-- Color theory schemes for low-diversity images (monochromatic, analogous, complementary, etc.)
-- Octree quantization over k-means
-- Template-based config generation
-- 64x64 pixel regions for concurrency
-- HEXA color format for theme-gen.json metadata
-- CLI sub-commands for theme refinement
+- **Standard Types**: Use `color.RGBA` from standard library, not custom types
+- **Purpose-Driven**: Colors organized by role (background, foreground, accent) not frequency
+- **Settings vs Config**: System settings (HOW tool operates) separate from user config (WHAT user wants)
+- **Layered Architecture**: Clear dependency layers with no circular dependencies
+- **Profile Detection**: Grayscale, Monotone, Monochromatic, Duotone/Tritone for edge cases
+- **Multi-Strategy**: Frequency for simple images, saliency for complex images
+- **Vocabulary precision**: IsGrayscale (saturation < 0.05) vs IsMonochromatic (±15° hue tolerance)
+- **Early termination algorithm**: Monochromatic detection with 80% threshold
+- **HEXA color format**: For theme-gen.json metadata
+- **CLI sub-commands**: For theme refinement
 
 ## Commands
 ```bash
@@ -73,33 +68,57 @@ go run tests/analyze-images/main.go
 go fmt ./...
 ```
 
-## Package Structure
-- `pkg/color/` - Color types, conversions, and HEXA parsing
-- `pkg/quantizer/` - Quantization algorithms
-- `pkg/extractor/` - Image processing and color extraction
-- `pkg/palette/` - Color theory schemes
-- `pkg/template/` - Config generators and theme-gen.json
-- `pkg/theme/` - Theme orchestration and CLI commands
-- `pkg/metadata/` - Theme metadata serialization
+## Package Structure (Refactored Architecture)
+
+### Foundation Layer
+- `pkg/formats/` - Color conversions and formatting (refactored from pkg/color)
+- `pkg/settings/` - System configuration and tool behavior
+- `pkg/config/` - User preferences and theme-specific overrides
+
+### Analysis Layer  
+- `pkg/analysis/` - Image analysis and profile detection (extracted from extractor)
+
+### Processing Layer
+- `pkg/strategies/` - Extraction strategies (extracted from extractor) 
+- `pkg/extractor/` - Extraction orchestration (simplified)
+
+### Generation Layer
+- `pkg/schemes/` - Color theory scheme generation
+- `pkg/theme/` - Theme file generation
+
+### Application Layer
+- `cmd/omarchy-theme-gen/` - CLI application
+
+### Testing
 - `tests/internal/` - Centralized test utilities and benchmarks
 - `tests/samples/` - Reusable test images
-- `tests/` - Unit tests and validation
-- `cmd/omarchy-theme-gen/` - CLI application
-- `internal/tui/` - UI components (future enhancement)
+- `tests/` - Standard Go test files
 
 ## Performance Targets
 - 4K image: < 2 seconds
 - Memory: < 100MB peak
 - Contrast: WCAG AA (4.5:1)
 
-## Next Session Focus
-Session 5: Color Theory Schemes Implementation
-- Create pkg/palette/ package with color theory scheme generators
-- Implement core schemes: monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square
-- Build SchemeOptions configuration for flexible palette generation  
-- Design SchemeGenerator interface for extensibility
-- Integrate schemes with existing multi-strategy extraction system
-- Validate scheme generation with test suite
+## Current Development Focus
+Architecture Refactoring (Multi-Session Process)
+
+### Session 1: Documentation Infrastructure Cleanup (Current)
+- Update all documentation to align with refactored architecture
+- Establish component-based PROJECT.md structure
+- Create architecture documentation and glossary
+- Fix cross-references and terminology consistency
+
+### Session 2: Foundation Refactoring (Next)
+- Transform pkg/color → pkg/formats with standard library types
+- Create pkg/settings and pkg/config packages
+- Update all imports and references
+- Migrate tests to new structure
+
+### Session 3: Purpose-Driven Extraction (Planned)
+- Extract pkg/analysis and pkg/strategies from extractor
+- Implement role-based color organization
+- Add profile detection and synthesis capabilities
+- Build settings-driven configuration system
 
 ## CLI Architecture
 Commands planned:

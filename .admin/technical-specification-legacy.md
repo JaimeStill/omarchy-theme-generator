@@ -2,7 +2,7 @@
 
 ## Overview
 
-Terminal User Interface application in Go that generates Omarchy themes from images using color extraction and palette generation based on color theory principles.
+Command-line tool in Go that generates Omarchy themes from images using intelligent, purpose-driven color extraction and color theory principles. The system uses a layered architecture with standard library types for optimal performance and maintainability.
 
 ## Input Parameters
 
@@ -37,35 +37,68 @@ theme-name/
 
 ## Core Technical Concepts
 
-### 1. Color Representation
-Native RGBA storage with lazy-cached HSL values for optimal performance. Images provide RGB natively - converting every pixel to HSL during extraction would add O(n) overhead.
+### 1. Purpose-Driven Color Extraction
+
+The system organizes colors by their intended role in the theme rather than just their frequency:
+
+**Color Roles:**
+- **Background**: Colors suitable for window/terminal backgrounds based on mode and lightness
+- **Foreground**: Colors suitable for text with proper contrast ratios
+- **Accents**: Saturated colors for highlights and UI elements
+- **Terminal Colors**: ANSI color palette mapping
+
+**Mode-Aware Processing:**
+```go
+// Role assignment adapts based on detected theme mode
+func AssignColorRoles(colors []color.RGBA, mode ThemeMode) map[ColorRole][]color.RGBA {
+    roles := make(map[ColorRole][]color.RGBA)
+    
+    for _, c := range colors {
+        _, _, l := formats.RGBToHSL(c)
+        
+        // Dark mode: darker colors → backgrounds
+        if mode == ModeDark && l < 0.35 {
+            roles[RoleBackground] = append(roles[RoleBackground], c)
+        }
+        
+        // Light mode: lighter colors → backgrounds  
+        if mode == ModeLight && l > 0.75 {
+            roles[RoleBackground] = append(roles[RoleBackground], c)
+        }
+    }
+    
+    return roles
+}
+```
+
+### 2. Standard Library Color Types
+
+Uses `color.RGBA` from Go standard library instead of custom types:
 
 ```go
-type Color struct {
-    R, G, B, A uint8
-    hsla     *hslaCache
-    hslaOnce sync.Once
+// pkg/formats/color.go
+import "image/color"
+
+// RGBToHSL converts standard color to HSL values
+func RGBToHSL(c color.Color) (h, s, l float64) {
+    r, g, b, _ := c.RGBA()
+    // Convert uint32 [0, 0xffff] to float64 [0, 1]
+    rf := float64(r) / 0xffff
+    gf := float64(g) / 0xffff
+    bf := float64(b) / 0xffff
+    
+    max := math.Max(math.Max(rf, gf), bf)
+    min := math.Min(math.Min(rf, gf), bf)
+    l = (max + min) / 2
+    
+    // Standard HSL conversion logic...
+    return h, s, l
 }
 
-type hslaCache struct {
-    H, S, L, A float64 // [0,1] range
-
-// HSLA returns cached HSLA values (calculated once)
-func (c *Color) HSLA() (h, s, l, a float64) {
-    c.hslaOnce.Do(func() {
-        h, s, l := rgbToHSL(c.R, c.G, c.B)
-        c.hsla = &hslaCache{H: h, S: s, L: l, A: toAlpha(c.A)}
-    })
-    return c.hsla.H, c.hsla.S, c.hsla.L, c.hsla.A
-}
-
-// Output format methods
-func (c *Color) HEX() string {
-    return fmt.Sprintf("#%02x%02x%02x", c.R, c.G, c.B)
-}
-
-func (c *Color) HEXA() string {
-    return fmt.Sprintf("#%02x%02x%02x%02x", c.R, c.G, c.B, c.A)
+// ToHex converts color to hex string format (#RRGGBB)
+func ToHex(c color.Color) string {
+    rgba := color.RGBAModel.Convert(c).(color.RGBA)
+    return fmt.Sprintf("#%02x%02x%02x", rgba.R, rgba.G, rgba.B)
 }
 ```
 
@@ -399,40 +432,69 @@ func (t *Theme) Export(basePath string) error {
 
 ## Architecture Layers
 
-1. **Core Domain** (`pkg/color/`): Color types, no dependencies
-2. **Algorithms** (`pkg/quantizer/`, `pkg/extractor/`, `pkg/palette/`): Depends on Core
-3. **Infrastructure** (`pkg/template/`, `pkg/validator/`): Depends on Core
-4. **Application** (`pkg/theme/`, `pkg/preview/`): Orchestration layer
-5. **Presentation** (`internal/tui/`): Bubble Tea components
+The refactored architecture uses clear dependency layers:
+
+1. **Foundation Layer**: 
+   - `pkg/formats` - Color conversions and formatting (refactored from pkg/color)
+   - `pkg/settings` - System configuration and tool behavior
+   - `pkg/config` - User preferences and theme-specific overrides
+
+2. **Analysis Layer**:
+   - `pkg/analysis` - Image analysis and profile detection (extracted from extractor)
+
+3. **Processing Layer**:
+   - `pkg/strategies` - Extraction strategies (extracted from extractor) 
+   - `pkg/extractor` - Extraction orchestration (simplified)
+
+4. **Generation Layer**:
+   - `pkg/schemes` - Color theory scheme generation
+   - `pkg/theme` - Theme file generation
+
+5. **Application Layer**:
+   - `cmd/omarchy-theme-gen` - CLI application
+
+### Settings vs Configuration Architecture
+
+**Settings** (`pkg/settings`) - HOW the tool operates:
+- Extraction thresholds and parameters
+- Algorithm behavior configuration  
+- Multi-layer composition (defaults → system → user → workspace → env)
+
+**Configuration** (`pkg/config`) - WHAT the user wants:
+- Theme-specific color overrides
+- User preferences and customizations
+- Stored with generated themes
 
 ## Technical Decisions
 
 | Decision | Rationale | Trade-off |
 |----------|-----------|-----------|
-| **RGBA with cached HSLA** | Native extraction performance, efficient manipulation | Slightly more complex than pure HSL, but 10x faster extraction |
-| **Octree over k-means** | Deterministic results, better gradient preservation, O(n) complexity | More memory than k-means, but acceptable for color reduction |
-| **HSL over HSV** | More intuitive lightness control for theme generation | HSV better for some art applications, but HSL maps better to CSS |
-| **Template over AST** | Simpler implementation, sufficient for static configs | Can't do programmatic modifications, but not needed for themes |
-| **64x64 regions** | Balance between goroutine overhead and parallelism | Smaller = more overhead, larger = less parallelism |
-| **Sync.Once for HSL** | Thread-safe lazy initialization without repeated locks | Small memory overhead for sync primitive |
-| **Frequency-based dominant** | Simple, fast, good enough for most images | May miss perceptually important but less frequent colors |
-| **Go 1.25 stdlib only** | No external dependencies, full control | Must implement color algorithms from scratch |
+| **Standard color.RGBA** | Better interoperability, proven implementation | Less control than custom types, but more stable |
+| **Purpose-driven extraction** | Colors organized by theme role, not frequency | More complex than frequency-based, but better themes |
+| **Layered architecture** | Clear dependencies, maintainable code | More packages than monolith, but easier to test |
+| **Multi-strategy extraction** | Adapts to image characteristics | More complex selection logic, but handles edge cases |
+| **Settings vs config separation** | Clear distinction between system and user preferences | Two configuration systems, but better organization |
+| **Profile-based processing** | Handles edge cases (grayscale, monotone) gracefully | Additional complexity, but robust theme generation |
+| **Standard Go testing** | Conventional, widely understood | More setup than execution tests, but standard practice |
+| **CLI-first architecture** | Simpler than TUI, easier to implement | Less interactive than TUI, but more reliable |
 
 ## Dependencies
 
 - **Go 1.25**: Latest language features
-- **Bubble Tea**: TUI framework
 - **Standard Library**: image, image/color, text/template
-- **No external color libraries**: Custom implementation for control
+- **No external dependencies**: Pure Go implementation for reliability and control
 
 ## Success Criteria
 
 - [ ] Process 4K images under 2 seconds
-- [ ] WCAG AA contrast compliance
-- [ ] 5+ palette strategies
+- [ ] WCAG AA contrast compliance  
+- [ ] Purpose-driven color role assignment
+- [ ] Multi-strategy extraction (frequency, saliency)
+- [ ] Profile detection (Grayscale, Monotone, Monochromatic, Duotone/Tritone)
+- [ ] Color theory scheme generation
 - [ ] All Omarchy config formats supported
-- [ ] Source image in backgrounds/
-- [ ] Light/dark mode detection
+- [ ] Settings vs config separation
+- [ ] Standard library types throughout
 
 ## References
 
