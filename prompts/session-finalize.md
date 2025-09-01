@@ -154,9 +154,9 @@ Session considered properly finalized when:
 
 ## References
 
-- **Development Methodology**: `/home/jaime/code/omarchy-theme-generator/docs/development-methodology.md`
-- **Testing Strategy**: `/home/jaime/code/omarchy-theme-generator/docs/testing-strategy.md`
-- **Progress Tracking**: `/home/jaime/code/omarchy-theme-generator/PROJECT.md`
-- **Context Management**: `/home/jaime/code/omarchy-theme-generator/CLAUDE.md`
+- **Development Methodology**: `../docs/development-methodology.md`
+- **Testing Strategy**: `../docs/testing-strategy.md`
+- **Progress Tracking**: `../PROJECT.md`
+- **Context Management**: `../CLAUDE.md`
 
 The session is complete when all finalization tasks are verified and next session objectives are clearly established.

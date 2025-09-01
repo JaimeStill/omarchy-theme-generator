@@ -4,12 +4,12 @@ Generate beautiful, cohesive terminal themes from any image using intelligent co
 
 ## Features
 
-- 🎨 **Smart Color Extraction** - Automatically identifies dominant colors using octree quantization
-- 🎭 **Light/Dark Mode** - Auto-detects or manually specify theme brightness
-- 🎯 **Color Theory** - Generates harmonious color schemes (monochromatic, analogous, complementary, split-complementary, triadic, tetradic, square)
-- ♿ **WCAG Compliant** - Ensures text readability with AA contrast ratios
-- 🖼️ **Wallpaper Included** - Source image automatically included in theme package
-- ⚡ **Reliable** - Clean implementation with solid error handling
+- 🎨 **Intelligent Color Extraction** - Multi-strategy system adapts to image characteristics
+- 🎯 **Purpose-Driven Colors** - Organizes colors by their role (background, foreground, accents)
+- ♿ **WCAG Compliant** - Ensures text readability with proper contrast ratios  
+- 🎭 **Light/Dark Mode** - Automatic detection with manual override options
+- 🖼️ **Edge Case Handling** - Gracefully handles grayscale, monotone, and monochromatic images
+- ⚡ **High Performance** - Processes 4K images in under 2 seconds
 
 ## Installation
 
@@ -55,24 +55,21 @@ Generate themes directly from command line:
    omarchy-theme-gen clone sunset-dark sunset-variant
    ```
 
-### Advanced Usage
+### Customization Options
 
 ```bash
-# Generate with specific options
-omarchy-theme-gen generate --image sunset.jpg --scheme monochromatic --mode dark
-
-# Specify theme mode
-omarchy-theme-gen sunset.jpg --mode dark
+# Force dark mode
+omarchy-theme-gen generate --image wallpaper.jpg --mode dark
 
 # Override primary color
-omarchy-theme-gen sunset.jpg --primary "#ff6b35"
+omarchy-theme-gen generate --image wallpaper.jpg --primary "#e94560"
 
-# Full control
-omarchy-theme-gen sunset.jpg \
-  --mode dark \
-  --primary "#ff6b35" \
-  --background "#1a1a1a" \
-  --foreground "#e0e0e0"
+# Apply color scheme
+omarchy-theme-gen generate --image wallpaper.jpg --scheme complementary
+
+# Refine existing theme
+omarchy-theme-gen set-scheme my-theme --scheme triadic
+omarchy-theme-gen set-mode my-theme --mode light
 ```
 
 ## Generated Theme Structure
@@ -96,23 +93,32 @@ my-theme/
 
 ## Generated Theme Integration
 
-Generated themes integrate directly with Omarchy's theme system and include a `theme-gen.json` file for refinement:
+Generated themes integrate directly with Omarchy's theme system and include a `theme-gen.json` file containing extraction metadata and user preferences for easy refinement.
 
-```json
-{
-  "version": "1.0.0",
-  "source_image": "backgrounds/sunset.jpg",
-  "generation": {
-    "mode": "dark",
-    "scheme": "complementary",
-    "primary": "#88c0d0ff",
-    "background": "#2e3440ff",
-    "foreground": "#eceff4ff"
-  }
-}
-```
+## Architecture
 
-Themes are automatically available in Omarchy after generation.
+The generator uses a layered architecture with clear dependencies:
+
+### Core Packages
+
+- **pkg/formats** - Color conversion and formatting utilities
+- **pkg/analysis** - Image characteristic and profile detection  
+- **pkg/extractor** - Color extraction orchestration
+- **pkg/strategies** - Pluggable extraction strategies (frequency, saliency)
+- **pkg/schemes** - Color theory and scheme generation
+- **pkg/theme** - Theme file generation from templates
+- **pkg/settings** - System configuration and thresholds
+- **pkg/config** - User preferences and overrides
+
+### Extraction Pipeline
+
+1. **Analysis** - Detect image characteristics and color profile
+2. **Strategy Selection** - Choose optimal extraction strategy
+3. **Extraction** - Extract colors using selected strategy
+4. **Role Assignment** - Categorize colors by purpose
+5. **Calculation** - Calculate missing colors using color theory
+6. **Validation** - Ensure WCAG compliance
+7. **Generation** - Create theme configuration files
 
 ## Supported Formats
 

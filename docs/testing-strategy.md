@@ -8,35 +8,34 @@ The testing strategy combines focused unit tests using `go test` with real-world
 
 ## Current Testing Approach
 
-### Real-World Unit Tests
+### Package-Level Unit Tests
 
 ```go
-// tests/strategies_test.go
-package extractor_test
+// tests/formats_test.go
+package formats_test
 
 import (
+    "image/color"
     "testing"
-    "github.com/JaimeStill/omarchy-theme-generator/pkg/extractor"
+    "github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
 )
 
-func TestStrategySelection(t *testing.T) {
+func TestColorConversion(t *testing.T) {
     testCases := []struct {
-        image    string
-        expected string
+        name     string
+        input    color.RGBA
+        expected struct{ h, s, l float64 }
     }{
-        {"nebula.jpeg", "saliency"},
-        {"night-city.jpeg", "saliency"}, 
-        {"grayscale.jpeg", "frequency"},
+        {"red", color.RGBA{255, 0, 0, 255}, struct{ h, s, l float64 }{0.0, 1.0, 0.5}},
+        {"gray", color.RGBA{128, 128, 128, 255}, struct{ h, s, l float64 }{0.0, 0.0, 0.5}},
     }
     
     for _, tc := range testCases {
-        t.Run(tc.image, func(t *testing.T) {
-            result, err := extractor.ExtractColors(tc.image, options)
-            if err != nil {
-                t.Fatalf("Failed: %v", err)
-            }
-            if result.SelectedStrategy != tc.expected {
-                t.Errorf("Expected %s, got %s", tc.expected, result.SelectedStrategy)
+        t.Run(tc.name, func(t *testing.T) {
+            h, s, l := formats.RGBToHSL(tc.input)
+            if h != tc.expected.h || s != tc.expected.s || l != tc.expected.l {
+                t.Errorf("Expected HSL(%.1f, %.1f, %.1f), got HSL(%.1f, %.1f, %.1f)", 
+                         tc.expected.h, tc.expected.s, tc.expected.l, h, s, l)
             }
         })
     }
@@ -44,10 +43,10 @@ func TestStrategySelection(t *testing.T) {
 ```
 
 ### Characteristics
-- **Standard Go testing**: Uses built-in `testing` package
-- **Real images**: 15 diverse wallpaper samples provide validation
-- **Empirical validation**: Tests actual behavior with real-world data
-- **Comprehensive coverage**: Strategy selection, theme analysis, benchmarks
+- **Standard Go testing**: Uses built-in `testing` package with `*_test.go` files
+- **Layered testing**: Each package tested in isolation with clear dependencies
+- **Real world validation**: Integration tests with actual image samples
+- **Comprehensive coverage**: Unit tests for all public APIs and critical functions
 
 ### Transparent Test Execution
 
@@ -169,35 +168,58 @@ func TestComponentIntegration(t *testing.T) {
 
 ## Test Organization
 
+### Isolated Test Structure
+All tests are organized in the tests/ directory, separate from source code:
+
 ```
 tests/
 ├── README.md                    # Test documentation and results
-├── *_test.go                    # Unit test files using standard Go testing
-├── images/                      # Test assets and data files
-│   ├── README.md                # Generated analysis documentation
-│   └── *.jpeg, *.png           # Test images for validation
-├── analyze-images/              # Utility tools for test data analysis
-│   ├── main.go                  # Image analysis utility
-│   └── README.md                # Utility documentation
-└── helpers/                     # Shared test utilities (optional)
-    └── common.go                # Helper functions for tests
+├── formats_test.go              # Unit tests for pkg/formats
+├── analysis_test.go             # Unit tests for pkg/analysis
+├── strategies_test.go           # Unit tests for pkg/strategies
+├── extractor_test.go            # Unit tests for pkg/extractor
+├── schemes_test.go              # Unit tests for pkg/schemes
+├── theme_test.go                # Unit tests for pkg/theme
+├── integration/                 # Integration test suites
+│   ├── pipeline_test.go         # End-to-end extraction pipeline
+│   └── workflow_test.go         # Complete theme generation workflow
+├── benchmarks/                  # Performance testing
+│   ├── extraction_bench_test.go # Color extraction benchmarks
+│   └── conversion_bench_test.go # Color conversion benchmarks
+├── images/                      # Real-world wallpaper test images
+│   ├── README.md                # Image analysis documentation
+│   ├── grayscale.jpg            # Pure grayscale test image
+│   ├── monotone.jpg             # Single hue tinted image
+│   ├── monochromatic.jpg        # Single hue with grayscale elements
+│   ├── duotone.jpg              # Two distinct colors
+│   ├── full-color.jpg           # Complex multi-color image
+│   └── *.jpg, *.png             # Additional test wallpapers
+├── internal/                    # Shared test utilities
+│   ├── benchmark.go             # Performance testing utilities
+│   └── generators.go            # Test data generators
+└── analyze-images/              # Test analysis utility
+    ├── main.go                  # Image characteristic analysis tool
+    └── README.md                # Utility documentation
 ```
 
 ## Running Tests
 
 ### Standard Go Testing
 ```bash
-# Run all tests
+# Run all unit tests
 go test ./tests -v
 
-# Run specific test suites
-go test ./tests -run TestSpecificFunction -v
+# Run specific package tests
+go test ./tests -run TestFormats -v
+
+# Run integration tests
+go test ./tests/integration -v
 
 # Run benchmarks
-go test ./tests -bench=. -v
+go test ./tests/benchmarks -bench=. -v
 
 # Run with race detection
-go test ./tests -race -v
+go test ./tests ./tests/integration -race -v
 ```
 
 ### Code Validation
@@ -252,17 +274,30 @@ Each test should verify:
 3. **Stability**: No crashes or panics
 4. **Determinism**: Consistent results across runs
 
-## Transition to Formal Testing
+## Test Coverage Goals
 
-After development completion:
-1. Convert execution tests to proper unit tests
-2. Add test coverage metrics
-3. Implement integration test suite
-4. Add benchmark tests
-5. Set up CI/CD pipeline
+### Unit Test Coverage
+- **pkg/formats**: 100% coverage of public functions
+- **pkg/analysis**: Profile detection and mode classification
+- **pkg/strategies**: Strategy selection and extraction algorithms  
+- **pkg/extractor**: Pipeline orchestration
+- **pkg/schemes**: Color theory scheme generation
+- **pkg/theme**: Template processing and output generation
+
+### Integration Test Coverage
+- End-to-end extraction pipeline with real images
+- Complete theme generation workflow
+- Settings and configuration integration
+- Profile detection with diverse image types
+
+### Benchmark Coverage
+- Color extraction performance with 4K images
+- Color space conversion efficiency
+- Profile detection speed
+- Memory usage optimization
 
 ## References
 
 - Development approach: `docs/development-methodology.md`
-- Technical requirements: `docs/technical-specification.md`
+- Architecture details: `docs/architecture.md`
 - Progress tracking: `PROJECT.md`

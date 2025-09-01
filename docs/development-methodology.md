@@ -11,19 +11,20 @@
 
 ### 2. Reference, Don't Repeat
 - Your repository is a single source of truth
-- Link to existing code: `See pkg/color/octree.go`
-- Reference decisions: `docs/decisions/001-algorithm.md`
-- Point to test results: `tests/output.txt`
+- Link to existing code: `See pkg/formats/color.go`
+- Reference architecture: `docs/architecture.md`
+- Point to test results and validation evidence
 
 ### 3. User-Driven Development
 - All code modifications require explicit user direction
 - Claude Code operates in Explanatory mode for insights
 - No changes without user consent
 
-### 4. Execution Tests as Truth
-- Validate immediately, not eventually
-- No frameworks, just direct execution
-- Adapt architecture based on empirical results
+### 4. Standard Go Tests as Truth
+- Use standard Go test files (`*_test.go`)
+- Unit tests for each package in isolation
+- Integration tests for complete workflows
+- Validate immediately with `go test`
 
 ### 5. Context Optimization
 - Each Claude instance is like a Mr. Meeseeks - specific purpose
@@ -33,18 +34,26 @@
 
 ## Development Process
 
-### Phase Distribution
-- **Planning**: 10-20% of effort
-- **Foundation**: 20-30% of effort
-- **Features**: 40-50% of effort
-- **Integration**: 10-20% of effort
+### Component-Based Development
+- **Foundation Layer**: Core utilities with no dependencies
+- **Analysis Layer**: Image understanding and profile detection
+- **Processing Layer**: Extraction algorithms and orchestration
+- **Generation Layer**: Theme creation and output formatting
+- **Application Layer**: CLI interface and user interaction
 
-### Session Structure
-1. Implement functionality with user direction
-2. Create minimal execution test
-3. Run test immediately
-4. Adapt based on results
-5. Document insights in CLAUDE.md
+### Layer Development Rules
+1. **Dependencies flow downward only** - higher layers depend on lower layers
+2. **Standard library first** - prefer Go standard types over custom implementations
+3. **Settings-driven** - no hardcoded values in business logic
+4. **Purpose-driven** - organize by intent (role-based colors, not frequency)
+5. **Extensible design** - interfaces for pluggable components
+
+### Implementation Workflow
+1. Identify target layer and dependencies
+2. Implement functionality with user direction
+3. Create standard Go tests (`*_test.go`)
+4. Validate with `go test` and `go vet`
+5. Update documentation and architecture references
 
 ### Knowledge Requirements
 
@@ -81,15 +90,22 @@ Before starting:
 
 ### Validation
 ```bash
-# Validate code without building
+# Validate code
 go vet ./...
 
-# Run execution tests directly
-go run tests/test-name/main.go
+# Run standard Go tests
+go test ./...
+
+# Run specific package tests
+go test ./pkg/formats
+
+# Run tests with verbose output
+go test -v ./tests
 ```
 
 ## References
 
-- Technical details: `docs/technical-specification.md`
+- Architecture overview: `docs/architecture.md`
 - Testing approach: `docs/testing-strategy.md`
 - Progress tracking: `PROJECT.md`
+- Terminology reference: `docs/glossary.md`
