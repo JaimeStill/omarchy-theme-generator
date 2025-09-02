@@ -7,11 +7,11 @@ import (
 	"math"
 	"sort"
 
-	tcolor "github.com/JaimeStill/omarchy-theme-generator/pkg/color"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"
+	"github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
 )
 
-type FrequencyStrategy struct{
+type FrequencyStrategy struct {
 	Settings *Settings
 }
 
@@ -44,7 +44,7 @@ func (f *FrequencyStrategy) Extract(img image.Image, options *ExtractionOptions)
 	result := &ExtractionResult{
 		Image:            img,
 		FrequencyMap:     fm,
-		DominantColor:    primaryColor,
+		DominantColor:    *primaryColor,
 		TopColors:        topColors,
 		UniqueColors:     fm.Size(),
 		TotalPixels:      fm.Total(),
@@ -144,7 +144,7 @@ func (fm *FrequencyMap) GetTopColors(n int) []*ColorFrequency {
 	for packed, count := range fm.counts {
 		r, g, b := unpackRGB(packed)
 		colors = append(colors, &ColorFrequency{
-			Color:      tcolor.NewRGB(r, g, b),
+			Color:      color.RGBA{R: r, G: g, B: b, A: 255},
 			Count:      count,
 			Percentage: float64(count) / float64(fm.total) * 100.0,
 		})
@@ -177,7 +177,7 @@ func (fm *FrequencyMap) GetDominantColor() *ColorFrequency {
 
 	r, g, b := unpackRGB(maxPacked)
 	return &ColorFrequency{
-		Color:      tcolor.NewRGB(r, g, b),
+		Color:      color.RGBA{R: r, G: g, B: b, A: 255},
 		Count:      maxCount,
 		Percentage: float64(maxCount) / float64(fm.total) * 100.0,
 	}
@@ -195,7 +195,7 @@ func (fm *FrequencyMap) FilterByThreshold(thresholdPercent float64) []*ColorFreq
 		if count >= minCount {
 			r, g, b := unpackRGB(packed)
 			results = append(results, &ColorFrequency{
-				Color:      tcolor.NewRGB(r, g, b),
+				Color:      color.RGBA{R: r, G: g, B: b, A: 255},
 				Count:      count,
 				Percentage: float64(count) / float64(fm.total) * 100.0,
 			})
@@ -301,7 +301,7 @@ func extractGeneric(fm *FrequencyMap, img image.Image) {
 	}
 }
 
-func (f *FrequencyStrategy) selectPrimaryColorByImportance(topColors []*ColorFrequency, characteristics *ImageCharacteristics) *tcolor.Color {
+func (f *FrequencyStrategy) selectPrimaryColorByImportance(topColors []*ColorFrequency, characteristics *ImageCharacteristics) *color.RGBA {
 	if len(topColors) == 0 {
 		return nil
 	}
@@ -320,7 +320,7 @@ func (f *FrequencyStrategy) selectPrimaryColorByImportance(topColors []*ColorFre
 		}
 	}
 
-	return bestColor
+	return &bestColor
 }
 
 type valueWeights struct {
@@ -331,7 +331,8 @@ type valueWeights struct {
 }
 
 func (f *FrequencyStrategy) calculateVisualImportance(colorFreq *ColorFrequency, characteristics *ImageCharacteristics, allColors []*ColorFrequency) float64 {
-	_, s, l := colorFreq.Color.HSL()
+	hsla := formats.RGBAToHSLA(colorFreq.Color)
+	s, l := hsla.S, hsla.L
 	freq := f.Settings.Frequency
 
 	frequencyScore := colorFreq.Percentage / 100.0
@@ -377,14 +378,14 @@ func (f *FrequencyStrategy) calculateContrastImportance(colorFreq *ColorFrequenc
 
 	background := allColors[0]
 	if background != colorFreq {
-		contrast := colorFreq.Color.ContrastRatio(background.Color)
+		contrast := formats.ContrastRatio(colorFreq.Color, background.Color)
 		maxContrast = math.Max(maxContrast, contrast)
 	}
 
 	checkCount := min(len(allColors), f.Settings.Frequency.MaxContrastSamples)
 	for i := 1; i < checkCount; i++ {
 		if allColors[i] != colorFreq {
-			contrast := colorFreq.Color.ContrastRatio(allColors[i].Color)
+			contrast := formats.ContrastRatio(colorFreq.Color, allColors[i].Color)
 			maxContrast = math.Max(maxContrast, contrast)
 		}
 	}

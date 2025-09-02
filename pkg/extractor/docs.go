@@ -77,7 +77,7 @@
 //
 // Analysis results provide essential information for palette generation systems:
 //   - Primary non-grayscale color detection for color theory seed generation
-//   - Color distribution metrics for strategy selection  
+//   - Color distribution metrics for strategy selection
 //   - Dominance analysis for hybrid extraction approaches
 //   - Multi-strategy selection based on image characteristics
 package extractor

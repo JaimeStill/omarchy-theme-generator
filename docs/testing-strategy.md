@@ -168,35 +168,26 @@ func TestComponentIntegration(t *testing.T) {
 
 ## Test Organization
 
-### Isolated Test Structure
-All tests are organized in the tests/ directory, separate from source code:
+### Package-Specific Test Structure
+Tests are organized by package in the tests/ directory:
 
 ```
 tests/
-├── README.md                    # Test documentation and results
-├── formats_test.go              # Unit tests for pkg/formats
-├── analysis_test.go             # Unit tests for pkg/analysis
-├── strategies_test.go           # Unit tests for pkg/strategies
-├── extractor_test.go            # Unit tests for pkg/extractor
-├── schemes_test.go              # Unit tests for pkg/schemes
-├── theme_test.go                # Unit tests for pkg/theme
-├── integration/                 # Integration test suites
-│   ├── pipeline_test.go         # End-to-end extraction pipeline
-│   └── workflow_test.go         # Complete theme generation workflow
-├── benchmarks/                  # Performance testing
-│   ├── extraction_bench_test.go # Color extraction benchmarks
-│   └── conversion_bench_test.go # Color conversion benchmarks
+├── formats/                     # Unit tests for pkg/formats
+│   ├── formats_hsla_test.go     # HSLA color space conversions
+│   ├── formats_hex_test.go      # Hex color parsing and formatting
+│   ├── formats_contrast_test.go # WCAG accessibility calculations
+│   └── formats_analysis_test.go # Color analysis utilities
+├── extractor/                   # Unit tests for pkg/extractor
+│   └── strategies_test.go       # Strategy selection and analysis
 ├── images/                      # Real-world wallpaper test images
 │   ├── README.md                # Image analysis documentation
-│   ├── grayscale.jpg            # Pure grayscale test image
-│   ├── monotone.jpg             # Single hue tinted image
-│   ├── monochromatic.jpg        # Single hue with grayscale elements
-│   ├── duotone.jpg              # Two distinct colors
-│   ├── full-color.jpg           # Complex multi-color image
+│   ├── grayscale.jpeg           # Pure grayscale test image
+│   ├── nebula.jpeg              # Complex space image
+│   ├── night-city.jpeg          # High-detail urban scene
+│   ├── mountains.jpeg           # Natural landscape
+│   ├── abstract.jpeg            # Abstract art
 │   └── *.jpg, *.png             # Additional test wallpapers
-├── internal/                    # Shared test utilities
-│   ├── benchmark.go             # Performance testing utilities
-│   └── generators.go            # Test data generators
 └── analyze-images/              # Test analysis utility
     ├── main.go                  # Image characteristic analysis tool
     └── README.md                # Utility documentation
@@ -207,19 +198,14 @@ tests/
 ### Standard Go Testing
 ```bash
 # Run all unit tests
-go test ./tests -v
+go test ./tests/formats ./tests/extractor -v
 
 # Run specific package tests
-go test ./tests -run TestFormats -v
-
-# Run integration tests
-go test ./tests/integration -v
-
-# Run benchmarks
-go test ./tests/benchmarks -bench=. -v
+go test ./tests/formats -run TestParseHex -v
+go test ./tests/extractor -run TestStrategySelection -v
 
 # Run with race detection
-go test ./tests ./tests/integration -race -v
+go test ./tests/formats ./tests/extractor -race -v
 ```
 
 ### Code Validation

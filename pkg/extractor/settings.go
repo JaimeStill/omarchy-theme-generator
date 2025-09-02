@@ -5,20 +5,21 @@ package extractor
 // using tests/analyze-thresholds/main.go.
 //
 // To regenerate optimal values:
-//   go run tests/analyze-thresholds/main.go
+//
+//	go run tests/analyze-thresholds/main.go
 type Settings struct {
 	// Strategy selection thresholds
 	Strategy StrategySettings
-	
+
 	// Image analysis parameters
 	Analysis AnalysisSettings
-	
+
 	// Saliency calculation weights
 	Saliency SaliencySettings
-	
+
 	// Frequency strategy weights
 	Frequency FrequencySettings
-	
+
 	// Extraction options
 	Extraction ExtractionSettings
 }
@@ -28,11 +29,11 @@ type StrategySettings struct {
 	// Edge density threshold for triggering saliency strategy
 	// Empirically derived: 0.036 achieves 73% accuracy on test set
 	SaliencyEdgeThreshold float64
-	
+
 	// Color complexity threshold for saliency consideration
 	// Images with >10K colors often have visually important regions
 	SaliencyColorComplexity int
-	
+
 	// Minimum saturation for color complexity to trigger saliency
 	// Prevents grayscale images from triggering complexity check
 	SaliencySaturationThreshold float64
@@ -43,15 +44,15 @@ type AnalysisSettings struct {
 	// Edge detection thresholds
 	EdgeDetectionMinStrength float64 // Minimum gradient to count as edge
 	EdgeDetectionSampleRate  int     // Sample every Nth pixel for performance
-	
+
 	// Image type classification thresholds
-	HighDetailEdgeThreshold   float64 // EdgeDensity > this = HighDetail
-	SmoothEdgeThreshold       float64 // EdgeDensity < this = potential Smooth
-	SmoothColorThreshold      int     // ColorComplexity > this for Smooth
-	LowDetailColorThreshold   int     // ColorComplexity < this = LowDetail
-	ComplexColorThreshold     int     // ColorComplexity > this = potential Complex
-	ComplexEdgeThreshold      float64 // EdgeDensity > this for Complex
-	
+	HighDetailEdgeThreshold float64 // EdgeDensity > this = HighDetail
+	SmoothEdgeThreshold     float64 // EdgeDensity < this = potential Smooth
+	SmoothColorThreshold    int     // ColorComplexity > this for Smooth
+	LowDetailColorThreshold int     // ColorComplexity < this = LowDetail
+	ComplexColorThreshold   int     // ColorComplexity > this = potential Complex
+	ComplexEdgeThreshold    float64 // EdgeDensity > this for Complex
+
 	// Region detection
 	RegionMinEdgeDensity float64 // Minimum edge density for distinct regions
 	RegionMaxEdgeDensity float64 // Maximum edge density for distinct regions
@@ -63,18 +64,18 @@ type SaliencySettings struct {
 	LocalContrastWeight   float64
 	EdgeStrengthWeight    float64
 	ColorUniquenessWeight float64
-	
+
 	// Sampling parameters for performance
-	SaliencyMapSampleRate    int // Sample every Nth pixel
-	SaliencyMapSpreadRadius  int // Radius for spreading saliency values
-	
+	SaliencyMapSampleRate   int // Sample every Nth pixel
+	SaliencyMapSpreadRadius int // Radius for spreading saliency values
+
 	// Local analysis windows
-	ContrastWindowRadius    int // Radius for local contrast calculation
-	UniquenessWindowRadius  int // Radius for color uniqueness calculation
-	
+	ContrastWindowRadius   int // Radius for local contrast calculation
+	UniquenessWindowRadius int // Radius for color uniqueness calculation
+
 	// Color similarity threshold for uniqueness calculation
 	ColorSimilarityThreshold float64 // Euclidean distance in RGB space
-	
+
 	// Final color weighting
 	FrequencyWeight float64 // Weight for original frequency (vs saliency)
 	SaliencyWeight  float64 // Weight for saliency score
@@ -89,16 +90,16 @@ type FrequencySettings struct {
 	SmoothWeights     [4]float64
 	ComplexWeights    [4]float64
 	DefaultWeights    [4]float64
-	
+
 	// Lightness penalties for extreme values
-	DarkLightThreshold     float64 // L < this gets penalty
-	BrightLightThreshold   float64 // L > this gets penalty
+	DarkLightThreshold      float64 // L < this gets penalty
+	BrightLightThreshold    float64 // L > this gets penalty
 	ExtremeLightnessPenalty float64 // Score multiplier for extreme lightness
 	OptimalLightnessBonus   float64 // Score multiplier for optimal range
-	
+
 	// Saturation bonus threshold
 	MinSaturationForBonus float64 // Minimum saturation to avoid penalty
-	
+
 	// Contrast calculation
 	MaxContrastSamples int // Maximum colors to check for contrast
 }
@@ -108,7 +109,7 @@ type ExtractionSettings struct {
 	// Memory optimization
 	InitialMapCapacity int // Initial capacity for frequency map
 	MaxMapCapacity     int // Maximum capacity to prevent excessive memory
-	
+
 	// Performance optimization
 	EdgeDensitySampleRate int // Sample rate for edge density calculation
 	ColorDistSampleRate   int // Sample rate for color distribution analysis
@@ -118,21 +119,21 @@ type ExtractionSettings struct {
 func DefaultSettings() *Settings {
 	return &Settings{
 		Strategy: StrategySettings{
-			SaliencyEdgeThreshold:        0.036,
-			SaliencyColorComplexity:      10000,
-			SaliencySaturationThreshold:  0.4,
+			SaliencyEdgeThreshold:       0.036,
+			SaliencyColorComplexity:     10000,
+			SaliencySaturationThreshold: 0.4,
 		},
 		Analysis: AnalysisSettings{
-			EdgeDetectionMinStrength:   30.0,
-			EdgeDetectionSampleRate:    4,
-			HighDetailEdgeThreshold:    0.15,
-			SmoothEdgeThreshold:        0.05,
-			SmoothColorThreshold:       100,
-			LowDetailColorThreshold:    50,
-			ComplexColorThreshold:      200,
-			ComplexEdgeThreshold:       0.08,
-			RegionMinEdgeDensity:       0.05,
-			RegionMaxEdgeDensity:       0.25,
+			EdgeDetectionMinStrength: 30.0,
+			EdgeDetectionSampleRate:  4,
+			HighDetailEdgeThreshold:  0.15,
+			SmoothEdgeThreshold:      0.05,
+			SmoothColorThreshold:     100,
+			LowDetailColorThreshold:  50,
+			ComplexColorThreshold:    200,
+			ComplexEdgeThreshold:     0.08,
+			RegionMinEdgeDensity:     0.05,
+			RegionMaxEdgeDensity:     0.25,
 		},
 		Saliency: SaliencySettings{
 			LocalContrastWeight:      0.5,

@@ -12,7 +12,7 @@ type ImageType int
 
 const (
 	HighDetail ImageType = iota // Images with high edge density and fine details
-	LowDetail                   // Images with minimal edge information and simple structure  
+	LowDetail                   // Images with minimal edge information and simple structure
 	Smooth                      // Images with low edges but high color complexity
 	Complex                     // Images with both high edges and high color complexity
 )
@@ -194,7 +194,7 @@ func calculateContrastLevel(img image.Image) float64 {
 // Uses empirically-derived thresholds to classify images for strategy selection.
 func classifyImageType(chars *ImageCharacteristics, settings *Settings) ImageType {
 	analysis := settings.Analysis
-	
+
 	if chars.EdgeDensity > analysis.HighDetailEdgeThreshold {
 		return HighDetail
 	}
