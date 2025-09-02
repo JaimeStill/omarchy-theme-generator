@@ -14,14 +14,14 @@ import (
 type Strategy interface {
 	// Extract performs color extraction using the strategy's approach
 	Extract(img image.Image, options *ExtractionOptions) (*ExtractionResult, error)
-	
+
 	// CanHandle determines if this strategy is suitable for the image characteristics
 	CanHandle(characteristics *ImageCharacteristics) bool
-	
+
 	// Priority returns the strategy's priority score for the given characteristics
 	// Higher scores indicate better suitability (0-100 range)
 	Priority(characteristics *ImageCharacteristics) int
-	
+
 	// Name returns the strategy identifier for logging and analysis
 	Name() string
 }
@@ -104,8 +104,8 @@ func (s *Selector) SelectBest(img image.Image) Strategy {
 //  4. Returns comprehensive extraction results or wrapped errors
 //
 // Error conditions:
-//  - Strategy extraction failures: wrapped with strategy name
-//  - Image analysis errors: propagated from AnalyzeImageCharacteristics()
+//   - Strategy extraction failures: wrapped with strategy name
+//   - Image analysis errors: propagated from AnalyzeImageCharacteristics()
 //
 // Performance: Total time includes strategy selection (50-200ms) plus extraction time.
 func (s *Selector) Extract(img image.Image, options *ExtractionOptions) (*ExtractionResult, error) {

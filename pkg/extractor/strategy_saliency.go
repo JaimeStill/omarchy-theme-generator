@@ -8,7 +8,7 @@ import (
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"
 )
 
-type SaliencyStrategy struct{
+type SaliencyStrategy struct {
 	Settings *Settings
 }
 
@@ -23,18 +23,18 @@ func (s *SaliencyStrategy) CanHandle(characteristics *ImageCharacteristics) bool
 	if characteristics.Type == HighDetail {
 		return true
 	}
-	
+
 	// Edge-based detection
 	if characteristics.EdgeDensity > s.Settings.Strategy.SaliencyEdgeThreshold {
 		return true
 	}
-	
+
 	// Color complexity detection: Visually rich images benefit from saliency
-	if characteristics.ColorComplexity > s.Settings.Strategy.SaliencyColorComplexity && 
-	   characteristics.AverageSaturation > s.Settings.Strategy.SaliencySaturationThreshold {
+	if characteristics.ColorComplexity > s.Settings.Strategy.SaliencyColorComplexity &&
+		characteristics.AverageSaturation > s.Settings.Strategy.SaliencySaturationThreshold {
 		return true
 	}
-	
+
 	return false
 }
 
@@ -154,9 +154,9 @@ func (s *SaliencyStrategy) calculateLocalSaliency(img image.Image, x, y int) flo
 	edgeStrength := s.calculateEdgeStrength(img, x, y)
 	colorUniqueness := s.calculateColorUniqueness(img, x, y)
 
-	saliency := s.Settings.Saliency.LocalContrastWeight*localContrast + 
-				s.Settings.Saliency.EdgeStrengthWeight*edgeStrength + 
-				s.Settings.Saliency.ColorUniquenessWeight*colorUniqueness
+	saliency := s.Settings.Saliency.LocalContrastWeight*localContrast +
+		s.Settings.Saliency.EdgeStrengthWeight*edgeStrength +
+		s.Settings.Saliency.ColorUniquenessWeight*colorUniqueness
 
 	return saliency
 }
@@ -266,13 +266,13 @@ func (s *SaliencyStrategy) weightColorsBySaliency(img image.Image, topColors []*
 	weightedColors := make([]*ColorFrequency, 0, len(topColors))
 
 	for _, colorFreq := range topColors {
-		r, g, b := colorFreq.Color.RGB()
-		packed := uint32(r)<<16 | uint32(g)<<8 | uint32(b)
+		c := colorFreq.Color
+		packed := uint32(c.R)<<16 | uint32(c.G)<<8 | uint32(c.B)
 
 		avgSaliency := colorSaliencies[packed]
 
-		combinedScore := s.Settings.Saliency.FrequencyWeight*colorFreq.Percentage + 
-						 s.Settings.Saliency.SaliencyWeight*avgSaliency*100.0
+		combinedScore := s.Settings.Saliency.FrequencyWeight*colorFreq.Percentage +
+			s.Settings.Saliency.SaliencyWeight*avgSaliency*100.0
 
 		weightedColors = append(weightedColors, &ColorFrequency{
 			Color:      colorFreq.Color,

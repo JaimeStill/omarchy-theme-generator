@@ -21,9 +21,9 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 ## Development Rules
 1. Operate in Explanatory mode (`/output-style explanatory`)
 2. Only modify code when explicitly directed
-3. Use `go test ./tests -v` for validation
+3. Use `go test ./tests/formats ./tests/extractor -v` for validation
 4. Use `go vet ./...` for type checking
-5. Reference existing implementations: "See pkg/color/hsl.go"
+5. Reference existing implementations: "See pkg/formats/hsla.go"
 6. Keep explanations technically precise
 
 ## Current Implementation Status
@@ -32,7 +32,7 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 - ✅ Grayscale vs monochromatic classification implemented
 - ✅ Unit test suite with real wallpaper validation
 - ✅ Documentation infrastructure refactoring complete
-- 🔄 Foundation layer refactoring in progress (pkg/color → pkg/formats)
+- ✅ Foundation layer refactoring complete (pkg/formats with standard library types)
 - ⏳ Purpose-driven extraction pending (role-based color organization)
 - ⏳ Color theory schemes pending (pkg/schemes/ package)
 - ⏳ Theme generation pending (pkg/theme/)
@@ -56,10 +56,11 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 go vet ./...
 
 # Run tests
-go test ./tests -v
+go test ./tests/formats ./tests/extractor -v
 
 # Run specific test suites
-go test ./tests -run TestStrategySelection -v
+go test ./tests/formats -run TestParseHex -v
+go test ./tests/extractor -run TestStrategySelection -v
 
 # Generate image analysis documentation
 go run tests/analyze-images/main.go
@@ -100,21 +101,16 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Current Development Focus
-Architecture Refactoring (Multi-Session Process)
+Architecture Refactoring
 
-### Session 1: Documentation Infrastructure Cleanup (Current)
-- Update all documentation to align with refactored architecture
-- Establish component-based PROJECT.md structure
-- Create architecture documentation and glossary
-- Fix cross-references and terminology consistency
+### Foundation Refactoring (Complete)
+- ✅ Transform pkg/color → pkg/formats with standard library types
+- ✅ Implement HSLA color space with alpha channel support
+- ✅ Add WCAG accessibility calculations with proper types
+- ✅ Create comprehensive color analysis utilities
+- ✅ Reorganize tests into package-specific structure
 
-### Session 2: Foundation Refactoring (Next)
-- Transform pkg/color → pkg/formats with standard library types
-- Create pkg/settings and pkg/config packages
-- Update all imports and references
-- Migrate tests to new structure
-
-### Session 3: Purpose-Driven Extraction (Planned)
+### Purpose-Driven Extraction (Next)
 - Extract pkg/analysis and pkg/strategies from extractor
 - Implement role-based color organization
 - Add profile detection and synthesis capabilities

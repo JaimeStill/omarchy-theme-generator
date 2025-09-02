@@ -3,23 +3,24 @@ package extractor
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"math"
 
-	tcolor "github.com/JaimeStill/omarchy-theme-generator/pkg/color"
+	"github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
 )
 
 // ColorFrequency represents a color and its occurrence frequency in an image.
 // It includes both raw count and percentage for convenient display and analysis.
 type ColorFrequency struct {
-	Color      *tcolor.Color // The color value
-	Count      uint32        // Number of pixels with this color
-	Percentage float64       // Percentage of total pixels (0.0-100.0)
+	Color      color.RGBA // The color value
+	Count      uint32     // Number of pixels with this color
+	Percentage float64    // Percentage of total pixels (0.0-100.0)
 }
 
 type ExtractionResult struct {
 	Image            image.Image
 	FrequencyMap     *FrequencyMap
-	DominantColor    *tcolor.Color
+	DominantColor    color.RGBA
 	TopColors        []*ColorFrequency
 	UniqueColors     int
 	TotalPixels      uint32
@@ -70,14 +71,14 @@ func InitializeStrategies() {
 //
 // Returns comprehensive extraction results including:
 //   - Color frequency analysis with percentages
-//   - Dominant color identification  
+//   - Dominant color identification
 //   - Strategy recommendation for theme generation
 //   - Image characteristics analysis
 //
 // Error conditions:
 //   - File not found or permission denied: wrapped os.PathError
 //   - Unsupported image format: ErrUnsupportedFormat
-//   - Image too large (>MaxImageDimension): ErrImageTooLarge  
+//   - Image too large (>MaxImageDimension): ErrImageTooLarge
 //   - Corrupted image data: image decoding errors
 //   - No colors extracted: ErrNoColors (rare, typically corrupted images)
 //
@@ -136,7 +137,7 @@ func (r *ExtractionResult) GetSignificantColors(minThreshold float64) []*ColorFr
 	return r.FrequencyMap.FilterByThreshold(minThreshold)
 }
 
-func (r *ExtractionResult) GetColorPalette(requestedSize int) ([]*tcolor.Color, error) {
+func (r *ExtractionResult) GetColorPalette(requestedSize int) ([]color.RGBA, error) {
 	if requestedSize <= 0 {
 		return nil, fmt.Errorf("palette size must be positive, got %d", requestedSize)
 	}
@@ -149,7 +150,7 @@ func (r *ExtractionResult) GetColorPalette(requestedSize int) ([]*tcolor.Color, 
 		colors = r.FrequencyMap.GetTopColors(requestedSize)
 	}
 
-	palette := make([]*tcolor.Color, len(colors))
+	palette := make([]color.RGBA, len(colors))
 	for i, cf := range colors {
 		palette[i] = cf.Color
 	}
@@ -177,7 +178,7 @@ func (r *ExtractionResult) AnalyzeColorDistribution() *ColorDistribution {
 		Top10Coverage:    0,
 	}
 
-	if r.DominantColor != nil && len(r.TopColors) > 0 {
+	if len(r.TopColors) > 0 {
 		dist.DominantCoverage = r.TopColors[0].Percentage
 	}
 
@@ -227,8 +228,8 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 	sampleSize := min(len(r.TopColors), 100)
 
 	for i := 0; i < sampleSize; i++ {
-		_, s, _ := r.TopColors[i].Color.HSL()
-		totalSaturation += s
+		hsla := formats.RGBAToHSLA(r.TopColors[i].Color)
+		totalSaturation += hsla.S
 	}
 
 	if sampleSize > 0 {
@@ -246,7 +247,8 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 		foundConflicting := false
 
 		for _, cf := range r.TopColors {
-			h, s, _ := cf.Color.HSL()
+			hsla := formats.RGBAToHSLA(cf.Color)
+			h, s := hsla.H, hsla.S
 			if s > 0.05 {
 				hueInDegrees := h * 360.0
 
@@ -290,11 +292,11 @@ func (r *ExtractionResult) AnalyzeForThemeGeneration() *ThemeGenerationAnalysis 
 // GetPrimaryNonGrayscale returns the first non-grayscale color found in the top colors.
 // It searches through colors in frequency order and returns the first with saturation >= threshold.
 // Returns nil if all top colors are grayscale. Useful for finding synthesis seed colors.
-func (r *ExtractionResult) GetPrimaryNonGrayscale(saturationThreshold float64) *tcolor.Color {
+func (r *ExtractionResult) GetPrimaryNonGrayscale(saturationThreshold float64) *color.RGBA {
 	for _, cf := range r.TopColors {
-		_, s, _ := cf.Color.HSL()
-		if s >= saturationThreshold {
-			return cf.Color
+		hsla := formats.RGBAToHSLA(cf.Color)
+		if hsla.S >= saturationThreshold {
+			return &cf.Color
 		}
 	}
 	return nil
@@ -309,7 +311,7 @@ func (r *ExtractionResult) String() string {
 		"ExtractionResult: %dx%d image, %d unique colors from %d pixels, dominant: %s (%.2f%%), strategy: %s",
 		bounds.Dx(), bounds.Dy(),
 		r.UniqueColors, r.TotalPixels,
-		r.DominantColor.HEX(), r.TopColors[0].Percentage,
+		formats.ToHex(r.DominantColor), r.TopColors[0].Percentage,
 		analysis.SuggestedStrategy,
 	)
 }

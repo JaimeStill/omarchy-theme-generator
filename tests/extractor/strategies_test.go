@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/extractor"
+	"github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
 )
 
 func TestStrategySelection(t *testing.T) {
@@ -26,8 +27,8 @@ func TestStrategySelection(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.image, func(t *testing.T) {
-			imagePath := filepath.Join("images", tc.image)
-			
+			imagePath := filepath.Join("..", "images", tc.image)
+
 			if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 				t.Skipf("Image %s not found, skipping test", tc.image)
 				return
@@ -43,7 +44,7 @@ func TestStrategySelection(t *testing.T) {
 			}
 
 			if tc.expectedStrategy != "" && result.SelectedStrategy != tc.expectedStrategy {
-				t.Errorf("Expected strategy %s for %s, got %s", 
+				t.Errorf("Expected strategy %s for %s, got %s",
 					tc.expectedStrategy, tc.image, result.SelectedStrategy)
 			}
 
@@ -51,15 +52,11 @@ func TestStrategySelection(t *testing.T) {
 				t.Errorf("No colors extracted from %s", tc.image)
 			}
 
-			if result.DominantColor == nil {
-				t.Errorf("No dominant color found for %s", tc.image)
-			}
-
-			t.Logf("%s: strategy=%s, colors=%d, dominant=%s (%.1f%%)", 
-				tc.image, 
+			t.Logf("%s: strategy=%s, colors=%d, dominant=%s (%.1f%%)",
+				tc.image,
 				result.SelectedStrategy,
 				result.UniqueColors,
-				result.DominantColor.HEX(),
+				formats.ToHex(result.DominantColor),
 				result.TopColors[0].Percentage)
 		})
 	}
@@ -71,8 +68,8 @@ func TestThemeGenerationAnalysis(t *testing.T) {
 
 	for _, image := range testImages {
 		t.Run(image, func(t *testing.T) {
-			imagePath := filepath.Join("images", image)
-			
+			imagePath := filepath.Join("..", "images", image)
+
 			if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 				t.Skipf("Image %s not found, skipping test", image)
 				return
@@ -94,15 +91,15 @@ func TestThemeGenerationAnalysis(t *testing.T) {
 
 			// Validate analysis consistency
 			if analysis.IsGrayscale && analysis.AverageSaturation > 0.1 {
-				t.Errorf("Image marked as grayscale but has saturation %.3f", 
+				t.Errorf("Image marked as grayscale but has saturation %.3f",
 					analysis.AverageSaturation)
 			}
 
-			t.Logf("%s: strategy=%s, grayscale=%v, monochromatic=%v, sat=%.3f", 
+			t.Logf("%s: strategy=%s, grayscale=%v, monochromatic=%v, sat=%.3f",
 				image,
 				analysis.SuggestedStrategy,
 				analysis.IsGrayscale,
-				analysis.IsMonochromatic, 
+				analysis.IsMonochromatic,
 				analysis.AverageSaturation)
 		})
 	}
@@ -110,8 +107,8 @@ func TestThemeGenerationAnalysis(t *testing.T) {
 
 func TestSaliencyVsFrequency(t *testing.T) {
 	// Direct comparison test for nebula problem
-	nebulaPath := filepath.Join("images", "nebula.jpeg")
-	
+	nebulaPath := filepath.Join("..", "images", "nebula.jpeg")
+
 	if _, err := os.Stat(nebulaPath); os.IsNotExist(err) {
 		t.Skip("nebula.jpeg not found for comparison test")
 	}
@@ -132,7 +129,8 @@ func TestSaliencyVsFrequency(t *testing.T) {
 	// Check that we're getting saturated colors (not pure black/gray)
 	hasColorful := false
 	for _, cf := range result.TopColors {
-		_, s, l := cf.Color.HSL()
+		hsla := formats.RGBAToHSLA(cf.Color)
+		s, l := hsla.S, hsla.L
 		// Look for saturated colors with some lightness (nebula has dark but colorful regions)
 		if s > 0.3 && l > 0.05 {
 			hasColorful = true
@@ -146,13 +144,13 @@ func TestSaliencyVsFrequency(t *testing.T) {
 }
 
 func BenchmarkSaliencyStrategy(b *testing.B) {
-	imagePath := filepath.Join("images", "nebula.jpeg")
+	imagePath := filepath.Join("..", "images", "nebula.jpeg")
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		b.Skip("nebula.jpeg not found for benchmark")
 	}
 
 	options := extractor.DefaultOptions()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := extractor.ExtractColors(imagePath, options)
@@ -163,13 +161,13 @@ func BenchmarkSaliencyStrategy(b *testing.B) {
 }
 
 func BenchmarkFrequencyStrategy(b *testing.B) {
-	imagePath := filepath.Join("images", "grayscale.jpeg")
+	imagePath := filepath.Join("..", "images", "grayscale.jpeg")
 	if _, err := os.Stat(imagePath); os.IsNotExist(err) {
 		b.Skip("grayscale.jpeg not found for benchmark")
 	}
 
 	options := extractor.DefaultOptions()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := extractor.ExtractColors(imagePath, options)
