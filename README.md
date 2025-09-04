@@ -1,5 +1,8 @@
 # Omarchy Theme Generator
 
+> [!IMPORTANT]
+> This project is still early in development and the README describes the intended API for this tool. Stay tuned, it's coming together!
+
 Generate beautiful, cohesive terminal themes from any image using intelligent color extraction and color theory principles.
 
 ## Features
