@@ -34,19 +34,34 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 
 ### Foundation Layer
 
-**pkg/formats**
-- Color space conversions (RGB↔HSL)
-- Format utilities (ToHex, ParseHex)
-- Type definitions (ColorRole, ThemeMode)
+**pkg/formats** (Structure complete, unit tests needed)
+- Color space conversions (RGB↔HSL, LAB, XYZ)
+- Format utilities (ToHex, ParseHex, ToHexA)
+- HSLA type with alpha channel support
+- WCAG accessibility calculations
 - No dependencies - pure functions only
 
-**pkg/settings**
-- System configuration and tool behavior
-- Multi-layer composition (defaults → system → user → workspace → env)
-- Empirical thresholds and operational parameters
-- Global tool configuration
+**pkg/chromatic** (Structure complete, algorithms in development)
+- Color theory foundation and harmony detection
+- Contrast and distance calculations
+- Hue and chroma manipulation
+- Color scheme generation interfaces
+- Dependencies: pkg/formats
 
-**pkg/config**
+**pkg/settings** (Structure complete, unit tests needed)
+- System configuration and tool behavior
+- Flat structure with Viper integration
+- Empirical thresholds and operational parameters
+- Settings-as-methods pattern
+- Dependencies: Viper
+
+**pkg/loader** (Structure complete, unit tests needed)
+- Image I/O with validation
+- JPEG and PNG format support
+- Format detection and error handling
+- Dependencies: Standard library image packages
+
+**pkg/config** (Not implemented - future feature)
 - User preferences and theme-specific overrides
 - Theme-gen.json integration for metadata
 - Per-theme color overrides and extraction hints
@@ -54,45 +69,47 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 
 ### Analysis Layer
 
-**pkg/analysis**
+**pkg/analysis** (Partially extracted from extractor, unit tests needed)
 - Image characteristic detection (edge density, complexity)
 - Profile classification (Grayscale, Monotone, Monochromatic, Duotone/Tritone)
 - Mode detection (light/dark based on luminance)
 - Role assignment logic for purpose-driven extraction
 - Perceptual clustering and color grouping
+- Dependencies: pkg/formats, pkg/settings
 
 ### Processing Layer
 
-**pkg/extractor**
-- Orchestrates extraction pipeline
-- Coordinates strategies and analysis
-- Aggregates results and validates output
-- Simplified to orchestration after refactoring
+**pkg/extractor** (Working, needs refactoring)
+- Currently contains extraction logic and embedded strategies
+- Multi-strategy extraction (frequency and saliency)
+- Strategy selection based on image characteristics
+- Will be simplified to orchestration after refactoring
+- Dependencies: pkg/formats, pkg/loader, pkg/errors
 
-**pkg/strategies**
-- Pluggable extraction algorithms
+**pkg/strategies** (Not implemented - pending extraction)
+- Will contain pluggable extraction algorithms
 - Strategy interface for extensibility
 - Frequency strategy for simple images
 - Saliency strategy for complex images
-- Strategy selection based on image characteristics
+- Strategy selection logic
 
-### Generation Layer
+### Generation Layer (Not implemented)
 
-**pkg/schemes**
+**pkg/schemes** (Planned)
 - Color theory scheme generation
 - Edge case synthesis for minimal-color images
 - Color harmony validation and WCAG compliance
 - Role-based scheme application
 
-**pkg/theme**
+**pkg/theme** (Planned)
 - Template processing and theme file generation
 - Configuration generation for supported formats
 - Format-specific color conversion
 - Metadata creation and management
 
-### Application Layer
+### Application Layer (Not implemented)
 
-**cmd/omarchy-theme-gen**
+**cmd/omarchy-theme-gen** (Planned)
 - CLI interface and command handling
 - User interaction and workflow management
 - Integration of all lower layers
@@ -185,10 +202,10 @@ Each profile can specify its own processing pipeline while reusing common compon
 ## Testing Strategy
 
 ### Package-Level Testing
-- Standard Go test files (`*_test.go`)
-- Unit tests for each package in isolation
-- Mock dependencies for layer testing
-- Comprehensive coverage of public APIs
+- Standard Go test files in `tests/` subdirectories
+- Unit tests for each package (in development)
+- Tests organized by package: `tests/formats/`, `tests/extractor/`, etc.
+- Comprehensive coverage of public APIs (target)
 
 ### Integration Testing
 - End-to-end pipeline validation
@@ -197,10 +214,11 @@ Each profile can specify its own processing pipeline while reusing common compon
 - Cross-layer interaction validation
 
 ### Test Organization
-- `tests/internal/` - Shared test utilities
-- `tests/samples/` - Reusable test images
-- Package-specific tests co-located with source
-- Benchmark tests for performance validation
+- `tests/formats/` - Unit tests for pkg/formats
+- `tests/extractor/` - Tests for extraction strategies
+- `tests/images/` - Real-world test wallpapers
+- `tests/analyze-images/` - Image analysis utility
+- Tests separated from source code for clarity
 
 ## Extension Points
 

@@ -103,8 +103,8 @@ The generator uses a layered architecture with clear dependencies:
 
 #### Foundation Layer
 - **pkg/formats** - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
-- **pkg/chromatic** - Foundational color theory and mathematical calculations  
-- **pkg/settings** - Flat configuration structure with Viper integration
+- **pkg/chromatic** - Color theory foundation and harmony calculations
+- **pkg/settings** - System configuration with Viper integration
 - **pkg/loader** - Image I/O with validation and format support
 - **pkg/errors** - Error handling utilities
 
@@ -112,11 +112,11 @@ The generator uses a layered architecture with clear dependencies:
 - **pkg/analysis** - High-level color profiles and comprehensive analysis
 
 #### Processing Layer
-- **pkg/extractor** - Color extraction orchestration (contains embedded strategies)
-- **pkg/strategies** - Pluggable extraction strategies (pending extraction)
+- **pkg/extractor** - Color extraction orchestration with embedded strategies
+- **pkg/strategies** - Extraction strategies (planned, pending extraction from extractor)
 
 #### Generation Layer
-- **pkg/theme** - Theme file generation from templates (pending implementation)
+- **pkg/theme** - Theme file generation from templates (planned)
 
 ### Extraction Pipeline
 
@@ -148,8 +148,14 @@ The generator uses a layered architecture with clear dependencies:
 ## Development
 
 ```bash
-# Run tests
-go test ./tests -v
+# Run all tests
+go test ./tests/... -v
+
+# Run package-specific tests
+go test ./tests/formats -v
+go test ./tests/extractor -v
+
+# Validate code
 go vet ./...
 
 # Format code

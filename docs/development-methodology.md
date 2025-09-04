@@ -15,10 +15,11 @@
 - Reference architecture: `docs/architecture.md`
 - Point to test results and validation evidence
 
-### 3. User-Driven Development
-- All code modifications require explicit user direction
-- Claude Code operates in Explanatory mode for insights
-- No changes without user consent
+### 3. AI-Guided Development
+- AI provides comprehensive implementation guides
+- User develops source code based on guides
+- AI creates tests and maintains documentation
+- User reviews and provides architectural direction
 
 ### 4. Standard Go Tests as Truth
 - Use standard Go test files (`*_test.go`)
@@ -93,14 +94,15 @@ Before starting:
 # Validate code
 go vet ./...
 
-# Run standard Go tests
-go test ./...
+# Run all tests
+go test ./tests/... -v
 
 # Run specific package tests
-go test ./pkg/formats
+go test ./tests/formats -v
+go test ./tests/extractor -v
 
-# Run tests with verbose output
-go test -v ./tests
+# Run tests with coverage
+go test ./tests/... -v -cover
 ```
 
 ## References

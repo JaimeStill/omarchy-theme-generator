@@ -173,13 +173,14 @@ Tests are organized by package in the tests/ directory:
 
 ```
 tests/
-├── formats/                     # Unit tests for pkg/formats
-│   ├── formats_hsla_test.go     # HSLA color space conversions
-│   ├── formats_hex_test.go      # Hex color parsing and formatting
-│   ├── formats_contrast_test.go # WCAG accessibility calculations
-│   └── formats_analysis_test.go # Color analysis utilities
+├── formats/                     # Unit tests for pkg/formats (in development)
+│   └── *.go                     # Test files to be created
 ├── extractor/                   # Unit tests for pkg/extractor
 │   └── strategies_test.go       # Strategy selection and analysis
+├── chromatic/                   # Unit tests for pkg/chromatic (to be created)
+├── settings/                    # Unit tests for pkg/settings (to be created)
+├── loader/                      # Unit tests for pkg/loader (to be created)
+├── analysis/                    # Unit tests for pkg/analysis (to be created)
 ├── images/                      # Real-world wallpaper test images
 │   ├── README.md                # Image analysis documentation
 │   ├── grayscale.jpeg           # Pure grayscale test image
@@ -198,14 +199,21 @@ tests/
 ### Standard Go Testing
 ```bash
 # Run all unit tests
-go test ./tests/formats ./tests/extractor -v
+go test ./tests/... -v
 
 # Run specific package tests
+go test ./tests/formats -v
+go test ./tests/extractor -v
+
+# Run specific test functions
 go test ./tests/formats -run TestParseHex -v
 go test ./tests/extractor -run TestStrategySelection -v
 
 # Run with race detection
-go test ./tests/formats ./tests/extractor -race -v
+go test ./tests/... -race -v
+
+# Run with coverage
+go test ./tests/... -v -cover
 ```
 
 ### Code Validation
@@ -262,13 +270,16 @@ Each test should verify:
 
 ## Test Coverage Goals
 
-### Unit Test Coverage
-- **pkg/formats**: 100% coverage of public functions
-- **pkg/analysis**: Profile detection and mode classification
-- **pkg/strategies**: Strategy selection and extraction algorithms  
-- **pkg/extractor**: Pipeline orchestration
-- **pkg/schemes**: Color theory scheme generation
-- **pkg/theme**: Template processing and output generation
+### Unit Test Coverage (Target)
+- **pkg/formats**: 100% coverage of public functions (tests needed)
+- **pkg/chromatic**: Color theory and harmony functions (tests needed)
+- **pkg/settings**: Configuration loading and management (tests needed)
+- **pkg/loader**: Image I/O and validation (tests needed)
+- **pkg/analysis**: Profile detection and clustering (tests needed)
+- **pkg/extractor**: Strategy selection and orchestration (partial coverage)
+- **pkg/strategies**: Extraction algorithms (future, after extraction)
+- **pkg/schemes**: Color scheme generation (future)
+- **pkg/theme**: Template processing (future)
 
 ### Integration Test Coverage
 - End-to-end extraction pipeline with real images

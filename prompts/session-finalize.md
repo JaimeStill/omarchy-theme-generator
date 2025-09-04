@@ -5,31 +5,31 @@ This prompt ensures proper documentation, artifact updates, and preparation for 
 
 ## Finalization Responsibilities
 
-### Claude Code Tasks
-- **Documentation Comments**: Add comprehensive comments to all new/revised infrastructure
+### AI (Claude Code) Tasks
+- **Test Documentation**: Ensure all test files have clear purpose statements
 - **Repository Artifacts**: Update PROJECT.md, technical specifications, and cross-references
 - **Progress Log Update**: Update PROJECT.md with session progress entry
-- **Context Optimization**: Update CLAUDE.md with key decisions, remove outdated details
+- **Context Optimization**: Update CLAUDE.md with current implementation status
 - **Reference Validation**: Ensure all internal links and file paths are accurate
 
 ### User Tasks
-- **Final Validation**: Run complete test suite one final time
-- **Commit Preparation**: Stage changes and prepare commit message
+- **Final Validation**: Run complete test suite with `go test ./tests/... -v`
+- **Code Review**: Review AI-generated tests and documentation
 - **Next Session Input**: Provide direction for subsequent session focus
 
 ## Finalization Process
 
 ### 1. Documentation Review
-**Infrastructure Comments**
+**Code Documentation**
 - [ ] All new public functions have godoc comments
 - [ ] All new types have purpose documentation  
 - [ ] Complex algorithms include implementation notes
-- [ ] Test files have clear purpose statements
+- [ ] Test files in tests/ subdirectories have clear purpose
 
 **Code Quality Check**
 - [ ] Run `go vet ./...` for type validation
 - [ ] Run `go fmt ./...` for consistent formatting
-- [ ] All execution tests run successfully
+- [ ] Run `go test ./tests/... -v` for all tests
 - [ ] No compilation errors or warnings
 
 ### 2. Repository Artifact Updates
@@ -140,17 +140,17 @@ Session considered properly finalized when:
 ## Final Checklist
 
 ### User Actions Required
-- [ ] Run final test validation: `go vet ./... && go fmt ./...`
-- [ ] Execute all relevant tests: `go run tests/test-*/main.go`
-- [ ] Review updated documentation for accuracy
+- [ ] Run final validation: `go vet ./... && go fmt ./...`
+- [ ] Execute all tests: `go test ./tests/... -v`
+- [ ] Review AI-generated tests and documentation
 - [ ] Provide next session direction or priorities
 
-### Claude Actions Required  
+### AI Actions Required  
 - [ ] Complete all documentation updates
-- [ ] Validate all cross-references and links
-- [ ] Update PROJECT.md Progress Log with session entry
-- [ ] Optimize CLAUDE.md context for next session
-- [ ] Confirm all artifacts properly updated
+- [ ] Ensure test files are properly organized in tests/
+- [ ] Update PROJECT.md with current implementation status
+- [ ] Validate all cross-references match actual structure
+- [ ] Confirm CLAUDE.md reflects current package states
 
 ## References
 
