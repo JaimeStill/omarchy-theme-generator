@@ -1,4 +1,4 @@
-package formats
+package chromatic
 
 import (
 	"image/color"
@@ -55,16 +55,6 @@ func Luminance(c color.RGBA) float64 {
 	return 0.2126*r + 0.7152*g + 0.0722*b
 }
 
-// linearize converts sRGB color values to linear RGB for luminance calculations.
-// Applies the sRGB gamma correction inverse function as specified in WCAG 2.1.
-// Values <= 0.03928 use linear scaling, values > 0.03928 use power function.
-func linearize(v float64) float64 {
-	if v <= 0.03928 {
-		return v / 12.92
-	}
-	return math.Pow((v+0.055)/1.055, 2.4)
-}
-
 // ContrastRatio calculates the contrast ratio between two colors according to
 // WCAG 2.1 guidelines. Returns a value from 1:1 (no contrast) to 21:1 (maximum contrast).
 // The formula is: (L1 + 0.05) / (L2 + 0.05) where L1 is the lighter color's luminance.
@@ -77,4 +67,14 @@ func ContrastRatio(c1, c2 color.RGBA) float64 {
 	}
 
 	return (l1 + 0.05) / (l2 + 0.05)
+}
+
+// linearize converts sRGB color values to linear RGB for luminance calculations.
+// Applies the sRGB gamma correction inverse function as specified in WCAG 2.1.
+// Values <= 0.03928 use linear scaling, values > 0.03928 use power function.
+func linearize(v float64) float64 {
+	if v <= 0.03928 {
+		return v / 12.92
+	}
+	return math.Pow((v+0.055)/1.055, 2.4)
 }

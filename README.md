@@ -101,14 +101,22 @@ The generator uses a layered architecture with clear dependencies:
 
 ### Core Packages
 
-- **pkg/formats** - Color conversion and formatting utilities
-- **pkg/analysis** - Image characteristic and profile detection  
-- **pkg/extractor** - Color extraction orchestration
-- **pkg/strategies** - Pluggable extraction strategies (frequency, saliency)
-- **pkg/schemes** - Color theory and scheme generation
-- **pkg/theme** - Theme file generation from templates
-- **pkg/settings** - System configuration and thresholds
-- **pkg/config** - User preferences and overrides
+#### Foundation Layer
+- **pkg/formats** - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
+- **pkg/chromatic** - Foundational color theory and mathematical calculations  
+- **pkg/settings** - Flat configuration structure with Viper integration
+- **pkg/loader** - Image I/O with validation and format support
+- **pkg/errors** - Error handling utilities
+
+#### Analysis Layer  
+- **pkg/analysis** - High-level color profiles and comprehensive analysis
+
+#### Processing Layer
+- **pkg/extractor** - Color extraction orchestration (contains embedded strategies)
+- **pkg/strategies** - Pluggable extraction strategies (pending extraction)
+
+#### Generation Layer
+- **pkg/theme** - Theme file generation from templates (pending implementation)
 
 ### Extraction Pipeline
 

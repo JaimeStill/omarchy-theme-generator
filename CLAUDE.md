@@ -26,15 +26,53 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 5. Reference existing implementations: "See pkg/formats/hsla.go"
 6. Keep explanations technically precise
 
+## Architectural Patterns
+
+### Settings-as-Methods Pattern
+- **Public functions requiring settings MUST be methods** on package configuration structures
+- Private functions MAY accept settings parameters from calling methods
+- This enforces explicit configuration and prevents hidden dependencies
+
+Example:
+```go
+// ✅ Correct: Public method on configuration structure
+func (a *Analyzer) AnalyzeColors(colors []color.RGBA) ColorProfile
+
+// ❌ Incorrect: Public function with settings parameter
+func AnalyzeColors(colors []color.RGBA, settings *Settings) ColorProfile
+```
+
+### Algorithmic Constants Only
+- **Hard-coded values allowed ONLY for algorithmic constants** (mathematical formulas, ratios)
+- **Any tunable parameter MUST be a setting** (thresholds, tolerances, limits)
+- If a value can be varied without breaking the algorithm, it belongs in settings
+
+Example:
+```go
+// ✅ Correct: Mathematical constant
+luminance := 0.2126*r + 0.7152*g + 0.0722*b
+
+// ❌ Incorrect: Tunable threshold
+if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
+```
+
+### Foundation Layer Responsibility
+- **pkg/formats**: Color space representations and conversions
+- **pkg/chromatic**: Color theory, calculations, and analysis (foundation)
+- **pkg/analysis**: High-level color profiles using chromatic
+- Use descriptive package names that reflect actual responsibility
+
 ## Current Implementation Status
 - ✅ Multi-strategy image extraction complete (frequency/saliency algorithms)
 - ✅ Strategy selection with empirical thresholds implemented
-- ✅ Grayscale vs monochromatic classification implemented
-- ✅ Unit test suite with real wallpaper validation
-- ✅ Documentation infrastructure refactoring complete
-- ✅ Foundation layer refactoring complete (pkg/formats with standard library types)
-- ⏳ Purpose-driven extraction pending (role-based color organization)
-- ⏳ Color theory schemes pending (pkg/schemes/ package)
+- ✅ Foundation layer refactoring complete (pkg/formats, pkg/chromatic, pkg/settings, pkg/loader)
+- ✅ LAB color space implementation with mathematical accuracy
+- ✅ Color analysis and profile detection (pkg/analysis with Analyzer pattern)
+- ✅ Flat settings architecture with Viper integration
+- ✅ Color theory foundation (pkg/chromatic with harmony detection)
+- ✅ Settings-as-methods architectural pattern established
+- ⏳ Strategy extraction pending (pkg/strategies with dependency injection)
+- ⏳ Extractor simplification pending (pure orchestration)
 - ⏳ Theme generation pending (pkg/theme/)
 - ⏳ CLI interface pending (cmd/omarchy-theme-gen/)
 
@@ -72,23 +110,23 @@ go fmt ./...
 ## Package Structure (Refactored Architecture)
 
 ### Foundation Layer
-- `pkg/formats/` - Color conversions and formatting (refactored from pkg/color)
-- `pkg/settings/` - System configuration and tool behavior
-- `pkg/config/` - User preferences and theme-specific overrides
+- `pkg/formats/` - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
+- `pkg/chromatic/` - Color theory, calculations, and analysis (foundational color science)
+- `pkg/settings/` - Flat configuration structure with Viper integration
+- `pkg/loader/` - Image I/O with validation and format support
 
 ### Analysis Layer  
-- `pkg/analysis/` - Image analysis and profile detection (extracted from extractor)
+- `pkg/analysis/` - High-level color profiles and comprehensive analysis (uses chromatic)
 
 ### Processing Layer
-- `pkg/strategies/` - Extraction strategies (extracted from extractor) 
-- `pkg/extractor/` - Extraction orchestration (simplified)
+- `pkg/strategies/` - Extraction strategies with dependency injection (pending)
+- `pkg/extractor/` - Extraction orchestration (simplified, pending)
 
 ### Generation Layer
-- `pkg/schemes/` - Color theory scheme generation
-- `pkg/theme/` - Theme file generation
+- `pkg/theme/` - Theme file generation (pending)
 
 ### Application Layer
-- `cmd/omarchy-theme-gen/` - CLI application
+- `cmd/omarchy-theme-gen/` - CLI application (pending)
 
 ### Testing
 - `tests/internal/` - Centralized test utilities and benchmarks
