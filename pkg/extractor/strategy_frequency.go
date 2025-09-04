@@ -7,6 +7,7 @@ import (
 	"math"
 	"sort"
 
+	"github.com/JaimeStill/omarchy-theme-generator/pkg/chromatic"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
 )
@@ -378,14 +379,14 @@ func (f *FrequencyStrategy) calculateContrastImportance(colorFreq *ColorFrequenc
 
 	background := allColors[0]
 	if background != colorFreq {
-		contrast := formats.ContrastRatio(colorFreq.Color, background.Color)
+		contrast := chromatic.ContrastRatio(colorFreq.Color, background.Color)
 		maxContrast = math.Max(maxContrast, contrast)
 	}
 
 	checkCount := min(len(allColors), f.Settings.Frequency.MaxContrastSamples)
 	for i := 1; i < checkCount; i++ {
 		if allColors[i] != colorFreq {
-			contrast := formats.ContrastRatio(colorFreq.Color, allColors[i].Color)
+			contrast := chromatic.ContrastRatio(colorFreq.Color, allColors[i].Color)
 			maxContrast = math.Max(maxContrast, contrast)
 		}
 	}

@@ -22,7 +22,33 @@
 - WCAG accessibility calculations with proper type safety
 - Color analysis utilities (grayscale, monochromatic, distance metrics)
 - Hex color parsing and formatting
-- **Status**: Complete
+- LAB and XYZ color space implementations
+- **Status**: Structure complete, unit tests needed
+
+#### pkg/chromatic
+- Color theory foundation and harmony detection
+- Contrast and distance calculations
+- Hue and chroma utilities
+- Color scheme generation interfaces
+- **Status**: Structure complete, core algorithms in development
+
+#### pkg/settings
+- Flat configuration structure with Viper integration
+- System-wide operational parameters
+- Empirical thresholds and defaults
+- Settings loader and management
+- **Status**: Structure complete, unit tests needed, will grow with development
+
+#### pkg/loader
+- Image I/O with validation
+- Format support for JPEG/PNG
+- Image validation and error handling
+- **Status**: Structure complete, unit tests needed
+
+#### pkg/analysis
+- Image and color analysis utilities
+- Clustering algorithms for color grouping
+- **Status**: Partially extracted from extractor, unit tests needed
 
 #### pkg/errors
 - Centralized error handling
@@ -33,8 +59,7 @@
 - Package-specific test organization (tests/formats/, tests/extractor/)
 - Strategy validation with test images
 - Image analysis utility
-- Comprehensive unit test coverage
-- **Status**: Complete
+- **Status**: Test structure established, individual package tests in development
 
 ### Capabilities
 - ✅ Process 4K images in <2 seconds
@@ -47,16 +72,30 @@
 
 ## Current Work
 
-### Architecture Refactoring (Active)
+### Architecture Refactoring (Foundation In Progress)
 **Goal**: Transform from frequency-based to purpose-driven extraction with layered architecture
 
-**Tasks**:
-- [x] Complete documentation cleanup (documentation infrastructure aligned with refactored architecture)
-- [x] Refactor pkg/color → pkg/formats with standard library types (Complete)
-- [ ] Extract pkg/analysis and pkg/strategies from extractor
-- [ ] Implement role-based color organization
-- [ ] Create pkg/settings and pkg/config packages
-- [ ] Add profile detection (Grayscale, Monotone, Monochromatic, Duotone/Tritone)
+**Completed Tasks**:
+- [x] Refactor pkg/color → pkg/formats with standard library types (Structure complete)
+- [x] Create pkg/settings with flat configuration and Viper integration (Structure complete)
+- [x] Create pkg/loader with image I/O and validation (Structure complete) 
+- [x] Extract color theory foundation to pkg/chromatic (Structure complete)
+- [x] Create pkg/analysis with Analyzer pattern (Partially complete)
+- [x] Establish settings-as-methods architectural pattern (Complete)
+- [x] Update documentation infrastructure (In progress)
+
+**Current Development Tasks**:
+- [ ] Complete unit tests for pkg/formats
+- [ ] Implement color derivation algorithms in pkg/chromatic
+- [ ] Complete unit tests for pkg/settings
+- [ ] Complete unit tests for pkg/loader
+- [ ] Complete unit tests for pkg/analysis
+
+**Next Phase Tasks**:
+- [ ] Extract strategies from pkg/extractor to pkg/strategies
+- [ ] Add advanced profile detection features to pkg/analysis
+- [ ] Simplify pkg/extractor to pure orchestration
+- [ ] Implement pkg/config for user preferences
 
 ---
 
@@ -72,22 +111,48 @@
 - `ContrastRatio()` - WCAG accessibility calculations
 - `ToHex()`, `ToHexA()` - Color formatting
 - `ParseHex()` - Hex string to color parsing
+- LAB and XYZ color space conversions
 - Theme type definitions (ColorRole, ThemeMode, etc.)
 
 *Dependencies*: Standard library only
-*Status*: Complete
+*Status*: Structure complete, unit tests needed
+
+#### **pkg/chromatic** - Color theory foundation
+*Purpose*: Foundational color science and theory calculations
+
+**Features**:
+- Color harmony detection and scheme generation
+- Contrast ratio and accessibility calculations
+- Perceptual color distance measurements
+- Hue and chroma manipulation utilities
+- Color derivation algorithms (in development)
+
+*Dependencies*: pkg/formats
+*Status*: Structure complete, core algorithms in development
+
+#### **pkg/loader** - Image I/O operations
+*Purpose*: Handle image loading, validation, and format support
+
+**Features**:
+- JPEG and PNG image loading
+- Image validation and error handling
+- Format detection and conversion
+- Memory-efficient image processing
+
+*Dependencies*: Standard library image packages
+*Status*: Structure complete, unit tests needed
 
 #### **pkg/settings** - System configuration
 *Purpose*: Tool behavior and operational thresholds
 
 **Features**:
-- Settings structure with layered composition
-- Default values and empirical thresholds
-- JSON loading from multiple sources
-- Multi-layer override system (defaults → system → user → workspace → env)
+- Flat settings structure (no nested complexity)
+- Viper integration with context-based injection
+- Comprehensive defaults with empirical thresholds
+- Settings-as-methods pattern enforcement
 
-*Dependencies*: Standard library only
-*Status*: Not implemented
+*Dependencies*: Standard library + Viper
+*Status*: Structure complete, unit tests needed, will grow with development
 
 #### **pkg/config** - User preferences
 *Purpose*: Theme-specific user overrides
@@ -116,7 +181,7 @@
 - Role assignment logic for purpose-driven extraction
 
 *Dependencies*: pkg/formats, pkg/settings
-*Status*: Not yet extracted from pkg/extractor
+*Status*: Partially extracted from pkg/extractor, unit tests needed
 
 ---
 
@@ -133,7 +198,7 @@
 - Configurable thresholds and parameters
 
 *Dependencies*: pkg/formats, pkg/analysis, pkg/settings
-*Status*: Not yet extracted from pkg/extractor
+*Status*: Pending extraction from pkg/extractor
 
 #### **pkg/extractor** - Extraction orchestration
 *Purpose*: Coordinate the extraction pipeline
@@ -240,16 +305,16 @@ omarchy-theme-generator/
 
 ## Completed Features
 
-### Foundation Work (Sessions 1-4)
+### Foundation Work (Initial Development)
 - ✅ Project structure and Go module setup
-- ✅ Color type with RGBA storage and cached HSLA conversion
-- ✅ Color space conversions (RGB↔HSL, manipulation, WCAG, LAB)
+- ✅ Initial color type implementation (refactored to pkg/formats)
+- ✅ Color space conversions (RGB↔HSL, WCAG, LAB, XYZ)
 - ✅ Image loading and validation infrastructure
 - ✅ Multi-strategy extraction system (frequency vs saliency)
 - ✅ Strategy selection based on image characteristics
 - ✅ Settings-driven configuration with empirical thresholds
 - ✅ Grayscale vs monochromatic classification with proper vocabulary
-- ✅ Comprehensive test suite with real wallpaper validation
+- ✅ Test structure with real wallpaper validation
 - ✅ Performance optimization (<2s for 4K images)
 
 ### Architectural Decisions Made
@@ -288,22 +353,24 @@ omarchy-theme-generator/
 
 ## Development Log
 
-### Documentation Cleanup (Complete)
+### Documentation Updates (In Progress)
 - Restructured PROJECT.md with component-based organization
 - Created comprehensive architecture documentation
 - Established glossary for technical terminology
-- Fixed cross-references across all documentation
-- Aligned all docs with refactored architecture vision
+- Updating cross-references across all documentation
+- Aligning all docs with refactored architecture and actual implementation
 
-### pkg/formats Refactor (Complete)
+### Architecture Refactoring Phase 1 (Structure Complete)
 - ✅ Replaced custom Color type with standard library color.RGBA
 - ✅ Converted from method-based to functional approach  
 - ✅ Implemented HSLA type with full alpha channel support
 - ✅ Added WCAG accessibility calculations with proper types
-- ✅ Created comprehensive color analysis utilities
-- ✅ Reorganized tests into package-specific subdirectories
-- ✅ All tests passing with proper validation
-- ✅ Updated documentation and commands to reflect new structure
+- ✅ Created color analysis utilities in pkg/formats
+- ✅ Created pkg/chromatic for color theory foundation
+- ✅ Created pkg/settings with Viper integration
+- ✅ Created pkg/loader for image I/O
+- ✅ Started pkg/analysis extraction from extractor
+- ⏳ Unit tests for all new packages in development
 
 **Key Decisions:**
 - Use color.RGBA as foundation type across entire codebase

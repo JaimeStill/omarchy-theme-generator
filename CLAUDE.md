@@ -4,9 +4,9 @@
 Go-based CLI tool that generates Omarchy themes from images using color extraction and palette generation based on color theory principles. Optional TUI interface planned for future enhancement.
 
 ## Development Philosophy
-- **User-driven**: All code modifications require explicit user direction
+- **User-driven**: AI provides implementation guides, user develops code
 - **Explanatory mode**: Provide educational insights while coding
-- **Execution tests**: Validate immediately with minimal tests, no frameworks
+- **Test-driven**: Create comprehensive unit tests in tests/ subdirectories
 - **Precise language**: Use correct technical terminology always
 - **Reference, don't repeat**: Link to existing code and docs
 
@@ -20,21 +20,59 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 
 ## Development Rules
 1. Operate in Explanatory mode (`/output-style explanatory`)
-2. Only modify code when explicitly directed
-3. Use `go test ./tests/formats ./tests/extractor -v` for validation
+2. Provide comprehensive implementation guides for user
+3. Use `go test ./tests/... -v` for full test validation
 4. Use `go vet ./...` for type checking
 5. Reference existing implementations: "See pkg/formats/hsla.go"
 6. Keep explanations technically precise
 
+## Architectural Patterns
+
+### Settings-as-Methods Pattern
+- **Public functions requiring settings MUST be methods** on package configuration structures
+- Private functions MAY accept settings parameters from calling methods
+- This enforces explicit configuration and prevents hidden dependencies
+
+Example:
+```go
+// ✅ Correct: Public method on configuration structure
+func (a *Analyzer) AnalyzeColors(colors []color.RGBA) ColorProfile
+
+// ❌ Incorrect: Public function with settings parameter
+func AnalyzeColors(colors []color.RGBA, settings *Settings) ColorProfile
+```
+
+### Algorithmic Constants Only
+- **Hard-coded values allowed ONLY for algorithmic constants** (mathematical formulas, ratios)
+- **Any tunable parameter MUST be a setting** (thresholds, tolerances, limits)
+- If a value can be varied without breaking the algorithm, it belongs in settings
+
+Example:
+```go
+// ✅ Correct: Mathematical constant
+luminance := 0.2126*r + 0.7152*g + 0.0722*b
+
+// ❌ Incorrect: Tunable threshold
+if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
+```
+
+### Foundation Layer Responsibility
+- **pkg/formats**: Color space representations and conversions
+- **pkg/chromatic**: Color theory, calculations, and analysis (foundation)
+- **pkg/analysis**: High-level color profiles using chromatic
+- Use descriptive package names that reflect actual responsibility
+
 ## Current Implementation Status
 - ✅ Multi-strategy image extraction complete (frequency/saliency algorithms)
 - ✅ Strategy selection with empirical thresholds implemented
-- ✅ Grayscale vs monochromatic classification implemented
-- ✅ Unit test suite with real wallpaper validation
-- ✅ Documentation infrastructure refactoring complete
-- ✅ Foundation layer refactoring complete (pkg/formats with standard library types)
-- ⏳ Purpose-driven extraction pending (role-based color organization)
-- ⏳ Color theory schemes pending (pkg/schemes/ package)
+- ✅ Foundation layer structure complete (pkg/formats, pkg/chromatic, pkg/settings, pkg/loader)
+- ✅ LAB and XYZ color space implementations in pkg/formats
+- ✅ Settings-as-methods architectural pattern established
+- ⏳ Unit tests needed for all foundation packages
+- ⏳ Color derivation algorithms in pkg/chromatic in development
+- ⏳ pkg/analysis partially extracted from extractor
+- ⏳ Strategy extraction pending (pkg/strategies with dependency injection)
+- ⏳ Extractor simplification pending (pure orchestration)
 - ⏳ Theme generation pending (pkg/theme/)
 - ⏳ CLI interface pending (cmd/omarchy-theme-gen/)
 
@@ -55,12 +93,19 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 # Validate code
 go vet ./...
 
-# Run tests
-go test ./tests/formats ./tests/extractor -v
+# Run all tests
+go test ./tests/... -v
 
-# Run specific test suites
+# Run package-specific tests
+go test ./tests/formats -v
+go test ./tests/extractor -v
+
+# Run specific test functions
 go test ./tests/formats -run TestParseHex -v
 go test ./tests/extractor -run TestStrategySelection -v
+
+# Run tests with coverage
+go test ./tests/... -v -cover
 
 # Generate image analysis documentation
 go run tests/analyze-images/main.go
@@ -69,31 +114,33 @@ go run tests/analyze-images/main.go
 go fmt ./...
 ```
 
-## Package Structure (Refactored Architecture)
+## Package Structure (Current State)
 
-### Foundation Layer
-- `pkg/formats/` - Color conversions and formatting (refactored from pkg/color)
-- `pkg/settings/` - System configuration and tool behavior
-- `pkg/config/` - User preferences and theme-specific overrides
+### Foundation Layer (Structure Complete, Tests Needed)
+- `pkg/formats/` - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
+- `pkg/chromatic/` - Color theory foundation (algorithms in development)
+- `pkg/settings/` - Flat configuration structure with Viper integration
+- `pkg/loader/` - Image I/O with validation and format support
+- `pkg/config/` - User preferences per theme (future, for theme-gen.json)
 
-### Analysis Layer  
-- `pkg/analysis/` - Image analysis and profile detection (extracted from extractor)
+### Analysis Layer (Partial Implementation)
+- `pkg/analysis/` - Color profiles and analysis (partially extracted from extractor)
 
-### Processing Layer
-- `pkg/strategies/` - Extraction strategies (extracted from extractor) 
-- `pkg/extractor/` - Extraction orchestration (simplified)
+### Processing Layer (Refactoring Needed)
+- `pkg/extractor/` - Currently contains extraction + embedded strategies
+- `pkg/strategies/` - Pending extraction from extractor
 
-### Generation Layer
-- `pkg/schemes/` - Color theory scheme generation
-- `pkg/theme/` - Theme file generation
+### Generation Layer (Not Implemented)
+- `pkg/theme/` - Theme file generation (future)
 
-### Application Layer
-- `cmd/omarchy-theme-gen/` - CLI application
+### Application Layer (Not Implemented)
+- `cmd/omarchy-theme-gen/` - CLI application (future)
 
-### Testing
-- `tests/internal/` - Centralized test utilities and benchmarks
-- `tests/samples/` - Reusable test images
-- `tests/` - Standard Go test files
+### Testing (Structure Established)
+- `tests/formats/` - Unit tests for pkg/formats (in development)
+- `tests/extractor/` - Tests for extraction strategies
+- `tests/images/` - Real-world test wallpapers
+- `tests/analyze-images/` - Image analysis utility
 
 ## Performance Targets
 - 4K image: < 2 seconds
@@ -101,20 +148,25 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Current Development Focus
-Architecture Refactoring
+Unit Testing and Algorithm Implementation
 
-### Foundation Refactoring (Complete)
-- ✅ Transform pkg/color → pkg/formats with standard library types
-- ✅ Implement HSLA color space with alpha channel support
-- ✅ Add WCAG accessibility calculations with proper types
-- ✅ Create comprehensive color analysis utilities
-- ✅ Reorganize tests into package-specific structure
+### Foundation Testing (Priority)
+- ⏳ Create unit tests for pkg/formats
+- ⏳ Create unit tests for pkg/chromatic
+- ⏳ Create unit tests for pkg/settings
+- ⏳ Create unit tests for pkg/loader
+- ⏳ Create unit tests for pkg/analysis
 
-### Purpose-Driven Extraction (Next)
-- Extract pkg/analysis and pkg/strategies from extractor
+### Algorithm Development (Active)
+- ⏳ Implement color derivation algorithms in pkg/chromatic
+- ⏳ Complete harmony generation functions
+- ⏳ Add perceptual distance calculations
+
+### Architecture Refactoring Phase 2 (Next)
+- Extract pkg/strategies from extractor
+- Complete pkg/analysis extraction
 - Implement role-based color organization
-- Add profile detection and synthesis capabilities
-- Build settings-driven configuration system
+- Simplify pkg/extractor to pure orchestration
 
 ## CLI Architecture
 Commands planned:
@@ -142,9 +194,15 @@ Command Options:
 
 Note: No `apply` command needed - themes integrate directly with Omarchy's system theme selection.
 
-## Remember
-- Start from fundamental understanding
-- Build toward learnable challenges
-- Document with technical precision
-- Test immediately, adapt quickly
-- Keep context clean and focused
+## AI Responsibilities
+- Provide comprehensive implementation guides
+- Create unit tests for all packages
+- Maintain documentation accuracy
+- Review code for best practices
+- Ensure cross-references are valid
+
+## User Responsibilities
+- Architecture and design decisions
+- Source code implementation
+- Review and refine AI outputs
+- Project direction and priorities

@@ -5,37 +5,37 @@ This prompt establishes the development methodology and role distribution for im
 
 ## Role Distribution
 
-### Claude Code Responsibilities
-- **Implementation Guides**: Provide step-by-step implementation instructions
-- **Review Gates**: Analyze user implementations before proceeding
-- **Test Generation**: Create execution tests following transparent test patterns
-- **Documentation**: Update infrastructure docs and cross-references
+### AI (Claude Code) Responsibilities
+- **Implementation Guides**: Provide comprehensive step-by-step implementation instructions
+- **Test Generation**: Create unit tests in tests/ subdirectories
+- **Documentation**: Maintain accurate documentation and cross-references
+- **Code Review**: Analyze implementations for best practices and patterns
 - **Technical Precision**: Use correct domain terminology and reference existing code
 
 ### User Responsibilities  
-- **Core Implementation**: Write the actual feature code
-- **Project Direction**: Make architectural decisions and feature choices
-- **Completion Confirmation**: Explicitly confirm when implementations are done
+- **Core Implementation**: Develop source code based on AI guides
+- **Architecture Direction**: Make design decisions and set priorities
+- **Review and Refine**: Edit and approve AI outputs
 - **Code Execution**: Run tests and validation commands
 
 ## Development Process
 
-### Step-by-Step Implementation
-1. **Guide Phase**: Claude provides detailed implementation guide for current step
-2. **Implementation Phase**: User implements the guided functionality
-3. **Confirmation Phase**: User explicitly states "Implementation complete" 
-4. **Review Phase**: Claude analyzes implementation before next step
-5. **Test Phase**: Claude creates/updates execution tests
-6. **Validation Phase**: User runs tests and reports results
+### Implementation Workflow
+1. **Guide Phase**: AI provides comprehensive implementation guide
+2. **Implementation Phase**: User develops code based on guide
+3. **Test Creation**: AI generates unit tests for the implementation
+4. **Review Phase**: AI analyzes code for quality and patterns
+5. **Documentation**: AI updates relevant documentation
+6. **Validation Phase**: User runs tests and confirms results
 
 ### Testing Requirements
 All functionality must be validated with standard Go tests following these principles:
 
-- **Standard Go Testing**: Use `*_test.go` files in tests/ directory
-- **Layered Testing**: Each package tested in isolation with clear dependencies
+- **Standard Go Testing**: Use `*_test.go` files in tests/ subdirectories per package
+- **Package Organization**: tests/formats/, tests/extractor/, tests/chromatic/, etc.
 - **Transparent Output**: Clear test failures showing expected vs actual results
 - **Real-World Validation**: Integration tests with actual image samples
-- **Immediate Feedback**: Run with `go test ./tests -v`
+- **Immediate Feedback**: Run with `go test ./tests/... -v`
 
 Example Go test structure:
 ```go
@@ -70,10 +70,11 @@ The project uses a layered architecture with clear dependencies:
 
 ### Current Implementation Status
 - ✅ Multi-strategy extraction (frequency/saliency)
-- ✅ Settings-driven configuration
-- 🔄 Architecture refactoring in progress
-- ⏳ Purpose-driven extraction pending
-- ⏳ Color scheme generation pending
+- ✅ Foundation package structures created
+- 🔄 Unit tests for all packages in development
+- 🔄 Color derivation algorithms in pkg/chromatic
+- ⏳ Strategy extraction from extractor pending
+- ⏳ Theme generation pending
 
 ## Implementation Guidelines
 
@@ -104,19 +105,21 @@ Each step must meet criteria before proceeding:
 - [ ] Identify session objectives from roadmap
 - [ ] Confirm development environment: `go vet ./...` 
 - [ ] Set explanatory output mode: `/output-style explanatory`
+- [ ] Verify test structure: `ls tests/`
 
 ### Per-Step Process
-1. Claude: Provide implementation guide with specific requirements
-2. User: Implement guided functionality  
-3. User: Confirm "Implementation complete"
-4. Claude: Review implementation quality and correctness
-5. Claude: Create/update execution test
-6. User: Run test and report results
-7. Claude: Proceed to next step or address issues
+1. AI: Provide comprehensive implementation guide
+2. User: Develop source code based on guide
+3. AI: Create unit tests in appropriate tests/ subdirectory
+4. AI: Review code and update documentation
+5. User: Run tests with `go test ./tests/... -v`
+6. User: Provide feedback on results
+7. AI: Address issues or proceed to next task
 
 ### Communication Protocol
-- User uses explicit confirmation: "Implementation complete"
-- Claude waits for confirmation before proceeding
+- AI provides comprehensive guides before user implementation
+- User implements and provides feedback
+- AI creates tests and documentation
 - All file paths in responses must be absolute
 - Reference existing code and documentation extensively
 

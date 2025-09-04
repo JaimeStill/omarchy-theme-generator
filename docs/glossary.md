@@ -39,9 +39,10 @@
 
 ### Package Names
 - **pkg/formats**: Handles color conversions and formatting (refactored from pkg/color).
-- **pkg/schemes**: Color theory scheme generation (not pkg/palette for consistency).
-- **pkg/analysis**: Image and color analysis (extracted from extractor).
-- **pkg/strategies**: Pluggable extraction algorithms (extracted from extractor).
+- **pkg/chromatic**: Color theory foundation and harmony calculations.
+- **pkg/analysis**: Image and color analysis (partially extracted from extractor).
+- **pkg/strategies**: Pluggable extraction algorithms (pending extraction from extractor).
+- **pkg/schemes**: Color theory scheme generation (future implementation).
 
 ### Configuration Types
 - **Settings**: System configuration controlling HOW the tool operates. Multi-layer composition from defaults → system → user → workspace → env.
@@ -56,16 +57,16 @@
 ## Development Methodology
 
 ### Testing Organization
-- **Unit Tests**: Package-level tests in tests/ directory, not embedded with source code.
-- **Integration Tests**: End-to-end workflow tests in tests/integration/.
-- **Benchmark Tests**: Performance validation in tests/benchmarks/.
+- **Unit Tests**: Package-level tests in tests/ subdirectories (e.g., tests/formats/, tests/extractor/).
+- **Integration Tests**: End-to-end workflow tests (future).
+- **Benchmark Tests**: Performance validation (future).
 - **Test Images**: Real-world wallpapers in tests/images/ for realistic validation.
 
 ### Development Principles
 - **Standard Library First**: Prefer Go standard types (color.RGBA) over custom implementations.
 - **Settings-Driven**: All thresholds configurable, no hardcoded values in business logic.
 - **Dependency Direction**: Higher layers depend on lower layers only, no circular dependencies.
-- **User-Driven**: All code modifications require explicit user direction.
+- **AI-Guided**: AI provides implementation guides, user develops code, AI creates tests.
 
 ### Color Science Terminology
 - **Contrast Ratio**: WCAG-defined measurement for text accessibility (target: 4.5:1 for AA compliance).

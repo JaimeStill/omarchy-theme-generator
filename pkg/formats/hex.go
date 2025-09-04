@@ -75,18 +75,6 @@ func ParseHex(hex string) (color.RGBA, error) {
 	return color.RGBA{R: r, G: g, B: b, A: a}, nil
 }
 
-// HSLAToHex converts an HSLA color to hex format #RRGGBB.
-// Alpha channel is ignored in the output.
-func HSLAToHex(h HSLA) string {
-	return ToHex(HSLAToRGBA(h))
-}
-
-// HSLAToHexA converts an HSLA color to hex format with alpha #RRGGBBAA.
-// Includes the alpha channel in the output.
-func HSLAToHexA(h HSLA) string {
-	return ToHexA(HSLAToRGBA(h))
-}
-
 // ParseHexToHSLA parses a hex color string and returns an HSLA color.
 // Accepts the same hex formats as ParseHex and converts the result to HSLA color space.
 func ParseHexToHSLA(hex string) (HSLA, error) {
