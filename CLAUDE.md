@@ -11,7 +11,7 @@ Go-based CLI tool that generates Omarchy themes from images using color extracti
 - **Reference, don't repeat**: Link to existing code and docs
 
 ## Core Documents
-- **Architecture design**: `docs/architecture.md` - Layered architecture and technical decisions
+- **Architecture design**: `ARCHITECTURE.md` - Layered architecture and technical decisions
 - **Development process**: `docs/development-methodology.md` - Intelligent Development principles
 - **Testing approach**: `docs/testing-strategy.md` - Unit test patterns
 - **Omarchy integration**: `OMARCHY.md` - Theme format standards and requirements
@@ -93,7 +93,7 @@ if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
 
 ## Key Technical Decisions
 - **Standard Types**: Use `color.RGBA` from standard library, not custom types
-- **Purpose-Driven**: Colors organized by role (background, foreground, accent) not frequency
+- **Category-Based**: Colors organized by 27 theme categories with configurable characteristics
 - **Settings vs Config**: System settings (HOW tool operates) separate from user config (WHAT user wants)
 - **Layered Architecture**: Clear dependency layers with no circular dependencies
 - **Profile Detection**: Grayscale, Monotone, Monochromatic, Duotone/Tritone for edge cases
@@ -169,7 +169,7 @@ Phase 1: Complete Refactoring & Testing (See PROJECT.md for detailed roadmap)
 ### Active Tasks
 1. Documentation updates (in progress)
 2. Strategy extraction from pkg/extractor
-3. Role-based color organization implementation
+3. Category-based extraction and scoring implementation
 4. pkg/palette package creation
 5. Comprehensive test coverage for all packages
 

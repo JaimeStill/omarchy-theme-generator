@@ -29,13 +29,18 @@ type ColorProfile struct {
 }
 
 type ImageColors struct {
-	Background color.RGBA
-	Foreground color.RGBA
-	Primary    color.RGBA
-	Secondary  color.RGBA
-	Accent     color.RGBA
+	ColorFrequency     map[color.RGBA]uint32              `json:"color_frequency"`
+	Categories         map[ColorCategory]color.RGBA       `json:"categories"`
+	CategoryCandidates map[ColorCategory][]ColorCandidate `json:"category_candidates"`
+	TotalPixels        uint32                             `json:"total_pixels"`
+	UniqueColors       int                                `json:"unique_colors"`
+	CoverageRatio      float64                            `json:"coverage_ratio"`
+}
 
-	MostFrequent color.RGBA
+type ColorCandidate struct {
+	Color     color.RGBA `json:"color"`
+	Frequency uint32     `json:"frequency"`
+	Score     float64    `json:"score"`
 }
 
 type Processor struct {
@@ -75,7 +80,16 @@ func (p *Processor) ProcessImage(img image.Image) (*ColorProfile, error) {
 	}
 
 	profile := p.analyzeColors(filtered)
-	profile.Colors = *p.extractByRole(filtered, profile)
+	profile.Colors = *p.extractColors(filtered, profile, totalPixels)
 
 	return profile, nil
+}
+
+func (p *Processor) calculateTotalPixels(colorFreq map[color.RGBA]uint32) uint32 {
+	total := uint32(0)
+	for _, freq := range colorFreq {
+		total += freq
+	}
+
+	return total
 }

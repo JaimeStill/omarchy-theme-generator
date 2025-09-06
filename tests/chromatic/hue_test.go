@@ -65,6 +65,17 @@ func TestFindDominantHue(t *testing.T) {
 				diff = 360 - diff
 			}
 			
+			// Comprehensive diagnostic logging
+			t.Logf("Input colors (%d):", len(tc.colors))
+			for i, color := range tc.colors {
+				t.Logf("  Color %d: H=%.1f°, S=%.3f, L=%.3f, A=%.3f", 
+					i+1, color.H, color.S, color.L, color.A)
+			}
+			t.Logf("Calculated dominant hue: %.1f°", result)
+			t.Logf("Expected dominant hue: %.1f° ± %.1f°", tc.expected, tc.tolerance)
+			t.Logf("Circular distance: %.1f° (threshold: %.1f°)", diff, tc.tolerance)
+			t.Logf("Within tolerance: %t", diff <= tc.tolerance)
+			
 			if diff > tc.tolerance {
 				t.Errorf("Expected dominant hue %v ± %v, got %v",
 					tc.expected, tc.tolerance, result)

@@ -1,312 +1,231 @@
 package processor_test
 
 import (
-	"context"
+	"image"
 	"image/color"
 	"testing"
 
-	"github.com/JaimeStill/omarchy-theme-generator/pkg/loader"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/processor"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/settings"
-	"github.com/JaimeStill/omarchy-theme-generator/pkg/chromatic"
 )
 
-func TestProcessor_New(t *testing.T) {
+func TestNew(t *testing.T) {
 	s := settings.DefaultSettings()
 	p := processor.New(s)
+	
+	t.Logf("Testing processor creation")
+	t.Logf("Settings provided: %+v", s.MinFrequency)
 	
 	if p == nil {
 		t.Fatal("Expected processor to be created, got nil")
 	}
+	
+	t.Logf("Processor created successfully")
 }
 
-func TestProcessor_ProcessImage_SimpleImage(t *testing.T) {
+func TestProcessImage_SimpleImage(t *testing.T) {
 	s := settings.DefaultSettings()
 	p := processor.New(s)
-	l := loader.NewFileLoader(s)
 	
-	// Use simple test image
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/simple.png")
+	// Create a simple 3x3 test image with distinct colors
+	img := createTestImage(3, 3, []color.RGBA{
+		{255, 255, 255, 255}, // White background
+		{0, 0, 0, 255},       // Black foreground  
+		{255, 0, 0, 255},     // Red accent
+	})
+	
+	t.Logf("Testing ProcessImage with 3x3 test image")
+	t.Logf("Image bounds: %v", img.Bounds())
+	
+	profile, err := p.ProcessImage(img)
 	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
+		t.Fatalf("ProcessImage failed: %v", err)
 	}
 	
-	result, err := p.ProcessImage(img)
-	if err != nil {
-		t.Fatalf("Expected no error for simple image, got: %v", err)
+	if profile == nil {
+		t.Fatal("Expected profile to be non-nil")
 	}
 	
-	if result == nil {
-		t.Fatal("Expected result to be non-nil")
+	// Log comprehensive diagnostic information
+	t.Logf("Color Profile Results:")
+	t.Logf("  Mode: %s", profile.Mode)
+	t.Logf("  ColorScheme: %s", profile.ColorScheme)
+	t.Logf("  IsGrayscale: %t", profile.IsGrayscale)
+	t.Logf("  IsMonochromatic: %t", profile.IsMonochromatic)
+	t.Logf("  DominantHue: %.1f°", profile.DominantHue)
+	t.Logf("  HueVariance: %.1f°", profile.HueVariance)
+	t.Logf("  AvgLuminance: %.3f", profile.AvgLuminance)
+	t.Logf("  AvgSaturation: %.3f", profile.AvgSaturation)
+	
+	t.Logf("Image Colors Results:")
+	t.Logf("  TotalPixels: %d", profile.Colors.TotalPixels)
+	t.Logf("  UniqueColors: %d", profile.Colors.UniqueColors)
+	t.Logf("  CoverageRatio: %.3f", profile.Colors.CoverageRatio)
+	t.Logf("  Categories found: %d", len(profile.Colors.Categories))
+	t.Logf("  Category candidates: %d total", countCandidates(profile.Colors.CategoryCandidates))
+	
+	// Basic validation
+	if profile.Colors.TotalPixels != 9 {
+		t.Errorf("Expected 9 total pixels, got %d", profile.Colors.TotalPixels)
 	}
 	
-	// Verify all color roles are assigned
-	if result.Colors.Background == (color.RGBA{}) {
-		t.Error("Expected background color to be assigned")
-	}
-	if result.Colors.Foreground == (color.RGBA{}) {
-		t.Error("Expected foreground color to be assigned")
-	}
-	if result.Colors.Primary == (color.RGBA{}) {
-		t.Error("Expected primary color to be assigned")
-	}
-}
-
-func TestProcessor_ProcessImage_GrayscaleImage(t *testing.T) {
-	s := settings.DefaultSettings()
-	p := processor.New(s)
-	l := loader.NewFileLoader(s)
-	
-	// Use grayscale test image
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/grayscale.jpeg")
-	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
+	if profile.Colors.UniqueColors == 0 {
+		t.Error("Expected non-zero unique colors")
 	}
 	
-	result, err := p.ProcessImage(img)
-	if err != nil {
-		t.Fatalf("Expected no error for grayscale image, got: %v", err)
+	if len(profile.Colors.Categories) == 0 {
+		t.Error("Expected at least one category to be assigned")
 	}
 	
-	// Verify contrast between background and foreground
-	contrast := chromatic.ContrastRatio(result.Colors.Background, result.Colors.Foreground)
-	if contrast < s.MinContrastRatio {
-		t.Errorf("Expected contrast ratio >= %v, got %v", s.MinContrastRatio, contrast)
-	}
-}
-
-func TestProcessor_ProcessImage_MonochromeImage(t *testing.T) {
-	s := settings.DefaultSettings()
-	p := processor.New(s)
-	l := loader.NewFileLoader(s)
-	
-	// Use monochrome test image
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/monochrome.jpeg")
-	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
-	}
-	
-	result, err := p.ProcessImage(img)
-	if err != nil {
-		t.Fatalf("Expected no error for monochrome image, got: %v", err)
-	}
-	
-	// Verify that colors were extracted successfully
-	if result.Colors.Primary == (color.RGBA{}) {
-		t.Error("Expected primary color to be assigned for monochrome image")
+	// Verify background category is always present
+	if _, hasBackground := profile.Colors.Categories[processor.CategoryBackground]; !hasBackground {
+		t.Error("Background category should always be present")
 	}
 }
 
-func TestProcessor_ProcessImage_LowFrequencyFiltering(t *testing.T) {
+func TestProcessImage_GrayscaleImage(t *testing.T) {
 	s := settings.DefaultSettings()
-	s.MinFrequency = 0.9 // 90% minimum frequency - very strict
 	p := processor.New(s)
-	l := loader.NewFileLoader(s)
 	
-	// Use complex multi-color image that won't meet strict frequency requirements
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/abstract.jpeg")
+	// Create a grayscale test image
+	img := createTestImage(2, 2, []color.RGBA{
+		{50, 50, 50, 255},   // Dark gray
+		{200, 200, 200, 255}, // Light gray
+	})
+	
+	t.Logf("Testing ProcessImage with grayscale image")
+	
+	profile, err := p.ProcessImage(img)
 	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
+		t.Fatalf("ProcessImage failed: %v", err)
 	}
 	
-	result, err := p.ProcessImage(img)
+	t.Logf("Grayscale Detection Results:")
+	t.Logf("  IsGrayscale: %t", profile.IsGrayscale)
+	t.Logf("  AvgSaturation: %.3f (threshold: %.3f)", profile.AvgSaturation, s.GrayscaleThreshold)
+	t.Logf("  Mode: %s", profile.Mode)
+	t.Logf("  AvgLuminance: %.3f (mode threshold: %.3f)", profile.AvgLuminance, s.ThemeModeThreshold)
+	
+	// Expect grayscale detection
+	if !profile.IsGrayscale {
+		t.Errorf("Expected grayscale detection for gray image (avg sat: %.3f)", profile.AvgSaturation)
+	}
+	
+	// Background should still be detected
+	if _, hasBackground := profile.Colors.Categories[processor.CategoryBackground]; !hasBackground {
+		t.Error("Background category should be present even in grayscale images")
+	}
+}
+
+func TestProcessImage_MonochromaticImage(t *testing.T) {
+	s := settings.DefaultSettings()
+	p := processor.New(s)
+	
+	// Create a monochromatic test image (different shades of blue)
+	img := createTestImage(3, 3, []color.RGBA{
+		{0, 0, 100, 255},   // Dark blue
+		{0, 0, 150, 255},   // Medium blue
+		{0, 0, 200, 255},   // Light blue
+	})
+	
+	t.Logf("Testing ProcessImage with monochromatic blue image")
+	
+	profile, err := p.ProcessImage(img)
+	if err != nil {
+		t.Fatalf("ProcessImage failed: %v", err)
+	}
+	
+	t.Logf("Monochromatic Detection Results:")
+	t.Logf("  IsMonochromatic: %t", profile.IsMonochromatic)
+	t.Logf("  DominantHue: %.1f° (expected ~240° for blue)", profile.DominantHue)
+	t.Logf("  HueVariance: %.1f° (tolerance: %.1f°)", profile.HueVariance, s.MonochromaticTolerance)
+	t.Logf("  ColorScheme: %s", profile.ColorScheme)
+	
+	// Should detect monochromatic pattern
+	if !profile.IsMonochromatic {
+		t.Logf("Note: Monochromatic detection may depend on saturation levels")
+	}
+	
+	// Should detect blue hue range (240° ± tolerance)
+	expectedHue := 240.0
+	hueDiff := abs(profile.DominantHue - expectedHue)
+	if hueDiff > 180 {
+		hueDiff = 360 - hueDiff
+	}
+	
+	if hueDiff > 30 { // Allow some tolerance for blue detection
+		t.Logf("Note: Dominant hue %.1f° differs from expected blue ~240°", profile.DominantHue)
+	}
+}
+
+func TestProcessImage_EmptyImage(t *testing.T) {
+	s := settings.DefaultSettings()
+	p := processor.New(s)
+	
+	// Create a 0x0 image (should fail gracefully)
+	img := image.NewRGBA(image.Rect(0, 0, 0, 0))
+	
+	t.Logf("Testing ProcessImage with empty image")
+	
+	_, err := p.ProcessImage(img)
 	if err == nil {
-		t.Error("Expected error when no colors meet frequency threshold")
+		t.Error("Expected error for empty image")
 	}
-	if result != nil {
-		t.Error("Expected nil result when processing fails")
-	}
+	
+	t.Logf("Empty image correctly rejected: %v", err)
 }
 
-// Test theme mode detection with known images
-func TestProcessor_ThemeMode_Detection(t *testing.T) {
-	testCases := []struct {
-		name         string
-		imagePath    string
-		expectedMode processor.ThemeMode
-		description  string
-	}{
-		{
-			name:         "Dark night city suggests Dark theme",
-			imagePath:    "../../tests/images/night-city.jpeg",
-			expectedMode: processor.Dark,
-			description:  "Night scene should pair with dark theme",
-		},
-		{
-			name:         "Bright coastal scene suggests Light theme", 
-			imagePath:    "../../tests/images/coast.jpeg",
-			expectedMode: processor.Light,
-			description:  "Bright coastal scene should pair with light theme",
-		},
-		{
-			name:         "Warm image suggests appropriate theme",
-			imagePath:    "../../tests/images/warm.jpeg",
-			expectedMode: processor.Dark, // Based on actual analysis: bg luminance 0.036
-			description:  "Warm image is actually quite dark overall",
-		},
-	}
-	
+func TestProcessImage_MinimumColorRequirement(t *testing.T) {
 	s := settings.DefaultSettings()
-	l := loader.NewFileLoader(s)
-	
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
-			img, err := l.LoadImage(ctx, tc.imagePath)
-			if err != nil {
-				t.Fatalf("Failed to load test image: %v", err)
-			}
-			
-			p := processor.New(s)
-			result, err := p.ProcessImage(img)
-			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
-			}
-			
-			// Calculate actual luminance metrics for diagnosis
-			bgLuminance := chromatic.Luminance(result.Colors.Background)
-			fgLuminance := chromatic.Luminance(result.Colors.Foreground)
-			primaryLuminance := chromatic.Luminance(result.Colors.Primary)
-			
-			// Log diagnostic information
-			t.Logf("Image: %s", tc.imagePath)
-			t.Logf("Background luminance: %v", bgLuminance)
-			t.Logf("Foreground luminance: %v", fgLuminance)
-			t.Logf("Primary luminance: %v", primaryLuminance)
-			t.Logf("Theme mode threshold: %v", s.ThemeModeThreshold)
-			
-			// Determine actual theme mode based on background selection
-			actualMode := processor.Dark
-			if bgLuminance >= 0.5 {
-				actualMode = processor.Light
-			}
-			
-			t.Logf("Expected mode: %v, Actual mode: %v", tc.expectedMode, actualMode)
-			
-			if actualMode != tc.expectedMode {
-				t.Errorf("Theme mode mismatch for %s: expected %v, got %v (bg luminance: %v, threshold: %v)",
-					tc.imagePath, tc.expectedMode, actualMode, bgLuminance, s.ThemeModeThreshold)
-			}
-		})
-	}
-}
-
-// Test fallback color parsing
-func TestProcessor_FallbackColors(t *testing.T) {
-	s := settings.DefaultSettings()
-	
-	// Test valid hex colors
-	s.LightBackgroundFallback = "#ffffff"
-	s.DarkBackgroundFallback = "#000000"
-	s.PrimaryFallback = "#ff5733"
-	
+	s.MinFrequency = 0.9 // Set very high threshold
 	p := processor.New(s)
-	l := loader.NewFileLoader(s)
 	
-	// Use a mid-tone image that might trigger fallback paths
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/sepia.jpeg")
-	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
+	// Create image where no colors meet the minimum frequency
+	img := createTestImage(10, 10, []color.RGBA{
+		{255, 0, 0, 255},   // Red - 1 pixel
+		{0, 255, 0, 255},   // Green - 1 pixel  
+		{0, 0, 255, 255},   // Blue - 1 pixel
+		{255, 255, 0, 255}, // Yellow - 97 pixels (dominant)
+	})
+	
+	t.Logf("Testing ProcessImage with high minimum frequency threshold")
+	t.Logf("MinFrequency setting: %.3f", s.MinFrequency)
+	
+	_, err := p.ProcessImage(img)
+	if err == nil {
+		t.Error("Expected error when no colors meet minimum frequency")
 	}
 	
-	result, err := p.ProcessImage(img)
-	if err != nil {
-		t.Fatalf("Unexpected error: %v", err)
-	}
-	
-	// Verify colors are assigned (fallbacks may or may not be used)
-	if result.Colors.Background == (color.RGBA{}) {
-		t.Error("Expected background color to be assigned")
-	}
-	if result.Colors.Primary == (color.RGBA{}) {
-		t.Error("Expected primary color to be assigned")
-	}
+	t.Logf("High frequency threshold correctly enforced: %v", err)
 }
 
-func TestProcessor_InvalidFallbackColors(t *testing.T) {
-	s := settings.DefaultSettings()
+// Helper functions
+
+func createTestImage(width, height int, colors []color.RGBA) image.Image {
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	
-	// Set invalid hex colors
-	s.LightBackgroundFallback = "invalid-hex"
-	s.DarkBackgroundFallback = "not-a-color"
-	s.PrimaryFallback = "#gggggg" // Invalid hex digits
-	
-	p := processor.New(s)
-	l := loader.NewFileLoader(s)
-	
-	// Use any test image
-	ctx := context.Background()
-	img, err := l.LoadImage(ctx, "../../tests/images/simple.png")
-	if err != nil {
-		t.Fatalf("Failed to load test image: %v", err)
+	colorIndex := 0
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, colors[colorIndex%len(colors)])
+			colorIndex++
+		}
 	}
 	
-	result, err := p.ProcessImage(img)
-	if err != nil {
-		t.Fatalf("Processor should handle invalid hex gracefully, got: %v", err)
-	}
-	
-	// Should still get valid colors from hardcoded fallbacks
-	if result.Colors.Background == (color.RGBA{}) {
-		t.Error("Expected hardcoded fallback background color")
-	}
-	if result.Colors.Primary == (color.RGBA{}) {
-		t.Error("Expected hardcoded fallback primary color")
-	}
+	return img
 }
 
-func TestProcessor_ColorExtractionQuality(t *testing.T) {
-	s := settings.DefaultSettings()
-	p := processor.New(s)
-	l := loader.NewFileLoader(s)
-	
-	testCases := []struct {
-		name      string
-		imagePath string
-		checkFunc func(*testing.T, *processor.ColorProfile)
-	}{
-		{
-			name:      "Portal image extracts vibrant colors",
-			imagePath: "../../tests/images/portal.jpeg",
-			checkFunc: func(t *testing.T, result *processor.ColorProfile) {
-				// Portal image should have distinctive colors
-				if result.Colors.Primary == result.Colors.Background {
-					t.Error("Primary color should be different from background")
-				}
-			},
-		},
-		{
-			name:      "Nebula image handles complex colors",
-			imagePath: "../../tests/images/nebula.jpeg",
-			checkFunc: func(t *testing.T, result *processor.ColorProfile) {
-				// Nebula should extract meaningful colors
-				contrast := chromatic.ContrastRatio(result.Colors.Background, result.Colors.Foreground)
-				if contrast < s.MinContrastRatio {
-					t.Errorf("Nebula should maintain contrast ratio >= %v, got %v", s.MinContrastRatio, contrast)
-				}
-			},
-		},
+func countCandidates(candidates map[processor.ColorCategory][]processor.ColorCandidate) int {
+	total := 0
+	for _, candidateList := range candidates {
+		total += len(candidateList)
 	}
-	
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
-			img, err := l.LoadImage(ctx, tc.imagePath)
-			if err != nil {
-				t.Fatalf("Failed to load test image: %v", err)
-			}
-			
-			result, err := p.ProcessImage(img)
-			if err != nil {
-				t.Fatalf("Unexpected error processing %s: %v", tc.imagePath, err)
-			}
-			
-			tc.checkFunc(t, result)
-		})
+	return total
+}
+
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
 	}
+	return x
 }

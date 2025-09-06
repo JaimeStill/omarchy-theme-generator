@@ -27,8 +27,8 @@ func TestSettings_Load_NoConfigFile(t *testing.T) {
 		t.Errorf("Without config file, should use default GrayscaleThreshold")
 	}
 	
-	if s.MinContrastRatio != defaults.MinContrastRatio {
-		t.Errorf("Without config file, should use default MinContrastRatio")
+	if s.MinFrequency != defaults.MinFrequency {
+		t.Errorf("Without config file, should use default MinFrequency")
 	}
 }
 
@@ -60,8 +60,8 @@ func TestSettings_LoadWithViper_ValidConfig(t *testing.T) {
 		t.Errorf("Expected MonochromaticTolerance 20.0, got %v", s.MonochromaticTolerance)
 	}
 	
-	if s.MinContrastRatio != 7.0 {
-		t.Errorf("Expected MinContrastRatio 7.0 (AAA), got %v", s.MinContrastRatio)
+	if s.ThemeModeThreshold != 0.6 {
+		t.Errorf("Expected custom ThemeModeThreshold 0.6, got %v", s.ThemeModeThreshold)
 	}
 	
 	if s.LightBackgroundFallback != "#f0f0f0" {
@@ -97,10 +97,10 @@ func TestSettings_LoadWithViper_PartialConfig(t *testing.T) {
 	// Apply defaults first (we can't access the private setDefaults function,
 	// so we'll set some defaults manually for testing)
 	v.SetDefault("grayscale_threshold", 0.05)
-	v.SetDefault("min_contrast_ratio", 4.5)
+	v.SetDefault("monochromatic_tolerance", 15.0)
 	
 	// Override only some values
-	v.Set("min_contrast_ratio", 5.5)
+	v.Set("monochromatic_tolerance", 18.0)
 	v.Set("light_background_fallback", "#fafafa")
 	v.Set("loader_max_width", 4096)
 	
@@ -110,8 +110,8 @@ func TestSettings_LoadWithViper_PartialConfig(t *testing.T) {
 	}
 	
 	// Custom values should be loaded
-	if s.MinContrastRatio != 5.5 {
-		t.Errorf("Expected custom MinContrastRatio 5.5, got %v", s.MinContrastRatio)
+	if s.MonochromaticTolerance != 18.0 {
+		t.Errorf("Expected custom MonochromaticTolerance 18.0, got %v", s.MonochromaticTolerance)
 	}
 	
 	if s.LightBackgroundFallback != "#fafafa" {
@@ -131,7 +131,7 @@ func TestSettings_LoadWithViper_PartialConfig(t *testing.T) {
 
 func TestSettings_Context(t *testing.T) {
 	s := settings.DefaultSettings()
-	s.MinContrastRatio = 6.0 // Custom value for testing
+	s.MinFrequency = 0.002 // Custom value for testing
 	
 	// Test setting context
 	ctx := context.Background()
@@ -143,8 +143,8 @@ func TestSettings_Context(t *testing.T) {
 		t.Fatal("FromContext() should return settings")
 	}
 	
-	if retrieved.MinContrastRatio != 6.0 {
-		t.Errorf("Context should preserve custom settings, got %v", retrieved.MinContrastRatio)
+	if retrieved.MinFrequency != 0.002 {
+		t.Errorf("Context should preserve custom settings, got %v", retrieved.MinFrequency)
 	}
 	
 	// Test retrieving from context without settings (should load defaults)
@@ -155,7 +155,7 @@ func TestSettings_Context(t *testing.T) {
 	}
 	
 	// Should be default value, not our custom 6.0
-	if defaultRetrieved.MinContrastRatio == 6.0 {
+	if defaultRetrieved.MinFrequency == 0.002 {
 		t.Error("Empty context should not return custom settings")
 	}
 }

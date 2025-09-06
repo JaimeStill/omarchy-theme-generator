@@ -1,184 +1,158 @@
 # Omarchy Theme Generator
 
 > [!IMPORTANT]
-> This project is still early in development and the README describes the intended API for this tool. Stay tuned, it's coming together!
+> This project is still early in development. The core processing pipeline is complete, but the CLI application and theme generation features are not yet implemented.
 
-Generate beautiful, cohesive terminal themes from any image using intelligent color extraction and color theory principles.
+Color extraction and analysis engine for generating terminal themes from images using category-based processing and color theory principles.
 
-## Features
+## What This Tool Is
 
-- 🎨 **Intelligent Color Extraction** - Optimized single-pass frequency analysis
-- 🎯 **Purpose-Driven Colors** - Organizes colors by their role (background, foreground, accents)
-- ♿ **WCAG Compliant** - Ensures text readability with proper contrast ratios  
-- 🎭 **Light/Dark Mode** - Automatic detection with manual override options
-- 🖼️ **Edge Case Handling** - Gracefully handles grayscale, monotone, and monochromatic images
-- ⚡ **High Performance** - Processes 4K images in under 2s
+The Omarchy Theme Generator is a Go-based color analysis system that extracts and categorizes colors from images using a 27-category system with multi-dimensional scoring. It applies frequency-based color extraction with color theory principles to create purpose-driven color palettes for terminal themes.
 
-## Installation
+## What You Can Currently Do
 
-```bash
-go install github.com/JaimeStill/omarchy-theme-generator/cmd/omarchy-theme-gen@latest
-```
+### Test and Validate Color Processing
+The test infrastructure provides comprehensive coverage of the processing pipeline:
+- **[tests/](tests/)** - Unit test suite with diagnostic logging for all packages
+- **[tests/integration/](tests/integration/)** - End-to-end pipeline validation
+- **[tests/benchmarks/](tests/benchmarks/)** - Performance benchmarking suite
 
-Or clone and run directly:
+### Analyze Images with Development Tools
+Analysis and testing tools for development and validation:
+- **[tools/analyze-images/](tools/analyze-images/)** - Image analysis and documentation generation
+- **[tools/performance-test/](tools/performance-test/)** - Performance testing and statistical analysis
+- **[tests/images/README.md](tests/images/README.md)** - Demonstration of current processing pipeline output
 
-```bash
-git clone https://github.com/JaimeStill/omarchy-theme-generator
-cd omarchy-theme-generator
-go run cmd/omarchy-theme-gen/main.go
-```
-
-## Usage
-
-### CLI Usage
+### Process Images Through the Pipeline
+The core processing engine can be tested directly:
 
 ```bash
-omarchy-theme-gen generate --image photo.jpg [options]
+# Run image analysis
+go run tools/analyze-images/main.go
+
+# Run performance tests
+go run tools/performance-test/main.go
+
+# Run unit tests
+go test ./tests/... -v
+
+# Run benchmarks
+go test ./tests/benchmarks -bench=. -benchmem
 ```
 
-Generate themes directly from command line:
+**Current Capabilities:**
+- 27-category color extraction system (Core UI, ANSI colors, accents, semantic colors)
+- Multi-dimensional scoring algorithm (frequency, contrast, saturation, hue alignment, lightness)
+- Color scheme identification and harmony analysis
+- Performance targets met: <2s processing, <100MB memory for 4K images
+- WCAG accessibility validation for contrast ratios
 
-1. **Generate theme from image**
-   ```bash
-   omarchy-theme-gen generate --image sunset.jpg --mode dark --name "sunset-dark"
-   ```
+## What You Will Be Able To Do
 
-2. **Adjust color scheme after generation**
-   ```bash
-   omarchy-theme-gen set-scheme sunset-dark --scheme complementary
-   ```
-
-3. **Switch between light and dark modes**
-   ```bash
-   omarchy-theme-gen set-mode sunset-dark --mode light
-   ```
-
-4. **Clone existing theme**
-   ```bash
-   omarchy-theme-gen clone sunset-dark sunset-variant
-   ```
-
-### Customization Options
+### Complete Theme Generation (In Development)
+Future CLI application with theme generation:
 
 ```bash
-# Force dark mode
-omarchy-theme-gen generate --image wallpaper.jpg --mode dark
+# Generate Omarchy theme from image
+omarchy-theme-gen generate --image wallpaper.jpg --name "my-theme"
 
-# Override primary color
-omarchy-theme-gen generate --image wallpaper.jpg --primary "#e94560"
-
-# Apply color scheme
-omarchy-theme-gen generate --image wallpaper.jpg --scheme complementary
-
-# Refine existing theme
-omarchy-theme-gen set-scheme my-theme --scheme triadic
-omarchy-theme-gen set-mode my-theme --mode light
+# Clone and modify existing themes
+omarchy-theme-gen clone my-theme my-variant --scheme complementary
 ```
 
-## Generated Theme Structure
+Generated themes will integrate directly with Omarchy's theme selection system.
 
+See **[PROJECT.md](PROJECT.md)** for the development roadmap and **[docs/architecture.md](docs/architecture.md)** for architectural design details.
+
+## How It's Being Built
+
+This project follows Intelligent Development principles with AI-assisted implementation:
+
+### Development Methodology
+- **[docs/development-methodology.md](docs/development-methodology.md)** - Development principles and practices
+- **[docs/testing-strategy.md](docs/testing-strategy.md)** - Testing standards and requirements
+- **[CLAUDE.md](CLAUDE.md)** - Project context for AI-assisted development
+
+### AI-Assisted Development
+- **[.claude/agents/](.claude/agents/)** - Specialized agents for development tasks
+- User-driven development with AI implementation assistance
+- Test-driven development with comprehensive coverage requirements
+
+### Architecture & Design
+- Layered architecture with separation of concerns
+- Settings-as-Methods pattern for configuration management
+- Public Infrastructure Testing standard for API coverage
+- Comprehensive diagnostic logging in all tests
+
+## Current Architecture Status
+
+### Foundation Layer (Complete)
+- **pkg/formats** - Color space conversions (RGBA, HSLA, LAB, XYZ)
+- **pkg/chromatic** - Color theory algorithms and calculations
+- **pkg/settings** - Configuration management with category defaults
+- **pkg/loader** - Image loading and format validation
+
+### Processing Layer (Complete)
+- **pkg/processor** - Unified 27-category extraction pipeline
+- **pkg/errors** - Error handling with sentinel errors
+
+### Generation Layer (In Development)
+- **pkg/palette** - Theme palette generation from color profiles
+- **pkg/theme** - Template-based theme file generation
+
+### Application Layer (Planned)
+- **cmd/omarchy-theme-gen** - CLI application interface
+
+## Performance Characteristics
+
+Benchmark results on Intel i7-9700K:
+- Small images (2.1MP): ~84ms processing, 16.6MB memory
+- Large images (14.7MP): ~533ms processing, 118MB memory
+- All images meet <2s processing and <100MB memory targets
+- Typical category coverage: 25-30% of 27 categories
+
+## Development Commands
+
+```bash
+# Run test suite
+go test ./tests/... -v
+
+# Run benchmarks
+go test ./tests/benchmarks -bench=. -benchmem
+
+# Run integration tests
+go test ./tests/integration -v
+
+# Code validation
+go vet ./...
+go fmt ./...
+
+# Generate image analysis
+go run tools/analyze-images/main.go
+
+# Run performance tests
+go run tools/performance-test/main.go
 ```
-my-theme/
-├── alacritty.toml      # Terminal emulator
-├── btop.theme          # System monitor
-├── hyprland.conf       # Window manager
-├── hyprlock.conf       # Lock screen
-├── mako.ini            # Notifications
-├── neovim.lua          # Editor colorscheme
-├── waybar.css          # Status bar
-├── walker.css          # App launcher
-├── swayosd.css         # On-screen display
-├── theme-gen.json      # Theme metadata for refinement
-├── backgrounds/        # Wallpapers
-│   └── wallpaper.jpg
-└── light.mode          # (if light theme)
-```
-
-## Generated Theme Integration
-
-Generated themes integrate directly with Omarchy's theme system and include a `theme-gen.json` file containing extraction metadata and user preferences for easy refinement.
-
-## Architecture
-
-Following comprehensive refactoring, the generator uses a simplified layered architecture optimized for performance:
-
-### Core Packages
-
-#### Foundation Layer (✅ Complete)
-- **pkg/formats** - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
-- **pkg/chromatic** - Color theory foundation and harmony calculations  
-- **pkg/settings** - System configuration with Viper integration
-- **pkg/loader** - Image I/O with validation and format support
-
-#### Processing Layer (✅ Complete) 
-- **pkg/processor** - Unified image processing and analysis with single-pass pipeline
-
-#### Generation Layer (🔄 Future)
-- **pkg/palette** - Complete theme palette generation using color theory algorithms
-- **pkg/theme** - Theme file generation from templates
-
-### Processing Pipeline
-
-**Unified Single-Pass Processing:**
-1. **Image Loading** - Load and validate image format
-2. **Color Extraction** - Frequency-based analysis for optimal performance  
-3. **Profile Analysis** - Detect grayscale, monochromatic, and color schemes
-4. **Role Assignment** - Map colors to background/foreground/primary/secondary/accent
-5. **Validation** - Ensure WCAG compliance with automatic fallbacks
-6. **Result** - Complete ColorProfile with embedded ImageColors and metadata
-
-## Supported Formats
-
-- **Input**: JPEG, PNG images
-- **Output**: All Omarchy configuration formats
-- **Color Spaces**: RGB, HSL with automatic conversion
-- **Color Schemes**: Automatic detection and classification
-  - Monochromatic (single hue variations)
-  - Complementary (opposite colors)  
-  - Triadic (three-color harmony)
-  - Analogous (adjacent colors)
-  - Complex multi-color schemes
 
 ## Requirements
 
 - Go 1.25+
 - No external dependencies (pure Go implementation)
+- Linux/Unix environment (developed on Linux)
 
-## Development
+## Example Processing Output
 
-```bash
-# Run all tests
-go test ./tests/... -v
+See **[tests/images/README.md](tests/images/README.md)** for examples of the processing pipeline output:
 
-# Run package-specific tests  
-go test ./tests/formats -v
-go test ./tests/processor -v
-go test ./tests/chromatic -v
-go test ./tests/settings -v
-go test ./tests/loader -v
+- Category-based color extraction results
+- Color analysis with theme mode detection
+- Performance metrics and processing times
+- Color scheme identification
 
-# Validate code
-go vet ./...
+## Contributing
 
-# Format code
-go fmt ./...
-```
-
-See [docs/](docs/) for technical documentation and development guidelines.
-
-## Philosophy
-
-This project follows [Intelligent Development](docs/development-methodology.md) principles:
-
-- Precise technical language
-- Immediate validation through execution tests
-- User-driven development with AI assistance
-- Knowledge transfer as primary output
-
-## License
-
-MIT
+This project uses AI-assisted development with human oversight. See **[CLAUDE.md](CLAUDE.md)** for context when working with AI tools, and **[docs/development-methodology.md](docs/development-methodology.md)** for development principles.
 
 ## Acknowledgments
 
-Built for the [Omarchy](https://omarchy.org) desktop environment by [DHH](https://github.com/DHH).
+Built for the [Omarchy](https://omarchy.org) desktop environment.
