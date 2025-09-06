@@ -238,7 +238,6 @@ func writeProfileAnalysis(readme *strings.Builder, profile *processor.ColorProfi
 	readme.WriteString("|----------|-------|\n")
 
 	readme.WriteString(fmt.Sprintf("| Mode | %s |\n", profile.Mode))
-	readme.WriteString(fmt.Sprintf("| Color Scheme | %s |\n", profile.ColorScheme))
 	readme.WriteString(fmt.Sprintf("| Dominant Hue | %.1f° |\n", profile.DominantHue))
 	readme.WriteString(fmt.Sprintf("| Hue Variance | %.1f° |\n", profile.HueVariance))
 	readme.WriteString(fmt.Sprintf("| Average Luminance | %.3f |\n", profile.AvgLuminance))
@@ -251,24 +250,16 @@ func writeProfileAnalysis(readme *strings.Builder, profile *processor.ColorProfi
 	readme.WriteString("\n")
 }
 
-// renderColorBlock creates a Unicode color block representation instead of HTML
+// renderColorBlock creates an image tag for color preview using placehold.co
 func renderColorBlock(hexColor string) string {
-	// Parse color to determine brightness for appropriate block character
-	color, err := formats.ParseHex(hexColor)
-	if err != nil {
-		return "■"
+	// Remove # prefix if present for URL formatting
+	cleanHex := strings.TrimPrefix(hexColor, "#")
+	
+	// Validate hex format
+	if len(cleanHex) != 6 {
+		return "![invalid](https://placehold.co/30x30/cccccc/cccccc.png)"
 	}
 	
-	// Calculate luminance to choose appropriate Unicode block
-	luminance := 0.2126*float64(color.R) + 0.7152*float64(color.G) + 0.0722*float64(color.B)
-	luminance /= 255.0
-	
-	// Choose block character based on luminance
-	if luminance > 0.8 {
-		return "⬜" // Light colored square
-	} else if luminance > 0.5 {
-		return "◻️" // Medium square  
-	} else {
-		return "⬛" // Dark colored square
-	}
+	// Return markdown image tag with placehold.co URL
+	return fmt.Sprintf("![%s](https://placehold.co/30x30/%s/%s.png)", hexColor, cleanHex, cleanHex)
 }
