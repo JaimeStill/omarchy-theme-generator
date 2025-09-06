@@ -47,6 +47,55 @@ func TestColorConversion(t *testing.T) {
 - **Layered testing**: Each package tested in isolation with clear dependencies
 - **Real world validation**: Integration tests with actual image samples
 - **Comprehensive coverage**: Unit tests for all public APIs and critical functions
+- **Diagnostic logging**: All tests include comprehensive `t.Logf()` output for debugging
+
+## Diagnostic Logging Requirements
+
+**ALL UNIT TESTS MUST INCLUDE COMPREHENSIVE DIAGNOSTIC OUTPUT**
+
+Every test function must use `t.Logf()` to output:
+- Input values and parameters
+- Expected vs actual results  
+- Intermediate calculation values
+- Threshold values and settings
+- Any metrics used for decision making
+
+### Example Implementation
+
+```go
+func TestThemeMode_Calculation(t *testing.T) {
+    // ... test setup ...
+    
+    result, err := p.ProcessImage(img)
+    if err != nil {
+        t.Fatalf("Unexpected error: %v", err)
+    }
+    
+    // Calculate diagnostic metrics
+    bgLuminance := chromatic.Luminance(result.Background)
+    avgInputLuminance := calculateAverageInputLuminance(inputColors)
+    
+    // LOG ALL RELEVANT METRICS
+    t.Logf("Input colors average luminance: %v", avgInputLuminance)
+    t.Logf("Threshold: %v", tc.threshold)
+    t.Logf("Background luminance: %v", bgLuminance)
+    t.Logf("Expected mode: %v, Detected mode: %v", expectedMode, actualMode)
+    
+    // Then perform assertions with full context
+    if actualMode != expectedMode {
+        t.Errorf("Expected theme mode %v, detected %v (input avg: %v, threshold: %v, bg luminance: %v)", 
+            expectedMode, actualMode, avgInputLuminance, tc.threshold, bgLuminance)
+    }
+}
+```
+
+### Why Diagnostic Logging is Critical
+
+1. **Debugging failures**: When tests fail, logs show exactly what calculations produced the unexpected result
+2. **Understanding algorithm behavior**: Logs reveal how input values flow through calculations
+3. **Validating test expectations**: Sometimes test expectations are wrong - logs help identify this
+4. **Performance analysis**: Logs can reveal performance characteristics of algorithms
+5. **Documentation**: Test logs serve as living examples of algorithm behavior
 
 ### Transparent Test Execution
 
@@ -173,14 +222,11 @@ Tests are organized by package in the tests/ directory:
 
 ```
 tests/
-├── formats/                     # Unit tests for pkg/formats (in development)
-│   └── *.go                     # Test files to be created
-├── extractor/                   # Unit tests for pkg/extractor
-│   └── strategies_test.go       # Strategy selection and analysis
-├── chromatic/                   # Unit tests for pkg/chromatic (to be created)
-├── settings/                    # Unit tests for pkg/settings (to be created)
-├── loader/                      # Unit tests for pkg/loader (to be created)
-├── analysis/                    # Unit tests for pkg/analysis (to be created)
+├── formats/                     # Unit tests for pkg/formats (complete)
+├── chromatic/                   # Unit tests for pkg/chromatic (complete)
+├── settings/                    # Unit tests for pkg/settings (complete)
+├── loader/                      # Unit tests for pkg/loader (complete)
+├── processor/                   # Unit tests for pkg/processor (complete)
 ├── images/                      # Real-world wallpaper test images
 │   ├── README.md                # Image analysis documentation
 │   ├── grayscale.jpeg           # Pure grayscale test image
@@ -271,14 +317,12 @@ Each test should verify:
 ## Test Coverage Goals
 
 ### Unit Test Coverage (Target)
-- **pkg/formats**: 100% coverage of public functions (tests needed)
-- **pkg/chromatic**: Color theory and harmony functions (tests needed)
-- **pkg/settings**: Configuration loading and management (tests needed)
-- **pkg/loader**: Image I/O and validation (tests needed)
-- **pkg/analysis**: Profile detection and clustering (tests needed)
-- **pkg/extractor**: Strategy selection and orchestration (partial coverage)
-- **pkg/strategies**: Extraction algorithms (future, after extraction)
-- **pkg/schemes**: Color scheme generation (future)
+- **pkg/formats**: Color space conversions and utilities (complete)
+- **pkg/chromatic**: Color theory and harmony functions (complete)
+- **pkg/settings**: Configuration loading and management (complete)
+- **pkg/loader**: Image I/O and validation (complete)
+- **pkg/processor**: Unified image processing and analysis (complete)
+- **pkg/palette**: Complete theme palette generation (future)
 - **pkg/theme**: Template processing (future)
 
 ### Integration Test Coverage

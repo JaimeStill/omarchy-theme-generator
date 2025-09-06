@@ -53,6 +53,12 @@ func TestToHex(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := formats.ToHex(tc.input)
+			
+			// Diagnostic logging
+			t.Logf("Input RGBA: R=%d, G=%d, B=%d, A=%d", tc.input.R, tc.input.G, tc.input.B, tc.input.A)
+			t.Logf("Expected hex: %s", tc.expected)
+			t.Logf("Actual hex: %s", result)
+			
 			if result != tc.expected {
 				t.Errorf("Expected %s, got %s", tc.expected, result)
 			}
@@ -96,6 +102,12 @@ func TestToHexA(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := formats.ToHexA(tc.input)
+			
+			// Diagnostic logging
+			t.Logf("Input RGBA: R=%d, G=%d, B=%d, A=%d", tc.input.R, tc.input.G, tc.input.B, tc.input.A)
+			t.Logf("Expected HEXA: %s", tc.expected)
+			t.Logf("Actual HEXA: %s", result)
+			
 			if result != tc.expected {
 				t.Errorf("Expected %s, got %s", tc.expected, result)
 			}
@@ -187,6 +199,16 @@ func TestParseHex(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := formats.ParseHex(tc.input)
 
+			// Diagnostic logging
+			t.Logf("Input hex string: %s", tc.input)
+			t.Logf("Should error: %t", tc.shouldErr)
+			if err != nil {
+				t.Logf("Parse error: %v", err)
+			} else {
+				t.Logf("Parsed RGBA: R=%d, G=%d, B=%d, A=%d", result.R, result.G, result.B, result.A)
+				t.Logf("Expected RGBA: R=%d, G=%d, B=%d, A=%d", tc.expected.R, tc.expected.G, tc.expected.B, tc.expected.A)
+			}
+
 			if tc.shouldErr {
 				if err == nil {
 					t.Errorf("Expected error for input %s, but got none", tc.input)
@@ -241,6 +263,12 @@ func TestHSLAToHex(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := formats.HSLAToHex(tc.input)
+			
+			// Diagnostic logging
+			t.Logf("Input HSLA: H=%.1f, S=%.3f, L=%.3f, A=%.3f", tc.input.H, tc.input.S, tc.input.L, tc.input.A)
+			t.Logf("Expected hex: %s", tc.expected)
+			t.Logf("Actual hex: %s", result)
+			
 			if result != tc.expected {
 				t.Errorf("Expected %s, got %s", tc.expected, result)
 			}
@@ -274,6 +302,12 @@ func TestHSLAToHexA(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result := formats.HSLAToHexA(tc.input)
+			
+			// Diagnostic logging
+			t.Logf("Input HSLA: H=%.1f, S=%.3f, L=%.3f, A=%.3f", tc.input.H, tc.input.S, tc.input.L, tc.input.A)
+			t.Logf("Expected HEXA: %s", tc.expected)
+			t.Logf("Actual HEXA: %s", result)
+			
 			if result != tc.expected {
 				t.Errorf("Expected %s, got %s", tc.expected, result)
 			}

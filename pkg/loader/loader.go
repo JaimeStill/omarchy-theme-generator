@@ -3,6 +3,8 @@ package loader
 import (
 	"context"
 	"image"
+	_ "image/jpeg" // Register JPEG format decoder
+	_ "image/png"  // Register PNG format decoder
 	"os"
 
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/errors"

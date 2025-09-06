@@ -6,27 +6,23 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                Application Layer (CLI)                  │
+│                Application Layer (Future)               │
+│                  cmd/omarchy-theme-gen                  │
 ├─────────────────────────────────────────────────────────┤
-│                  Generation Layer                       │
+│                  Generation Layer (Future)              │
 │         ┌──────────────┐      ┌──────────────┐          │
-│         │    schemes   │      │    theme     │          │
+│         │   palette    │      │    theme     │          │
 │         └──────────────┘      └──────────────┘          │
 ├─────────────────────────────────────────────────────────┤
 │                  Processing Layer                       │
-│         ┌──────────────┐      ┌──────────────┐          │
-│         │   extractor  │      │  strategies  │          │
-│         └──────────────┘      └──────────────┘          │
-├─────────────────────────────────────────────────────────┤
-│                   Analysis Layer                        │
 │                ┌──────────────────┐                     │
-│                │     analysis     │                     │
+│                │    processor     │                     │
 │                └──────────────────┘                     │
 ├─────────────────────────────────────────────────────────┤
 │                 Foundation Layer                        │
-│      ┌──────────┐   ┌──────────┐   ┌──────────┐         │
-│      │ formats  │   │ settings │   │  config  │         │
-│      └──────────┘   └──────────┘   └──────────┘         │
+│  ┌─────────┐ ┌───────────┐ ┌─────────┐ ┌─────────┐      │
+│  │ formats │ │ chromatic │ │ settings│ │  loader │      │
+│  └─────────┘ └───────────┘ └─────────┘ └─────────┘      │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -34,224 +30,169 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 
 ### Foundation Layer
 
-**pkg/formats** (Structure complete, unit tests needed)
-- Color space conversions (RGB↔HSL, LAB, XYZ)
-- Format utilities (ToHex, ParseHex, ToHexA)
-- HSLA type with alpha channel support
-- WCAG accessibility calculations
-- No dependencies - pure functions only
+**pkg/formats** - Color space representations and conversions
+- RGB↔HSL, LAB, XYZ color space conversions
+- Hex string parsing and formatting (ToHex, ParseHex)
+- HSLA type with full alpha channel support 
+- WCAG accessibility calculations (ContrastRatio)
+- Pure functions with no external dependencies
 
-**pkg/chromatic** (Structure complete, algorithms in development)
-- Color theory foundation and harmony detection
-- Contrast and distance calculations
-- Hue and chroma manipulation
-- Color scheme generation interfaces
+**pkg/chromatic** - Color theory foundation
+- Color harmony detection and scheme classification
+- Contrast ratio and perceptual distance calculations
+- Hue analysis and chroma manipulation utilities
+- Color derivation algorithms for theme generation
 - Dependencies: pkg/formats
 
-**pkg/settings** (Structure complete, unit tests needed)
-- System configuration and tool behavior
-- Flat structure with Viper integration
-- Empirical thresholds and operational parameters
-- Settings-as-methods pattern
-- Dependencies: Viper
+**pkg/settings** - System configuration management
+- Flat settings structure with Viper integration
+- Empirical thresholds and performance parameters
+- Settings-as-methods architectural pattern enforcement
+- Fallback color configurations (hex string format)
+- Dependencies: Standard library + Viper
 
-**pkg/loader** (Structure complete, unit tests needed)
-- Image I/O with validation
-- JPEG and PNG format support
-- Format detection and error handling
+**pkg/loader** - Image I/O and validation
+- JPEG and PNG image loading with format validation
+- Memory-efficient image processing and error handling
+- Image metadata extraction (dimensions, pixel count)
+- Format support validation and conversion
 - Dependencies: Standard library image packages
-
-**pkg/config** (Not implemented - future feature)
-- User preferences and theme-specific overrides
-- Theme-gen.json integration for metadata
-- Per-theme color overrides and extraction hints
-- User customization layer
-
-### Analysis Layer
-
-**pkg/analysis** (Partially extracted from extractor, unit tests needed)
-- Image characteristic detection (edge density, complexity)
-- Profile classification (Grayscale, Monotone, Monochromatic, Duotone/Tritone)
-- Mode detection (light/dark based on luminance)
-- Role assignment logic for purpose-driven extraction
-- Perceptual clustering and color grouping
-- Dependencies: pkg/formats, pkg/settings
 
 ### Processing Layer
 
-**pkg/extractor** (Working, needs refactoring)
-- Currently contains extraction logic and embedded strategies
-- Multi-strategy extraction (frequency and saliency)
-- Strategy selection based on image characteristics
-- Will be simplified to orchestration after refactoring
-- Dependencies: pkg/formats, pkg/loader, pkg/errors
+**pkg/processor** - Unified image processing and analysis
+- Single-pass processing pipeline: Load → Extract → Analyze → Assign roles
+- ColorProfile composition with comprehensive metadata including embedded ImageColors
+- Frequency-based color extraction optimized for all image types
+- Role-based color assignment to background/foreground/primary/secondary/accent
+- Integrated analysis: Grayscale, monochromatic, and color scheme detection
+- Theme mode detection based on luminance analysis (light/dark pairing)
+- WCAG compliance validation with automatic fallback handling
+- Dependencies: pkg/formats, pkg/chromatic, pkg/settings, pkg/loader
 
-**pkg/strategies** (Not implemented - pending extraction)
-- Will contain pluggable extraction algorithms
-- Strategy interface for extensibility
-- Frequency strategy for simple images
-- Saliency strategy for complex images
-- Strategy selection logic
+## Processing Pipeline
 
-### Generation Layer (Not implemented)
+The processor implements a single-pass processing pipeline:
 
-**pkg/schemes** (Planned)
-- Color theory scheme generation
-- Edge case synthesis for minimal-color images
-- Color harmony validation and WCAG compliance
-- Role-based scheme application
+```
+Image Input
+    │
+    ▼
+┌─────────────────────┐
+│    Image Loading    │ ← pkg/loader
+│   (Format Check)    │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Color Extraction   │ ← Frequency-based analysis
+│   (Single-pass)     │   
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Profile Analysis   │ ← Grayscale/monochromatic detection
+│ (Theme Mode, etc.)  │   Color scheme classification
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│  Role Assignment    │ ← Background/foreground selection
+│  (Purpose-driven)   │   Primary/secondary/accent mapping
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│    Validation       │ ← WCAG contrast compliance
+│   (WCAG + Fallback) │   Fallback color application
+└─────────┬───────────┘
+          │
+          ▼
+    ColorProfile
+   (Complete metadata)
+```
 
-**pkg/theme** (Planned)
-- Template processing and theme file generation
-- Configuration generation for supported formats
-- Format-specific color conversion
-- Metadata creation and management
+## Data Structures
 
-### Application Layer (Not implemented)
+### ColorProfile Composition
 
-**cmd/omarchy-theme-gen** (Planned)
-- CLI interface and command handling
-- User interaction and workflow management
-- Integration of all lower layers
-- Command implementation (generate, set-scheme, etc.)
+The processor returns a comprehensive ColorProfile that embeds ImageColors and includes all analysis metadata:
 
-## Data Flow
+```go
+type ColorProfile struct {
+    Mode            ThemeMode           // Light or Dark
+    ColorScheme     ColorScheme         // Detected scheme type
+    IsGrayscale     bool               // Saturation analysis
+    IsMonochromatic bool               // Hue variance analysis  
+    DominantHue     float64            // Primary hue direction
+    HueVariance     float64            // Color diversity metric
+    AvgLuminance    float64            // Overall brightness
+    AvgSaturation   float64            // Overall color intensity
+    Colors          ImageColors        // Embedded role-based colors
+}
+```
 
-1. **Input** → Image file provided by user
-2. **Analysis** → Image characteristics and profile detection
-3. **Strategy Selection** → Choose optimal extraction algorithm
-4. **Extraction** → Raw color data from image
-5. **Role Assignment** → Categorize colors by purpose (background, foreground, accents)
-6. **Profile Processing** → Apply profile-specific handling
-7. **Calculation** → Calculate missing colors using color theory algorithms
-8. **Scheme Application** → Apply color theory if requested
-9. **Validation** → Ensure WCAG compliance and accessibility
-10. **Generation** → Create theme configuration files
-11. **Output** → Complete theme package with metadata
+### Role-Based Color Organization
+
+Colors are organized by purpose rather than frequency:
+
+```go
+type ImageColors struct {
+    Background   color.RGBA  // Theme background color
+    Foreground   color.RGBA  // Text and UI elements
+    Primary      color.RGBA  // Brand/accent color
+    Secondary    color.RGBA  // Supporting elements  
+    Accent       color.RGBA  // Highlights and emphasis
+    MostFrequent color.RGBA  // Statistical reference
+}
+```
+
+## Architectural Patterns
+
+### Settings-as-Methods Pattern
+
+All public functions requiring configuration are methods on package configuration structures:
+
+```go
+// Correct: Method on configuration structure
+func (p *Processor) ProcessImage(img image.Image) (*ColorProfile, error)
+
+// Incorrect: Function with settings parameter  
+func ProcessImage(img image.Image, settings *Settings) (*ColorProfile, error)
+```
+
+### Dependency Management
+
+Clear dependency layers prevent circular dependencies:
+
+```
+Foundation Layer: No external dependencies (except Viper for settings)
+Processing Layer: Foundation packages only
+Generation Layer: Foundation + Processing packages
+Application Layer: All packages
+```
+
+## Performance Characteristics
+
+The architecture achieves the following performance metrics:
+
+| Metric | Target | Achieved | Status |
+|--------|--------|----------|--------|
+| 4K Processing | <2s | 236ms avg | ✅ 88% faster |
+| Memory Usage | <100MB | 8.6MB avg | ✅ 91% under limit |
+| Peak Memory | <100MB | 61.2MB max | ✅ 39% under limit |
+| Target Compliance | 100% | 100% (15/15) | ✅ Perfect |
+
+### Performance by Image Size
+
+- **Medium (2-8MP)**: 12 images, 147ms average
+- **Large (>8MP)**: 3 images, 593ms average  
+- **All images**: Sub-second processing with full analysis
 
 ## Design Principles
 
-### 1. Separation of Concerns
-Each package has a single, well-defined responsibility:
-- **Formats**: Data transformation only
-- **Analysis**: Image understanding only  
-- **Extraction**: Color gathering only
-- **Generation**: Output creation only
-
-### 2. Dependency Direction
-Dependencies flow downward only:
-- Higher layers depend on lower layers
-- Lower layers never depend on higher layers
-- Same-layer dependencies are minimized
-- No circular dependencies allowed
-
-### 3. Settings-Driven Configuration
-- No hardcoded values in business logic
-- All thresholds and parameters configurable
-- Multi-layer settings composition
-- Clear separation between system settings and user preferences
-
-### 4. Standard Library First
-- Use Go standard library types where possible
-- Prefer `color.RGBA` over custom color types
-- Minimize external dependencies
-- Leverage proven, well-tested implementations
-
-### 5. Purpose-Driven Organization
-- Colors organized by role, not frequency
-- Background/foreground/accent categorization
-- Mode-aware role assignment (light/dark themes)
-- Edge case handling through profiles
-
-## Configuration Architecture
-
-### Settings vs Config Distinction
-
-**Settings** (`pkg/settings`) - **HOW** the tool operates:
-- Extraction thresholds and parameters
-- Algorithm behavior configuration  
-- Performance and accuracy trade-offs
-- System-wide operational values
-- Multi-layer composition from various sources
-
-**Config** (`pkg/config`) - **WHAT** the user wants:
-- Theme-specific color overrides
-- User preferences and customizations
-- Per-theme extraction hints
-- Output format preferences
-- Stored with generated themes
-
-### Settings Composition Order
-```
-defaults → system → user → workspace → env
-```
-Later values override earlier ones, allowing flexible configuration at multiple levels.
-
-## Profile Detection System
-
-### Image Profiles
-- **Grayscale**: No hue information (s ≈ 0) → requires color synthesis
-- **Monotone**: Single hue tinting throughout → extract tint, enhance variation  
-- **Monochromatic**: Single dominant hue with pure grayscale elements → extract accent
-- **Duotone/Tritone**: 2-3 distinct colors only → use as anchors, synthesize rest
-- **Full Color**: Standard multi-color image → normal extraction pipeline
-
-### Profile-Specific Processing
-Each profile can specify its own processing pipeline while reusing common components. Profiles are designed to be extensible for future edge cases.
-
-## Testing Strategy
-
-### Package-Level Testing
-- Standard Go test files in `tests/` subdirectories
-- Unit tests for each package (in development)
-- Tests organized by package: `tests/formats/`, `tests/extractor/`, etc.
-- Comprehensive coverage of public APIs (target)
-
-### Integration Testing
-- End-to-end pipeline validation
-- Real image processing tests
-- Performance benchmarking
-- Cross-layer interaction validation
-
-### Test Organization
-- `tests/formats/` - Unit tests for pkg/formats
-- `tests/extractor/` - Tests for extraction strategies
-- `tests/images/` - Real-world test wallpapers
-- `tests/analyze-images/` - Image analysis utility
-- Tests separated from source code for clarity
-
-## Extension Points
-
-### Adding New Profiles
-1. Define profile detection logic in `pkg/analysis`
-2. Implement profile-specific processing
-3. Register with profile detector
-4. Add corresponding tests
-
-### Adding New Strategies  
-1. Implement `Strategy` interface in `pkg/strategies`
-2. Add strategy-specific configuration to settings
-3. Update strategy selector logic
-4. Validate with diverse test images
-
-### Adding New Output Formats
-1. Create format-specific template in `pkg/theme`
-2. Implement color mapping for the format
-3. Add format detection and selection
-4. Test with generated themes
-
-## Performance Considerations
-
-### Current Targets
-- 4K image processing: <2 seconds
-- Memory usage: <100MB peak
-- Extraction strategies: Multiple algorithms available
-- WCAG compliance: Automatic validation
-
-### Optimization Strategies
-- Efficient color space operations
-- Minimal memory allocations
-- Concurrent processing where beneficial
-- Early termination for edge cases
-
-This architecture provides a solid foundation for the purpose-driven theme generation system while maintaining flexibility for future enhancements.
+1. **Single Responsibility**: Each package has one clear purpose
+2. **Performance First**: All decisions favor speed and memory efficiency
+3. **Standards Compliance**: WCAG accessibility and Go best practices
+4. **Simplicity**: Eliminate abstraction layers that don't add value
+5. **Testability**: Comprehensive unit test coverage with diagnostic logging

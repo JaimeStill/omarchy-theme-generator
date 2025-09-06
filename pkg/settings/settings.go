@@ -7,23 +7,30 @@ type contextKey string
 const settingsKey contextKey = "settings"
 
 type Settings struct {
-	GrayscaleThreshold           float64  `mapstructure:"grayscale_threshold"`
-	MonochromaticTolerance       float64  `mapstructure:"monochromatic_tolerance"`
-	LoaderMaxWidth               int      `mapstructure:"loader_max_width"`
-	LoaderMaxHeight              int      `mapstructure:"loader_max_height"`
-	LoaderAllowedFormats         []string `mapstructure:"loader_allowed_formats"`
-	ExtractorMaxColors           int      `mapstructure:"extractor_max_colors"`
-	ExtractorMinThreshold        float64  `mapstructure:"extractor_min_threshold"`
-	ExtractorEdgeThreshold       float64  `mapstructure:"extractor_edge_threshold"`
-	ExtractorColorComplexity     int      `mapstructure:"extractor_color_complexity"`
-	ExtractorSaturationThreshold float64  `mapstructure:"extractor_saturation_threshold"`
-	ExtractorMaxCandidates       int      `mapstructure:"extractor_max_candidates"`
-	ExtractorDominanceThreshold  float64  `mapstructure:"extractor_dominance_threshold"`
-	ExtractorOptimalLightnessMin float64  `mapstructure:"extractor_optimal_lightness_min"`
-	ExtractorOptimalLightnessMax float64  `mapstructure:"extractor_optimal_lightness_max"`
-	ExtractorSpreadDivisor       float64  `mapstructure:"extractor_spread_divisor"`
-	ExtractorFrequencyWeight     float64  `mapstructure:"extractor_frequency_weight"`
-	ExtractorSaliencyWeight      float64  `mapstructure:"extractor_saliency_weight"`
+	GrayscaleThreshold       float64  `mapstructure:"grayscale_threshold"`
+	MonochromaticTolerance   float64  `mapstructure:"monochromatic_tolerance"`
+	ThemeModeThreshold       float64  `mapstructure:"theme_mode_threshold"`
+	MinFrequency             float64  `mapstructure:"min_frequency"`
+	LightBackgroundThreshold float64  `mapstructure:"light_background_threshold"`
+	DarkBackgroundThreshold  float64  `mapstructure:"dark_background_threshold"`
+	MinContrastRatio         float64  `mapstructure:"min_contrast_ratio"`
+	MinPrimarySaturation     float64  `mapstructure:"min_primary_saturation"`
+	MinAccentSaturation      float64  `mapstructure:"min_accent_saturation"`
+	MinAccentLightness       float64  `mapstructure:"min_accent_lightness"`
+	MaxAccentLightness       float64  `mapstructure:"max_accent_lightness"`
+	DarkLightThreshold       float64  `mapstructure:"dark_light_threshold"`
+	BrightLightThreshold     float64  `mapstructure:"bright_light_threshold"`
+	ExtremeLightnessPenalty  float64  `mapstructure:"extreme_lightness_penalty"`
+	OptimalLightnessBonus    float64  `mapstructure:"optimal_lightness_bonus"`
+	MinSaturationForBonus    float64  `mapstructure:"min_saturation_for_bonus"`
+	LoaderMaxWidth           int      `mapstructure:"loader_max_width"`
+	LoaderMaxHeight          int      `mapstructure:"loader_max_height"`
+	LoaderAllowedFormats     []string `mapstructure:"loader_allowed_formats"`
+	LightBackgroundFallback  string   `mapstructure:"light_background_fallback"`
+	DarkBackgroundFallback   string   `mapstructure:"dark_background_fallback"`
+	LightForegroundFallback  string   `mapstructure:"light_foreground_fallback"`
+	DarkForegroundFallback   string   `mapstructure:"dark_foreground_fallback"`
+	PrimaryFallback          string   `mapstructure:"primary_fallback"`
 }
 
 func WithSettings(ctx context.Context, s *Settings) context.Context {

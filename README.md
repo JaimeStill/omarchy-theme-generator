@@ -7,12 +7,12 @@ Generate beautiful, cohesive terminal themes from any image using intelligent co
 
 ## Features
 
-- 🎨 **Intelligent Color Extraction** - Multi-strategy system adapts to image characteristics
+- 🎨 **Intelligent Color Extraction** - Optimized single-pass frequency analysis
 - 🎯 **Purpose-Driven Colors** - Organizes colors by their role (background, foreground, accents)
 - ♿ **WCAG Compliant** - Ensures text readability with proper contrast ratios  
 - 🎭 **Light/Dark Mode** - Automatic detection with manual override options
 - 🖼️ **Edge Case Handling** - Gracefully handles grayscale, monotone, and monochromatic images
-- ⚡ **High Performance** - Processes 4K images in under 2 seconds
+- ⚡ **High Performance** - Processes 4K images in under 2s
 
 ## Installation
 
@@ -100,48 +100,44 @@ Generated themes integrate directly with Omarchy's theme system and include a `t
 
 ## Architecture
 
-The generator uses a layered architecture with clear dependencies:
+Following comprehensive refactoring, the generator uses a simplified layered architecture optimized for performance:
 
 ### Core Packages
 
-#### Foundation Layer
+#### Foundation Layer (✅ Complete)
 - **pkg/formats** - Color space representations and conversions (RGBA, HSLA, LAB, XYZ)
-- **pkg/chromatic** - Color theory foundation and harmony calculations
+- **pkg/chromatic** - Color theory foundation and harmony calculations  
 - **pkg/settings** - System configuration with Viper integration
 - **pkg/loader** - Image I/O with validation and format support
-- **pkg/errors** - Error handling utilities
 
-#### Analysis Layer  
-- **pkg/analysis** - High-level color profiles and comprehensive analysis
+#### Processing Layer (✅ Complete) 
+- **pkg/processor** - Unified image processing and analysis with single-pass pipeline
 
-#### Processing Layer
-- **pkg/extractor** - Color extraction orchestration with embedded strategies
-- **pkg/strategies** - Extraction strategies (planned, pending extraction from extractor)
+#### Generation Layer (🔄 Future)
+- **pkg/palette** - Complete theme palette generation using color theory algorithms
+- **pkg/theme** - Theme file generation from templates
 
-#### Generation Layer
-- **pkg/theme** - Theme file generation from templates (planned)
+### Processing Pipeline
 
-### Extraction Pipeline
-
-1. **Analysis** - Detect image characteristics and color profile
-2. **Strategy Selection** - Choose optimal extraction strategy
-3. **Extraction** - Extract colors using selected strategy
-4. **Role Assignment** - Categorize colors by purpose
-5. **Calculation** - Calculate missing colors using color theory
-6. **Validation** - Ensure WCAG compliance
-7. **Generation** - Create theme configuration files
+**Unified Single-Pass Processing:**
+1. **Image Loading** - Load and validate image format
+2. **Color Extraction** - Frequency-based analysis for optimal performance  
+3. **Profile Analysis** - Detect grayscale, monochromatic, and color schemes
+4. **Role Assignment** - Map colors to background/foreground/primary/secondary/accent
+5. **Validation** - Ensure WCAG compliance with automatic fallbacks
+6. **Result** - Complete ColorProfile with embedded ImageColors and metadata
 
 ## Supported Formats
 
 - **Input**: JPEG, PNG images
 - **Output**: All Omarchy configuration formats
 - **Color Spaces**: RGB, HSL with automatic conversion
-- **Palette Strategies**:
+- **Color Schemes**: Automatic detection and classification
   - Monochromatic (single hue variations)
-  - Complementary (opposite colors)
+  - Complementary (opposite colors)  
   - Triadic (three-color harmony)
   - Analogous (adjacent colors)
-  - Tetradic (four-color schemes)
+  - Complex multi-color schemes
 
 ## Requirements
 
@@ -154,9 +150,12 @@ The generator uses a layered architecture with clear dependencies:
 # Run all tests
 go test ./tests/... -v
 
-# Run package-specific tests
+# Run package-specific tests  
 go test ./tests/formats -v
-go test ./tests/extractor -v
+go test ./tests/processor -v
+go test ./tests/chromatic -v
+go test ./tests/settings -v
+go test ./tests/loader -v
 
 # Validate code
 go vet ./...
