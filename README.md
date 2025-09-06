@@ -7,7 +7,7 @@ Color extraction and analysis engine for generating terminal themes from images 
 
 ## What This Tool Is
 
-The Omarchy Theme Generator is a Go-based color analysis system that extracts and categorizes colors from images using a 27-category system with multi-dimensional scoring. It applies frequency-based color extraction with color theory principles to create purpose-driven color palettes for terminal themes.
+The Omarchy Theme Generator is a Go-based color analysis system that extracts and categorizes colors from images using a 27-category system with multi-dimensional scoring. It applies category-based color extraction with color theory principles to create purpose-driven color palettes for Omarchy.
 
 ## What You Can Currently Do
 
@@ -148,10 +148,6 @@ See **[tests/images/README.md](tests/images/README.md)** for examples of the pro
 - Color analysis with theme mode detection
 - Performance metrics and processing times
 - Color scheme identification
-
-## Contributing
-
-This project uses AI-assisted development with human oversight. See **[CLAUDE.md](CLAUDE.md)** for context when working with AI tools, and **[docs/development-methodology.md](docs/development-methodology.md)** for development principles.
 
 ## Acknowledgments
 
