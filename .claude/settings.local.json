@@ -1,8 +1,10 @@
 {
-  "outputStyle": "Explanatory",
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(go test:*)",
+      "Bash(go run:*)"
     ]
-  }
+  },
+  "outputStyle": "Explanatory"
 }

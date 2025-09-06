@@ -19,13 +19,28 @@ func ValidateImageFormat(path string, supportedFormats []string) error {
 		}
 	}
 
-	if slices.Contains(supportedFormats, ext) {
+	// Convert extension to format name (remove the dot)
+	format := strings.TrimPrefix(ext, ".")
+	
+	if slices.Contains(supportedFormats, format) {
 		return nil
 	}
 
 	return &errors.ImageFormatError{
 		Path:      path,
 		Extension: ext,
+		Supported: supportedFormats,
+	}
+}
+
+func ValidateImageFormatName(formatName string, supportedFormats []string) error {
+	if slices.Contains(supportedFormats, formatName) {
+		return nil
+	}
+
+	return &errors.ImageFormatError{
+		Path:      "",
+		Extension: formatName,
 		Supported: supportedFormats,
 	}
 }
@@ -53,7 +68,7 @@ func ValidateImageDimensions(width, height, maxWidth, maxHeight int) error {
 }
 
 func ValidateImageInfo(info *ImageInfo, maxWidth, maxHeight int, supportedFormats []string) error {
-	if err := ValidateImageFormat(info.Format, supportedFormats); err != nil {
+	if err := ValidateImageFormatName(info.Format, supportedFormats); err != nil {
 		return &errors.ImageFormatError{
 			Path:      info.Path,
 			Extension: info.Format,

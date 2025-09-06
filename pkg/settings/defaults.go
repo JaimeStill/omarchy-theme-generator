@@ -10,6 +10,8 @@ import (
 func setDefaults(v *viper.Viper) {
 	v.SetDefault("grayscale_threshold", 0.05)
 	v.SetDefault("monochromatic_tolerance", 15.0)
+	v.SetDefault("theme_mode_threshold", 0.5)
+	v.SetDefault("min_frequency", 0.001)
 
 	v.SetDefault("loader_max_width", 8192)
 	v.SetDefault("loader_max_height", 8192)
@@ -20,21 +22,13 @@ func setDefaults(v *viper.Viper) {
 		"webp",
 	})
 
-	v.SetDefault("extractor_max_colors", 10)
-	v.SetDefault("extractor_min_threshold", 0.1)
+	v.SetDefault("light_background_fallback", "#ffffff")
+	v.SetDefault("dark_background_fallback", "#202020")
+	v.SetDefault("light_foreground_fallback", "#202020")
+	v.SetDefault("dark_foreground_fallback", "#ffffff")
+	v.SetDefault("primary_fallback", "#6496c8")
 
-	v.SetDefault("extractor_edge_threshold", 0.036)
-	v.SetDefault("extractor_color_complexity", 10000)
-	v.SetDefault("extractor_saturation_threshold", 0.4)
-
-	v.SetDefault("extractor_max_candidates", 20)
-	v.SetDefault("extractor_dominance_threshold", 60.0)
-	v.SetDefault("extractor_optimal_lightness_min", 0.2)
-	v.SetDefault("extractor_optimal_lightness_max", 0.8)
-
-	v.SetDefault("extractor_spread_divisor", 3.0)
-	v.SetDefault("extractor_weight", 0.3)
-	v.SetDefault("extractor_saliency_weight", 0.7)
+	setCategoryDefaults(v)
 }
 
 func DefaultSettings() *Settings {

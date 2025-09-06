@@ -6,6 +6,38 @@
 
 The testing strategy combines focused unit tests using `go test` with real-world validation using diverse wallpaper images. Tests provide immediate feedback and serve as living documentation of system behavior.
 
+## Core Testing Principles
+
+### Public Infrastructure Testing Standard
+
+**ALL PUBLIC PACKAGE FUNCTIONALITY MUST BE TESTED**
+
+The primary standard for gauging test coverage is comprehensive testing of public package infrastructure. This means:
+
+1. **Every public function and method** has corresponding unit tests
+2. **Every public data structure and configuration** has validation tests  
+3. **Every public API endpoint** has behavioral tests
+4. **Every public constant and setting** has usage tests
+
+This principle ensures:
+- **API Contract Validation**: All public interfaces work as documented
+- **Backwards Compatibility**: Changes to public APIs are caught immediately  
+- **Integration Readiness**: All exposed functionality is verified to work correctly
+- **Documentation Accuracy**: Tests serve as executable examples of public APIs
+
+### Coverage Assessment Framework
+
+Test coverage adequacy is measured by:
+- **Public Function Coverage**: 100% of exported functions tested
+- **Public Struct Coverage**: All exported types have construction and usage tests
+- **Public Method Coverage**: All exported methods tested with realistic parameters
+- **Error Path Coverage**: All public error conditions tested and documented
+
+**Private/internal functions are tested only when**:
+- They contain complex algorithms requiring validation
+- They implement critical business logic
+- They handle edge cases that affect public behavior
+
 ## Current Testing Approach
 
 ### Package-Level Unit Tests
@@ -47,6 +79,55 @@ func TestColorConversion(t *testing.T) {
 - **Layered testing**: Each package tested in isolation with clear dependencies
 - **Real world validation**: Integration tests with actual image samples
 - **Comprehensive coverage**: Unit tests for all public APIs and critical functions
+- **Diagnostic logging**: All tests include comprehensive `t.Logf()` output for debugging
+
+## Diagnostic Logging Requirements
+
+**ALL UNIT TESTS MUST INCLUDE COMPREHENSIVE DIAGNOSTIC OUTPUT**
+
+Every test function must use `t.Logf()` to output:
+- Input values and parameters
+- Expected vs actual results  
+- Intermediate calculation values
+- Threshold values and settings
+- Any metrics used for decision making
+
+### Example Implementation
+
+```go
+func TestThemeMode_Calculation(t *testing.T) {
+    // ... test setup ...
+    
+    result, err := p.ProcessImage(img)
+    if err != nil {
+        t.Fatalf("Unexpected error: %v", err)
+    }
+    
+    // Calculate diagnostic metrics
+    bgLuminance := chromatic.Luminance(result.Background)
+    avgInputLuminance := calculateAverageInputLuminance(inputColors)
+    
+    // LOG ALL RELEVANT METRICS
+    t.Logf("Input colors average luminance: %v", avgInputLuminance)
+    t.Logf("Threshold: %v", tc.threshold)
+    t.Logf("Background luminance: %v", bgLuminance)
+    t.Logf("Expected mode: %v, Detected mode: %v", expectedMode, actualMode)
+    
+    // Then perform assertions with full context
+    if actualMode != expectedMode {
+        t.Errorf("Expected theme mode %v, detected %v (input avg: %v, threshold: %v, bg luminance: %v)", 
+            expectedMode, actualMode, avgInputLuminance, tc.threshold, bgLuminance)
+    }
+}
+```
+
+### Why Diagnostic Logging is Critical
+
+1. **Debugging failures**: When tests fail, logs show exactly what calculations produced the unexpected result
+2. **Understanding algorithm behavior**: Logs reveal how input values flow through calculations
+3. **Validating test expectations**: Sometimes test expectations are wrong - logs help identify this
+4. **Performance analysis**: Logs can reveal performance characteristics of algorithms
+5. **Documentation**: Test logs serve as living examples of algorithm behavior
 
 ### Transparent Test Execution
 
@@ -173,14 +254,11 @@ Tests are organized by package in the tests/ directory:
 
 ```
 tests/
-├── formats/                     # Unit tests for pkg/formats (in development)
-│   └── *.go                     # Test files to be created
-├── extractor/                   # Unit tests for pkg/extractor
-│   └── strategies_test.go       # Strategy selection and analysis
-├── chromatic/                   # Unit tests for pkg/chromatic (to be created)
-├── settings/                    # Unit tests for pkg/settings (to be created)
-├── loader/                      # Unit tests for pkg/loader (to be created)
-├── analysis/                    # Unit tests for pkg/analysis (to be created)
+├── formats/                     # Unit tests for pkg/formats (complete)
+├── chromatic/                   # Unit tests for pkg/chromatic (complete)
+├── settings/                    # Unit tests for pkg/settings (complete)
+├── loader/                      # Unit tests for pkg/loader (complete)
+├── processor/                   # Unit tests for pkg/processor (complete)
 ├── images/                      # Real-world wallpaper test images
 │   ├── README.md                # Image analysis documentation
 │   ├── grayscale.jpeg           # Pure grayscale test image
@@ -270,16 +348,24 @@ Each test should verify:
 
 ## Test Coverage Goals
 
-### Unit Test Coverage (Target)
-- **pkg/formats**: 100% coverage of public functions (tests needed)
-- **pkg/chromatic**: Color theory and harmony functions (tests needed)
-- **pkg/settings**: Configuration loading and management (tests needed)
-- **pkg/loader**: Image I/O and validation (tests needed)
-- **pkg/analysis**: Profile detection and clustering (tests needed)
-- **pkg/extractor**: Strategy selection and orchestration (partial coverage)
-- **pkg/strategies**: Extraction algorithms (future, after extraction)
-- **pkg/schemes**: Color scheme generation (future)
-- **pkg/theme**: Template processing (future)
+### Unit Test Coverage (Public Infrastructure Standard)
+- **pkg/formats**: Color space conversions and utilities (100% public API coverage achieved)
+- **pkg/chromatic**: Color theory and harmony functions (100% public API coverage achieved)
+- **pkg/settings**: Configuration loading and management (100% public API coverage achieved) 
+- **pkg/loader**: Image I/O and validation (100% public API coverage achieved)
+- **pkg/processor**: Unified image processing and analysis (100% public API coverage achieved)
+- **pkg/palette**: Complete theme palette generation (100% public API coverage required)
+- **pkg/theme**: Template processing (100% public API coverage required)
+
+### Public API Coverage Verification
+Each package must demonstrate:
+1. **All exported functions tested** with realistic inputs and edge cases
+2. **All exported methods tested** on their respective structs/interfaces
+3. **All exported constants validated** for correct values and usage
+4. **All exported types validated** for construction, manipulation, and serialization
+5. **All error conditions tested** that can be returned from public APIs
+
+This standard ensures that any code depending on these packages can rely on thoroughly tested public interfaces.
 
 ### Integration Test Coverage
 - End-to-end extraction pipeline with real images
