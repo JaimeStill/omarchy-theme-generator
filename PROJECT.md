@@ -39,18 +39,18 @@
 - Format support validation and conversion
 - **Status**: ✅ Complete with comprehensive unit tests
 
-### Processing Layer (Complete with Comprehensive Unit Tests)
+### Processing Layer (Refactoring Required)
 
-#### pkg/processor - Unified Image Processing
-- **Single-pass pipeline**: Replaces pkg/analysis + pkg/extractor + pkg/strategies
-- **ColorProfile composition**: Comprehensive metadata with embedded ImageColors
-- **Frequency-based extraction**: Optimized single-strategy approach for all image types
-- **Role-based color assignment**: Direct mapping to background/foreground/primary/secondary/accent
-- **Integrated analysis**: Grayscale, monochromatic, and color scheme detection
-- **Theme mode detection**: Light/dark pairing based on luminance analysis
-- **WCAG compliance**: Automatic contrast validation and fallback handling
-- **Performance optimized**: <2s processing for 4K images, <100MB memory usage
-- **Status**: ✅ Complete with comprehensive unit tests using real test images
+#### pkg/processor - Color Extraction and Organization
+- **Current state**: 27-category semantic assignment (too rigid)
+- **Target state**: Characteristic-based color organization
+- **Frequency-based extraction**: Keep optimized approach for all image types
+- **Color pool organization**: Group by lightness, saturation, hue
+- **Relationship tracking**: Contrast pairs, harmony groups
+- **Enhanced statistics**: Hue distribution, lightness histogram, saturation groups
+- **Theme mode detection**: Light/dark based on luminance analysis
+- **Performance optimized**: Maintain <2s processing for 4K images, <100MB memory
+- **Status**: 🔄 Requires refactoring to remove premature categorization
 
 ### Testing Infrastructure (Complete)
 
@@ -86,32 +86,59 @@
 
 ---
 
-## 🔄 Next Development Phase: Theme Generation
+## 🔄 Next Development Phase: Processor Refactoring & Theme Generation
 
-### Phase Goal
-Implement complete Omarchy theme generation from ColorProfile metadata.
+### Phase 1: pkg/processor Refactoring
+**Purpose**: Transform from semantic categorization to characteristic-based organization
 
-### pkg/palette - Theme Palette Generation (Not Implemented)
-**Purpose**: Generate complete theme color palettes from processed image metadata
+**Key Changes**:
+- **Remove 27-category system**: Eliminate premature role assignment
+- **Implement ColorPool structure**: Organize by lightness, saturation, hue
+- **Add relationship tracking**: Contrast pairs and harmony groups
+- **Enhance statistics**: Distribution metrics and coverage analysis
+- **Maintain performance**: Keep <2s processing, <100MB memory targets
 
-**Key Responsibilities**:
-- **Consume ColorProfile metadata** from pkg/processor output
-- **Apply color theory algorithms** from pkg/chromatic for harmonious palettes
-- **Derive full Omarchy theme colors** using role-based color expansion
-- **Generate complete color schemes** beyond the 6 extracted base colors
-- **Bridge image analysis** to theme file generation requirements
+**New Data Structures**:
+```go
+type ColorPool struct {
+    DominantColors  []WeightedColor
+    ByLightness     LightnessGroups  // dark/mid/light
+    BySaturation    SaturationGroups // vibrant/normal/muted/gray
+    ByHue           HueFamilies      // 12 hue sectors
+    ContrastPairs   []ColorPair
+    HarmonyGroups   []ColorGroup
+}
+```
 
-**Dependencies**: pkg/formats, pkg/chromatic, pkg/processor
 **Estimated Development**: 2-3 sessions
 
-### pkg/theme - Theme File Generation (Not Implemented)  
-**Purpose**: Generate Omarchy configuration files from palette data
+### Phase 2: pkg/palette - Semantic Color Mapping
+**Purpose**: Map color pool to theme component requirements
 
 **Key Responsibilities**:
-- Template-based generation for all Omarchy formats (alacritty, btop, hyprland, etc.)
-- Role → configuration mapping using pkg/palette output
-- Format-specific color conversion and validation
-- Metadata generation (theme-gen.json with HEXA format)
+- **Consume ColorPool** from refactored pkg/processor
+- **Apply theme strategies**: Vibrant, muted, minimal, artistic
+- **Component-aware selection**: Different strategies for minimal/standard/extended needs
+- **Semantic role assignment**: Map colors to terminal, UI, accent roles
+- **Handle edge cases**: Grayscale, monochromatic images
+
+**Component Requirements**:
+- Minimal (2-4 colors): waybar, hyprland, mako
+- Standard (10-16 colors): alacritty terminal palette
+- Extended (20-30+ colors): btop gradients
+
+**Dependencies**: pkg/formats, pkg/chromatic, pkg/processor
+**Estimated Development**: 3-4 sessions
+
+### Phase 3: pkg/theme - Configuration Generation
+**Purpose**: Generate Omarchy-specific configuration files
+
+**Key Responsibilities**:
+- Component-specific templates (alacritty.toml, waybar.css, etc.)
+- Format conversions (hex, RGB, RGBA)
+- Neovim theme mapping
+- Icon theme selection based on dominant hue
+- Metadata generation (theme-gen.json)
 
 **Dependencies**: pkg/formats, pkg/palette
 **Estimated Development**: 2-3 sessions
@@ -169,10 +196,11 @@ type ColorProfile struct {
 - Eliminates hidden dependencies and improves testability
 - Enforced across all foundation and processing packages
 
-### Role-Based Color Organization ✅
-- Colors organized by purpose (background/foreground/primary/secondary/accent) not frequency
-- Enables direct mapping to Omarchy theme requirements
-- Supports future palette expansion algorithms
+### Characteristic-Based Color Organization (Pending Refactor)
+- **Current**: 27-category semantic assignment (too rigid)
+- **Target**: Organization by intrinsic properties (lightness/saturation/hue)
+- **Benefit**: Flexible mapping to any component requirements
+- **Support**: All theme personalities (vibrant/muted/minimal/artistic)
 
 ### Performance-First Architecture ✅
 - Single-pass processing eliminates unnecessary abstraction layers
@@ -250,12 +278,35 @@ omarchy-theme-generator/
 
 ---
 
-## Next Steps
+## Implementation Roadmap
 
-1. **pkg/palette Implementation**: Core theme color derivation from ColorProfile metadata
-2. **pkg/theme Implementation**: Omarchy configuration file generation
-3. **CLI Application**: User-facing command-line interface
-4. **Integration Testing**: End-to-end theme generation validation
-5. **Performance Optimization**: Further refinement based on complete pipeline metrics
+### Immediate Priority (Phase 1)
+1. **pkg/processor Refactoring**: Transform to characteristic-based organization
+   - Remove 27-category semantic assignments
+   - Implement ColorPool with lightness/saturation/hue grouping
+   - Add contrast pairs and harmony group tracking
+   - Update tests to validate new organization
 
-The foundation is solid, tested, and performance-validated. The next phase focuses on transforming our robust color analysis into complete, beautiful Omarchy themes.
+### Medium Priority (Phase 2) 
+2. **pkg/palette Implementation**: Semantic color mapping engine
+   - Component-aware selection strategies
+   - Theme personality support (vibrant/muted/minimal/artistic)
+   - Edge case handling (grayscale/monochromatic)
+   - Integration with existing pkg/chromatic algorithms
+
+### Future Priority (Phase 3)
+3. **pkg/theme Implementation**: Omarchy configuration generation
+   - Component-specific templates and format handling
+   - Neovim theme mapping and icon selection
+   - Metadata generation for theme management
+
+4. **CLI Application**: Complete user interface
+5. **Integration Testing**: End-to-end validation with real themes
+
+### Key Success Criteria
+- **Flexibility**: Generate 2-30+ color schemes from same input
+- **Quality**: Match or exceed manual theme quality
+- **Performance**: Maintain <2s processing times
+- **Compatibility**: Generate all 12 Omarchy component types
+
+The foundation is solid and performance-validated. The architectural shift to characteristic-based organization will enable flexible theme generation matching the diversity found in existing Omarchy themes.

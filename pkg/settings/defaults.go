@@ -11,7 +11,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("grayscale_threshold", 0.05)
 	v.SetDefault("monochromatic_tolerance", 15.0)
 	v.SetDefault("theme_mode_threshold", 0.5)
-	v.SetDefault("min_frequency", 0.001)
+	v.SetDefault("min_frequency", 0.0001)
 
 	v.SetDefault("loader_max_width", 8192)
 	v.SetDefault("loader_max_height", 8192)

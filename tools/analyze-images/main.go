@@ -18,6 +18,8 @@ import (
 func main() {
 	// Parse command line flags
 	imagesDir := flag.String("images", "tests/images", "Directory containing test images")
+	showCandidates := flag.Bool("candidates", true, "Show detailed candidate colors")
+	maxCandidatesShown := flag.Int("max-candidates", 3, "Maximum candidates to show per category")
 	flag.Parse()
 
 	// Find all image files
@@ -86,14 +88,19 @@ func main() {
 		readme.WriteString(fmt.Sprintf("![%s](./%s)\n\n", imageName, imageName))
 		readme.WriteString(fmt.Sprintf("**Dimensions**: %d x %d px\n\n", info.Width, info.Height))
 
-		// Category-based color analysis
-		writeCategoryAnalysis(&readme, profile)
+		// Category-based color analysis with candidates
+		writeCategoryAnalysis(&readme, profile, *showCandidates, *maxCandidatesShown)
 
 		// Core color summary for quick reference
 		writeCoreSummary(&readme, profile)
 
 		// Analysis metadata
 		writeProfileAnalysis(&readme, profile)
+
+		// Add detailed candidates section if enabled
+		if *showCandidates {
+			writeCandidatesDetail(&readme, profile, *maxCandidatesShown)
+		}
 	}
 
 	// Write README to tests/images/README.md
@@ -108,10 +115,10 @@ func main() {
 }
 
 // writeCategoryAnalysis generates comprehensive category-based color analysis
-func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProfile) {
+func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProfile, showCandidates bool, maxCandidatesShown int) {
 	readme.WriteString("### Category Analysis\n\n")
-	readme.WriteString(fmt.Sprintf("**Category Coverage**: %.1f%% (%d of %d categories)\n\n", 
-		profile.Colors.CoverageRatio*100, 
+	readme.WriteString(fmt.Sprintf("**Category Coverage**: %.1f%% (%d of %d categories)\n\n",
+		profile.Colors.CoverageRatio*100,
 		len(profile.Colors.Categories),
 		len(processor.GetAllCategories())))
 
@@ -121,7 +128,7 @@ func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProf
 		processor.CategoryForeground,
 		processor.CategoryDimForeground,
 		processor.CategoryCursor,
-	})
+	}, showCandidates, maxCandidatesShown)
 
 	// Terminal Normal Colors
 	writeCategorySection(readme, "Terminal Normal Colors (ANSI 0-7)", profile, []processor.ColorCategory{
@@ -133,7 +140,7 @@ func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProf
 		processor.CategoryNormalMagenta,
 		processor.CategoryNormalCyan,
 		processor.CategoryNormalWhite,
-	})
+	}, showCandidates, maxCandidatesShown)
 
 	// Terminal Bright Colors
 	writeCategorySection(readme, "Terminal Bright Colors (ANSI 8-15)", profile, []processor.ColorCategory{
@@ -145,14 +152,14 @@ func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProf
 		processor.CategoryBrightMagenta,
 		processor.CategoryBrightCyan,
 		processor.CategoryBrightWhite,
-	})
+	}, showCandidates, maxCandidatesShown)
 
 	// Accent Colors
 	writeCategorySection(readme, "Accent Colors", profile, []processor.ColorCategory{
 		processor.CategoryAccentPrimary,
 		processor.CategoryAccentSecondary,
 		processor.CategoryAccentTertiary,
-	})
+	}, showCandidates, maxCandidatesShown)
 
 	// Semantic Colors
 	writeCategorySection(readme, "Semantic Colors", profile, []processor.ColorCategory{
@@ -160,33 +167,65 @@ func writeCategoryAnalysis(readme *strings.Builder, profile *processor.ColorProf
 		processor.CategoryWarning,
 		processor.CategorySuccess,
 		processor.CategoryInfo,
-	})
+	}, showCandidates, maxCandidatesShown)
 }
 
-func writeCategorySection(readme *strings.Builder, title string, profile *processor.ColorProfile, categories []processor.ColorCategory) {
+func writeCategorySection(readme *strings.Builder, title string, profile *processor.ColorProfile, categories []processor.ColorCategory, showCandidates bool, maxCandidatesShown int) {
 	// First, collect categories that actually have colors
 	var validRows []string
-	
+
 	for _, category := range categories {
 		if c, exists := profile.Colors.Categories[category]; exists {
 			hex := formats.ToHex(c)
 			visual := renderColorBlock(hex)
-			candidateCount := 0
-			if candidates, hasCandidates := profile.Colors.CategoryCandidates[category]; hasCandidates {
-				candidateCount = len(candidates)
+
+			// Build candidates display
+			candidatesDisplay := ""
+			if showCandidates {
+				if candidates, hasCandidates := profile.Colors.CategoryCandidates[category]; hasCandidates {
+					// Show top candidates with scores
+					for i, candidate := range candidates {
+						if i >= maxCandidatesShown {
+							if len(candidates) > maxCandidatesShown {
+								candidatesDisplay += fmt.Sprintf("+%d more", len(candidates)-maxCandidatesShown)
+							}
+							break
+						}
+						if i > 0 {
+							candidatesDisplay += "<br>"
+						}
+						candHex := formats.ToHex(candidate.Color)
+						candidatesDisplay += fmt.Sprintf("`%s` (%.2f)", candHex, candidate.Score)
+					}
+				} else {
+					candidatesDisplay = "-"
+				}
+			} else {
+				// Just show count
+				candidateCount := 0
+				if candidates, hasCandidates := profile.Colors.CategoryCandidates[category]; hasCandidates {
+					candidateCount = len(candidates)
+				}
+				candidatesDisplay = fmt.Sprintf("%d", candidateCount)
 			}
-			validRows = append(validRows, fmt.Sprintf("| %s | `%s` | %s | %d |\n", 
-				string(category), hex, visual, candidateCount))
+
+			validRows = append(validRows, fmt.Sprintf("| %s | `%s` | %s | %s |\n",
+				string(category), hex, visual, candidatesDisplay))
 		}
 		// Omit rows for categories without colors (empty table rows)
 	}
-	
+
 	// Only write the section if there are valid rows
 	if len(validRows) > 0 {
 		readme.WriteString(fmt.Sprintf("#### %s\n\n", title))
-		readme.WriteString("| Category | Hex | Visual | Candidates |\n")
-		readme.WriteString("|----------|-----|--------|-----------|\n")
-		
+		if showCandidates {
+			readme.WriteString("| Category | Selected | Visual | Candidates (score) |\n")
+			readme.WriteString("|----------|----------|--------|-------------------|\n")
+		} else {
+			readme.WriteString("| Category | Hex | Visual | Candidates |\n")
+			readme.WriteString("|----------|-----|--------|-----------|\n")
+		}
+
 		for _, row := range validRows {
 			readme.WriteString(row)
 		}
@@ -194,10 +233,67 @@ func writeCategorySection(readme *strings.Builder, title string, profile *proces
 	}
 }
 
+// writeCandidatesDetail adds a detailed section showing all color candidates
+func writeCandidatesDetail(readme *strings.Builder, profile *processor.ColorProfile, maxCandidatesShown int) {
+	// Collect categories with multiple candidates for detailed view
+	var categoriesWithCandidates []processor.ColorCategory
+	for _, category := range processor.GetAllCategories() {
+		if candidates, exists := profile.Colors.CategoryCandidates[category]; exists && len(candidates) > 1 {
+			categoriesWithCandidates = append(categoriesWithCandidates, category)
+		}
+	}
+
+	if len(categoriesWithCandidates) == 0 {
+		return
+	}
+
+	readme.WriteString("### Color Candidates Detail\n\n")
+	readme.WriteString("*Top candidates for categories with multiple options:*\n\n")
+
+	for _, category := range categoriesWithCandidates {
+		candidates := profile.Colors.CategoryCandidates[category]
+
+		readme.WriteString(fmt.Sprintf("**%s** (%d candidates):\n", category, len(candidates)))
+		readme.WriteString("| Rank | Color | Visual | Frequency | Score |\n")
+		readme.WriteString("|------|-------|--------|-----------|-------|\n")
+
+		maxShow := maxCandidatesShown * 2 // Show more in detail section
+		if maxShow > len(candidates) {
+			maxShow = len(candidates)
+		}
+
+		for i := 0; i < maxShow; i++ {
+			cand := candidates[i]
+			hex := formats.ToHex(cand.Color)
+			visual := renderColorBlock(hex)
+			freqPct := float64(cand.Frequency) / float64(profile.Colors.TotalPixels) * 100
+
+			// Mark selected color
+			rankStr := fmt.Sprintf("%d", i+1)
+			if i == 0 {
+				if selected, hasSelected := profile.Colors.Categories[category]; hasSelected {
+					if formats.ToHex(selected) == hex {
+						rankStr = fmt.Sprintf("**%d** ✓", i+1)
+					}
+				}
+			}
+
+			readme.WriteString(fmt.Sprintf("| %s | `%s` | %s | %.4f%% | %.3f |\n",
+				rankStr, hex, visual, freqPct, cand.Score))
+		}
+
+		if len(candidates) > maxShow {
+			readme.WriteString(fmt.Sprintf("| ... | +%d more | | | |\n", len(candidates)-maxShow))
+		}
+
+		readme.WriteString("\n")
+	}
+}
+
 func writeCoreSummary(readme *strings.Builder, profile *processor.ColorProfile) {
 	// Show the most important colors for quick reference
-	coreCategories := []struct{
-		name string
+	coreCategories := []struct {
+		name     string
 		category processor.ColorCategory
 	}{
 		{"Background", processor.CategoryBackground},
@@ -209,7 +305,7 @@ func writeCoreSummary(readme *strings.Builder, profile *processor.ColorProfile) 
 
 	// First, collect categories that actually have colors
 	var validRows []string
-	
+
 	for _, core := range coreCategories {
 		if c, exists := profile.Colors.Categories[core.category]; exists {
 			hex := formats.ToHex(c)
@@ -218,13 +314,13 @@ func writeCoreSummary(readme *strings.Builder, profile *processor.ColorProfile) 
 		}
 		// Omit rows for categories without colors (empty table rows)
 	}
-	
+
 	// Only write the section if there are valid rows
 	if len(validRows) > 0 {
 		readme.WriteString("### Core Colors Summary\n\n")
 		readme.WriteString("| Role | Hex | Visual |\n")
 		readme.WriteString("|------|-----|--------|\n")
-		
+
 		for _, row := range validRows {
 			readme.WriteString(row)
 		}
@@ -254,12 +350,12 @@ func writeProfileAnalysis(readme *strings.Builder, profile *processor.ColorProfi
 func renderColorBlock(hexColor string) string {
 	// Remove # prefix if present for URL formatting
 	cleanHex := strings.TrimPrefix(hexColor, "#")
-	
+
 	// Validate hex format
 	if len(cleanHex) != 6 {
 		return "![invalid](https://placehold.co/30x30/cccccc/cccccc.png)"
 	}
-	
+
 	// Return markdown image tag with placehold.co URL
 	return fmt.Sprintf("![%s](https://placehold.co/30x30/%s/%s.png)", hexColor, cleanHex, cleanHex)
 }

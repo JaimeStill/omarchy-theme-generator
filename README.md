@@ -3,11 +3,11 @@
 > [!IMPORTANT]
 > This project is still early in development. The core processing pipeline is complete, but the CLI application and theme generation features are not yet implemented.
 
-Color extraction and analysis engine for generating terminal themes from images using category-based processing and color theory principles.
+Color extraction and analysis engine for generating Omarchy themes from images using characteristic-based color organization and flexible palette mapping.
 
 ## What This Tool Is
 
-The Omarchy Theme Generator is a Go-based color analysis system that extracts and categorizes colors from images using a 27-category system with multi-dimensional scoring. It applies category-based color extraction with color theory principles to create purpose-driven color palettes for Omarchy.
+The Omarchy Theme Generator is a Go-based color analysis system that extracts and organizes colors from images by their intrinsic properties (lightness, saturation, hue). It provides a rich pool of colors that can be flexibly mapped to generate themes ranging from minimal (2-4 colors) to extended (30+ colors) configurations for all Omarchy components.
 
 ## What You Can Currently Do
 
@@ -41,11 +41,11 @@ go test ./tests/benchmarks -bench=. -benchmem
 ```
 
 **Current Capabilities:**
-- 27-category color extraction system (Core UI, ANSI colors, accents, semantic colors)
-- Multi-dimensional scoring algorithm (frequency, contrast, saturation, hue alignment, lightness)
-- Color scheme identification and harmony analysis
+- Characteristic-based color extraction (lightness, saturation, hue organization)
+- Multi-dimensional color analysis (frequency, relationships, harmonies)
+- Color scheme identification and profile detection
 - Performance targets met: <2s processing, <100MB memory for 4K images
-- WCAG accessibility validation for contrast ratios
+- Contrast relationship tracking for accessibility
 
 ## What You Will Be Able To Do
 
@@ -92,13 +92,13 @@ This project follows Intelligent Development principles with AI-assisted impleme
 - **pkg/settings** - Configuration management with category defaults
 - **pkg/loader** - Image loading and format validation
 
-### Processing Layer (Complete)
-- **pkg/processor** - Unified 27-category extraction pipeline
+### Processing Layer (Refactoring Required)
+- **pkg/processor** - Color extraction and characteristic-based organization
 - **pkg/errors** - Error handling with sentinel errors
 
 ### Generation Layer (In Development)
-- **pkg/palette** - Theme palette generation from color profiles
-- **pkg/theme** - Template-based theme file generation
+- **pkg/palette** - Semantic color mapping and theme strategy application
+- **pkg/theme** - Component-specific configuration generation
 
 ### Application Layer (Planned)
 - **cmd/omarchy-theme-gen** - CLI application interface

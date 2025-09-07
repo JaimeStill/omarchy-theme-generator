@@ -1,7 +1,7 @@
 # Omarchy Theme Generator
 
 ## Project Context
-Go-based CLI tool that generates Omarchy themes from images using color extraction and palette generation based on color theory principles. Optional TUI interface planned for future enhancement.
+Go-based CLI tool that generates Omarchy themes from images using characteristic-based color organization and flexible palette mapping. Transforms image colors into complete Omarchy configurations through a three-stage pipeline: extraction, semantic mapping, and component generation.
 
 ## Development Philosophy
 - **User-driven**: AI provides implementation guides, user develops code
@@ -65,35 +65,35 @@ if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
 
 ## Current Implementation Status
 
-### ✅ Completed Architecture (Foundation + Processing Layers)
+### ✅ Completed Architecture (Foundation Layer)
 - **pkg/formats**: Complete with comprehensive unit tests (RGBA, HSLA, LAB, XYZ, hex parsing)
 - **pkg/chromatic**: Complete with comprehensive unit tests (color theory, harmony, contrast)
 - **pkg/settings**: Complete with comprehensive unit tests (Viper integration, fallback configs)
 - **pkg/loader**: Complete with comprehensive unit tests (JPEG/PNG loading, validation)
-- **pkg/processor**: Complete unified processing with comprehensive unit tests using real images
 - **Settings-as-methods pattern**: Enforced across all packages
-- **ColorProfile composition**: Embedded ImageColors with complete metadata
 - **Performance validated**: 100% compliance with <2s/100MB targets (88% faster than target)
-- **Documentation**: Complete overhaul reflecting unified architecture
+- **Documentation**: Complete architecture documentation
 
-### ✅ Eliminated Packages (40-60% Performance Improvement)
-- ❌ **pkg/analysis** → Merged into pkg/processor
-- ❌ **pkg/extractor** → Merged into pkg/processor  
-- ❌ **pkg/strategies** → Eliminated (frequency-only approach)
+### 🔄 Current Focus: Architectural Refactoring
+- **Theme Analysis Complete**: [THEMES.md](THEMES.md) contains comprehensive analysis of all 11 default Omarchy themes
+- **Architecture Insights**: Discovered flexible color requirements (2-30+ colors per theme)
+- **Refactoring Required**: pkg/processor needs transformation from semantic to characteristic-based organization
 
-### ✅ Testing & Tools Infrastructure Complete
-- **tests/**: Package-specific unit tests with diagnostic logging standards
-- **tools/analyze-images/**: Image analysis documentation generator
-- **tools/performance-test/**: Statistical performance validation across test dataset
+### 🔄 Processing Layer (Refactoring Required)
+- **pkg/processor**: Current 27-category system too rigid, needs characteristic-based organization
+- **Target Architecture**: ColorPool with lightness/saturation/hue grouping
+- **Performance Requirement**: Maintain <2s/100MB targets during refactoring
 
-### 🔄 Next Development Phase: Theme Generation
-- ⏳ **pkg/palette**: Theme color derivation from ColorProfile metadata (will use pkg/chromatic algorithms)
-- ⏳ **pkg/theme**: Omarchy configuration file generation
-- ⏳ **cmd/omarchy-theme-gen/**: CLI application interface
+### 🔄 Next Development Phases
+- **Phase 1**: pkg/processor refactoring (2-3 sessions)
+- **Phase 2**: pkg/palette semantic mapping engine (3-4 sessions)  
+- **Phase 3**: pkg/theme component generation (2-3 sessions)
+- **Phase 4**: cmd/omarchy-theme-gen CLI interface (1-2 sessions)
 
 ## Key Technical Decisions
+
+### Established Patterns ✅
 - **Standard Types**: Use `color.RGBA` from standard library, not custom types
-- **Category-Based**: Colors organized by 27 theme categories with configurable characteristics
 - **Settings vs Config**: System settings (HOW tool operates) separate from user config (WHAT user wants)
 - **Layered Architecture**: Clear dependency layers with no circular dependencies
 - **Profile Detection**: Grayscale, Monotone, Monochromatic, Duotone/Tritone for edge cases
@@ -102,8 +102,15 @@ if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
 - **Early termination algorithm**: Monochromatic detection with 80% threshold
 - **Color Storage**: HEXA format (#RRGGBBAA) in theme-gen.json for human readability
 - **Color Bridge**: ParseHexA function to convert HEXA → color.RGBA
-- **pkg/chromatic vs pkg/palette**: Foundation algorithms vs complete palette generation
-- **CLI sub-commands**: For theme refinement
+
+### New Architectural Decisions 🔄
+- **Characteristic-Based Organization**: Replace 27-category system with lightness/saturation/hue grouping
+- **Flexible Color Pool**: ColorPool structure supporting 2-30+ color requirements
+- **Three-Stage Pipeline**: processor (extract) → palette (map) → theme (generate)
+- **Component-Aware Selection**: Different strategies for minimal/standard/extended color needs
+- **Theme Personality Support**: Vibrant, muted, minimal, artistic generation strategies
+- **Relationship Tracking**: Contrast pairs and harmony groups in ColorPool
+- **Separation of Concerns**: No premature semantic assignment during extraction
 
 ## Commands
 ```bash
@@ -140,20 +147,15 @@ go fmt ./...
 - `pkg/settings/` - Flat configuration structure with Viper integration
 - `pkg/loader/` - Image I/O with validation and format support
 
-### Generation Layer (Not Implemented)
-- `pkg/palette/` - Theme palette generation from processor output
-- `pkg/theme/` - Theme file generation from templates
-
-### Processing Layer (Complete)
-- `pkg/processor/` - Unified processing pipeline with frequency-based extraction
-- `pkg/palette/` - Pending creation for palette generation engine
+### Processing Layer (Refactoring Required)
+- `pkg/processor/` - Color extraction and characteristic-based organization (needs refactoring)
 
 ### Generation Layer (Not Implemented)
-- `pkg/config/` - User preferences per theme (theme-gen.json)
-- `pkg/theme/` - Theme file generation with templates
+- `pkg/palette/` - Semantic color mapping and theme strategy application
+- `pkg/theme/` - Component-specific configuration file generation
 
 ### Application Layer (Not Implemented)
-- `cmd/omarchy-theme-gen/` - CLI application
+- `cmd/omarchy-theme-gen/` - CLI application interface
 
 ### Testing (Structure Established)
 - `tests/*/` - Unit tests per package (comprehensive coverage pending)
@@ -164,21 +166,27 @@ go fmt ./...
 - Contrast: WCAG AA (4.5:1)
 
 ## Current Development Focus
-Phase 1: Complete Refactoring & Testing (See PROJECT.md for detailed roadmap)
+Complete architectural analysis and prepare for refactoring phases (See PROJECT.md and THEMES.md)
 
-### Active Tasks
-1. Documentation updates (in progress)
-2. Strategy extraction from pkg/extractor
-3. Category-based extraction and scoring implementation
-4. pkg/palette package creation
-5. Comprehensive test coverage for all packages
+### Recent Achievements
+1. **Theme Analysis Complete**: Comprehensive analysis of all 11 default Omarchy themes in THEMES.md
+2. **Architecture Insights**: Discovered flexible component requirements (2-30+ colors)
+3. **Refactoring Strategy**: Identified need for characteristic-based organization vs semantic categorization
+4. **Documentation Updates**: Updated README.md, PROJECT.md, and CLAUDE.md with new direction
 
-### Development Phases
-- **Phase 1**: Complete refactoring & testing (current)
-- **Phase 2**: Theme generation implementation
-- **Phase 3**: CLI application
+### Next Phase: pkg/processor Refactoring
+1. **Remove 27-category system**: Transform to ColorPool with lightness/saturation/hue grouping
+2. **Add relationship tracking**: Contrast pairs and harmony groups
+3. **Enhanced statistics**: Distribution metrics and coverage analysis
+4. **Maintain performance**: Keep <2s processing, <100MB memory targets
+5. **Update tests**: Validate new characteristic-based organization
 
-Refer to PROJECT.md for complete roadmap with task breakdowns.
+### Future Phases
+- **Phase 2**: pkg/palette semantic mapping engine (3-4 sessions)
+- **Phase 3**: pkg/theme component generation (2-3 sessions)  
+- **Phase 4**: cmd/omarchy-theme-gen CLI interface (1-2 sessions)
+
+Refer to PROJECT.md and THEMES.md for complete roadmap and architectural analysis.
 
 ## CLI Architecture
 Commands planned:
