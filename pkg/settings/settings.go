@@ -8,59 +8,44 @@ const settingsKey contextKey = "settings"
 
 type Settings struct {
 	// Core extraction settings
-	GrayscaleThreshold     float64 `mapstructure:"grayscale_threshold"`
-	MonochromaticTolerance float64 `mapstructure:"monochromatic_tolerance"`
-	ThemeModeThreshold     float64 `mapstructure:"theme_mode_threshold"`
-	MinFrequency           float64 `mapstructure:"min_frequency"`
+	GrayscaleThreshold           float64 `mapstructure:"grayscale_threshold"`
+	GrayscaleImageThreshold      float64 `mapstructure:"grayscale_image_threshold"`
+	MonochromaticTolerance       float64 `mapstructure:"monochromatic_tolerance"`
+	MonochromaticWeightThreshold float64 `mapstructure:"monochromatic_weight_threshold"`
+	ThemeModeThreshold           float64 `mapstructure:"theme_mode_threshold"`
+	MinFrequency                 float64 `mapstructure:"min_frequency"`
 
 	// Loader settings
 	LoaderMaxWidth       int      `mapstructure:"loader_max_width"`
 	LoaderMaxHeight      int      `mapstructure:"loader_max_height"`
 	LoaderAllowedFormats []string `mapstructure:"loader_allowed_formats"`
 
-	// Fallback colors
-	LightBackgroundFallback string `mapstructure:"light_background_fallback"`
-	DarkBackgroundFallback  string `mapstructure:"dark_background_fallback"`
-	LightForegroundFallback string `mapstructure:"light_foreground_fallback"`
-	DarkForegroundFallback  string `mapstructure:"dark_foreground_fallback"`
-	PrimaryFallback         string `mapstructure:"primary_fallback"`
+	LightnessDarkMax  float64 `mapstructure:"lightness_dark_max"`
+	LightnessLightMin float64 `mapstructure:"lightness_light_min"`
 
-	// Category-based extraction settings
-	Categories      CategorySettings       `mapstructure:"categories"`
-	CategoryScoring CategoryScoringWeights `mapstructure:"category_scoring"`
-	Extraction      ExtractionSettings     `mapstructure:"extraction"`
-}
+	SaturationGrayMax   float64 `mapstructure:"saturation_gray_max"`
+	SaturationMutedMax  float64 `mapstructure:"saturation_muted_max"`
+	SaturationNormalMax float64 `mapstructure:"saturation_normal_max"`
 
-type CategorySettings struct {
-	Dark  map[string]CategoryCharacteristics `mapstructure:"dark"`
-	Light map[string]CategoryCharacteristics `mapstructure:"light"`
-}
+	HueSectorCount int     `mapstructure:"hue_sector_count"`
+	HueSectorSize  float64 `mapstructure:"hue_sector_size"`
 
-type CategoryCharacteristics struct {
-	MinLightness  float64  `mapstructure:"min_lightness"`
-	MaxLightness  float64  `mapstructure:"max_lightness"`
-	MinSaturation float64  `mapstructure:"min_saturation"`
-	MaxSaturation float64  `mapstructure:"max_saturation"`
-	MinContrast   float64  `mapstructure:"min_contrast"`
-	HueCenter     *float64 `mapstructure:"hue_center"`
-	HueTolerance  *float64 `mapstructure:"hue_tolerance"`
-}
-
-type CategoryScoringWeights struct {
-	Frequency    float64 `mapstructure:"frequency"`
-	Contrast     float64 `mapstructure:"contrast"`
-	Saturation   float64 `mapstructure:"saturation"`
-	HueAlignment float64 `mapstructure:"hue_alignment"`
-	Lightness    float64 `mapstructure:"lightness"`
+	Extraction ExtractionSettings `mapstructure:"extraction"`
+	Fallbacks  FallbackSettings   `mapstructure:"fallbacks"`
 }
 
 type ExtractionSettings struct {
-	MaxCandidatesPerCategory int     `mapstructure:"max_candidates_per_category"`
-	AllowColoredBackgrounds  bool    `mapstructure:"allow_colored_backgrounds"`
-	PreferVibrantAccents     bool    `mapstructure:"prefer_vibrant_accents"`
-	MaintainHueConsistency   bool    `mapstructure:"maintain_hue_consistency"`
-	GrayscaleHueTemperature  float64 `mapstructure:"grayscale_hue_temperature"`
-	MinimumColorFrequency    float64 `mapstructure:"minimum_color_frequency"`
+	MaxColorsToExtract      int     `mapstructure:"max_colors_to_extract"`
+	DominantColorCount      int     `mapstructure:"dominant_color_count"`
+	MinColorDiversity       float64 `mapstructure:"min_color_diversity"`
+	AdaptiveGrouping        bool    `mapstructure:"adaptive_grouping"`
+	PreserveNaturalClusters bool    `mapstructure:"preserve_natural_clusters"`
+}
+
+type FallbackSettings struct {
+	DefaultDark  string `mapstructure:"default_dark"`
+	DefaultLight string `mapstructure:"default_light"`
+	DefaultGray  string `mapstructure:"default_gray"`
 }
 
 func WithSettings(ctx context.Context, s *Settings) context.Context {

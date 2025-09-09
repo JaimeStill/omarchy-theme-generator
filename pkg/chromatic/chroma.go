@@ -7,16 +7,18 @@ import (
 )
 
 type Chroma struct {
-	tolerance float64
+	settings *settings.Settings
 }
 
 func NewChroma(s *settings.Settings) *Chroma {
 	return &Chroma{
-		tolerance: s.MonochromaticTolerance,
+		settings: s,
 	}
 }
 
 func (c *Chroma) IdentifyColorScheme(variance float64, colorCount int, hues []float64) ColorScheme {
+	tolerance := c.settings.MonochromaticTolerance
+
 	if colorCount == 0 {
 		return Grayscale
 	}
@@ -37,10 +39,10 @@ func (c *Chroma) IdentifyColorScheme(variance float64, colorCount int, hues []fl
 	}
 
 	if colorCount == 3 {
-		if isTriadic(hues, c.tolerance) {
+		if isTriadic(hues, tolerance) {
 			return Triadic
 		}
-		if isSplitComplementary(hues, c.tolerance) {
+		if isSplitComplementary(hues, tolerance) {
 			return SplitComplementary
 		}
 		if variance <= 30 {
@@ -50,10 +52,10 @@ func (c *Chroma) IdentifyColorScheme(variance float64, colorCount int, hues []fl
 	}
 
 	if colorCount == 4 {
-		if isSquare(hues, c.tolerance) {
+		if isSquare(hues, tolerance) {
 			return Square
 		}
-		if isTetradic(hues, c.tolerance) {
+		if isTetradic(hues, tolerance) {
 			return Tetradic
 		}
 		if variance <= 30 {
@@ -62,7 +64,7 @@ func (c *Chroma) IdentifyColorScheme(variance float64, colorCount int, hues []fl
 		return Custom
 	}
 
-	if variance <= c.tolerance {
+	if variance <= tolerance {
 		return Monochromatic
 	}
 	if variance <= 30 {
@@ -72,15 +74,16 @@ func (c *Chroma) IdentifyColorScheme(variance float64, colorCount int, hues []fl
 	return Custom
 }
 
-// huesWithinTolerance checks if two hues are within the specified tolerance in degrees.
+// HuesWithinTolerance checks if two hues are within the specified tolerance in degrees.
 // Handles hue wraparound (e.g., 350° and 10° are 20° apart, not 340°).
 // Used internally by IsMonochromatic to determine color similarity.
 func (c *Chroma) HuesWithinTolerance(h1, h2 float64) bool {
+	tolerance := c.settings.MonochromaticTolerance
 	diff := math.Abs(h1 - h2)
 
 	if diff > 180 {
 		diff = 360 - diff
 	}
 
-	return diff <= c.tolerance
+	return diff <= tolerance
 }

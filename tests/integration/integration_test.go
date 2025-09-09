@@ -93,16 +93,16 @@ func TestEnd2EndImageProcessing(t *testing.T) {
 			t.Logf("Processing time: %v", processingTime)
 			t.Logf("Profile characteristics:")
 			t.Logf("  Mode: %s", profile.Mode)
-			t.Logf("  Color Scheme: %s", profile.ColorScheme)
 			t.Logf("  Dominant Hue: %.1f°", profile.DominantHue)
 			t.Logf("  Hue Variance: %.1f°", profile.HueVariance)
 			t.Logf("  Average Luminance: %.3f", profile.AvgLuminance)
 			t.Logf("  Average Saturation: %.3f", profile.AvgSaturation)
 			t.Logf("  Is Grayscale: %t", profile.IsGrayscale)
 			t.Logf("  Is Monochromatic: %t", profile.IsMonochromatic)
-			t.Logf("  Categories found: %d/27 (%.1f%%)",
-				len(profile.Colors.Categories), 
-				float64(len(profile.Colors.Categories))/27*100)
+			t.Logf("  Colors extracted: %d unique from %d pixels",
+				profile.Pool.UniqueColors, profile.Pool.TotalPixels)
+			t.Logf("  Dominant colors: %d",
+				len(profile.Pool.DominantColors))
 
 			// Validate performance targets
 			maxProcessingTime := 2 * time.Second
@@ -111,12 +111,16 @@ func TestEnd2EndImageProcessing(t *testing.T) {
 			}
 
 			// Validate profile completeness
-			if profile.Colors.UniqueColors == 0 {
+			if profile.Pool.UniqueColors == 0 {
 				t.Error("No unique colors found")
 			}
 
-			if profile.Colors.TotalPixels == 0 {
+			if profile.Pool.TotalPixels == 0 {
 				t.Error("Total pixels not set")
+			}
+
+			if len(profile.Pool.AllColors) == 0 {
+				t.Error("No colors extracted from image")
 			}
 
 			// Validate mode detection
@@ -133,29 +137,28 @@ func TestEnd2EndImageProcessing(t *testing.T) {
 					tc.expectColor, hasColor, profile.IsGrayscale)
 			}
 
-			// Validate category extraction
-			if len(profile.Colors.Categories) == 0 {
-				t.Error("No categories extracted from image")
+			// Validate characteristic grouping
+			totalGrouped := len(profile.Pool.ByLightness.Dark) + len(profile.Pool.ByLightness.Mid) + len(profile.Pool.ByLightness.Light)
+			if totalGrouped == 0 {
+				t.Error("No colors grouped by lightness")
 			}
 
-			// Ensure core categories are present when applicable
-			if _, hasBackground := profile.Colors.Categories[processor.CategoryBackground]; !hasBackground {
-				t.Error("Background category not found")
+			// Validate statistics calculation
+			if profile.Pool.Statistics.ChromaticDiversity < 0 || profile.Pool.Statistics.ChromaticDiversity > 1 {
+				t.Errorf("Invalid chromatic diversity: %.3f (should be 0-1)", profile.Pool.Statistics.ChromaticDiversity)
 			}
 
-			// Validate category candidates
-			totalCandidates := 0
-			for category, candidates := range profile.Colors.CategoryCandidates {
-				totalCandidates += len(candidates)
-				t.Logf("Category %s has %d candidates", category, len(candidates))
-			}
+			// Log characteristic grouping results
+			t.Logf("Color grouping results:")
+			t.Logf("  Dark: %d, Mid: %d, Light: %d",
+				len(profile.Pool.ByLightness.Dark), len(profile.Pool.ByLightness.Mid), len(profile.Pool.ByLightness.Light))
+			t.Logf("  Gray: %d, Muted: %d, Normal: %d, Vibrant: %d",
+				len(profile.Pool.BySaturation.Gray), len(profile.Pool.BySaturation.Muted),
+				len(profile.Pool.BySaturation.Normal), len(profile.Pool.BySaturation.Vibrant))
+			t.Logf("  Hue families: %d", len(profile.Pool.ByHue))
 
-			if totalCandidates == 0 {
-				t.Logf("Note: No category candidates found - image may have very limited color diversity")
-			}
-
-			t.Logf("Integration test passed: %d categories, %d total candidates",
-				len(profile.Colors.Categories), totalCandidates)
+			t.Logf("Integration test passed: %d colors extracted, grouped into characteristics",
+				profile.Pool.UniqueColors)
 		})
 	}
 }
@@ -230,34 +233,30 @@ func TestColorTheoryIntegration(t *testing.T) {
 		t.Fatalf("Failed to process image: %v", err)
 	}
 
-	// Test color scheme identification
+	// Test color theory integration
 	t.Logf("Testing color theory integration:")
-	t.Logf("  Color scheme: %s", profile.ColorScheme)
 	t.Logf("  Dominant hue: %.1f°", profile.DominantHue)
 	t.Logf("  Hue variance: %.1f°", profile.HueVariance)
 
 	// Test color theory integration with extracted colors
-	if len(profile.Colors.Categories) > 1 {
-		t.Logf("  Color theory validation: %d categories extracted", len(profile.Colors.Categories))
+	if len(profile.Pool.AllColors) > 1 {
+		t.Logf("  Color theory validation: %d colors extracted", len(profile.Pool.AllColors))
 		
-		// Verify scheme consistency
-		if profile.ColorScheme == "" {
-			t.Logf("Note: No color scheme identified from extracted colors")
-		}
+		// Color scheme identification is handled by pkg/palette, not processor
 	}
 
-	// Test accessibility calculations
-	if bg, hasBg := profile.Colors.Categories[processor.CategoryBackground]; hasBg {
-		if fg, hasFg := profile.Colors.Categories[processor.CategoryForeground]; hasFg {
-			contrast := chromatic.ContrastRatio(bg, fg)
-			accessible := chromatic.IsAccessible(bg, fg, chromatic.AA)
-			
-			t.Logf("  Background-Foreground contrast: %.2f:1", contrast)
-			t.Logf("  WCAG AA compliant: %t", accessible)
-			
-			if contrast < 1.0 || contrast > 21.0 {
-				t.Errorf("Invalid contrast ratio: %.2f", contrast)
-			}
+	// Test accessibility calculations with dominant colors
+	if len(profile.Pool.DominantColors) >= 2 {
+		bg := profile.Pool.DominantColors[0].RGBA
+		fg := profile.Pool.DominantColors[1].RGBA
+		contrast := chromatic.ContrastRatio(bg, fg)
+		accessible := chromatic.IsAccessible(bg, fg, chromatic.AA)
+		
+		t.Logf("  Top two colors contrast: %.2f:1", contrast)
+		t.Logf("  WCAG AA compliant: %t", accessible)
+		
+		if contrast < 1.0 || contrast > 21.0 {
+			t.Errorf("Invalid contrast ratio: %.2f", contrast)
 		}
 	}
 }
@@ -315,8 +314,8 @@ func TestPerformanceTargets(t *testing.T) {
 
 			t.Logf("Performance test: %s (%.1f MP)", tc.filename, tc.sizeCategoryMP)
 			t.Logf("  Processing time: %v (target: <%v)", processingTime, tc.maxTime)
-			t.Logf("  Categories extracted: %d", len(profile.Colors.Categories))
-			t.Logf("  Unique colors: %d", profile.Colors.UniqueColors)
+			t.Logf("  Colors extracted: %d", profile.Pool.UniqueColors)
+			t.Logf("  Dominant colors: %d", len(profile.Pool.DominantColors))
 
 			// Validate performance target
 			if processingTime > tc.maxTime {
@@ -325,8 +324,8 @@ func TestPerformanceTargets(t *testing.T) {
 			}
 
 			// Validate extraction completeness
-			if len(profile.Colors.Categories) == 0 {
-				t.Error("No categories extracted despite successful processing")
+			if len(profile.Pool.AllColors) == 0 {
+				t.Error("No colors extracted despite successful processing")
 			}
 
 			// Overall performance should always be under 2s (project requirement)

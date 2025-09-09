@@ -33,7 +33,6 @@
 //	// Access analysis metadata
 //	mode := profile.Mode // Light or Dark
 //	isGrayscale := profile.IsGrayscale
-//	scheme := profile.ColorScheme
 //
 // The processor enforces the settings-as-methods architectural pattern,
 // requiring all operations to be performed through configured processor

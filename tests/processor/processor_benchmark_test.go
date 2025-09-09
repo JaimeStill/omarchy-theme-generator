@@ -115,8 +115,8 @@ func BenchmarkProcessImage_Large(b *testing.B) {
 	}
 }
 
-// BenchmarkCategoryExtraction benchmarks the category extraction specifically
-func BenchmarkCategoryExtraction(b *testing.B) {
+// BenchmarkColorExtraction benchmarks the color extraction specifically
+func BenchmarkColorExtraction(b *testing.B) {
 	s := settings.DefaultSettings()
 	p := processor.New(s)
 	l := loader.NewFileLoader(s)
@@ -130,7 +130,7 @@ func BenchmarkCategoryExtraction(b *testing.B) {
 		b.Fatalf("Failed to load test image: %v", err)
 	}
 	
-	b.Logf("Benchmarking category extraction with nebula.jpeg")
+	b.Logf("Benchmarking color extraction with nebula.jpeg")
 	
 	b.ResetTimer()
 	
@@ -140,9 +140,9 @@ func BenchmarkCategoryExtraction(b *testing.B) {
 			b.Fatalf("Processing failed: %v", err)
 		}
 		
-		// Ensure categories were extracted
-		if len(profile.Colors.Categories) == 0 {
-			b.Fatalf("No categories extracted")
+		// Ensure colors were extracted and organized
+		if len(profile.Pool.AllColors) == 0 {
+			b.Fatalf("No colors extracted")
 		}
 	}
 }

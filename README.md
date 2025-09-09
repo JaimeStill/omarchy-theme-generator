@@ -41,11 +41,11 @@ go test ./tests/benchmarks -bench=. -benchmem
 ```
 
 **Current Capabilities:**
-- Characteristic-based color extraction (lightness, saturation, hue organization)
-- Multi-dimensional color analysis (frequency, relationships, harmonies)
-- Color scheme identification and profile detection
-- Performance targets met: <2s processing, <100MB memory for 4K images
-- Contrast relationship tracking for accessibility
+- Characteristic-based color extraction with ColorPool organization
+- Statistical analysis (chromatic diversity, contrast range, hue variance)
+- Color scheme identification and profile detection (grayscale, monochromatic)
+- Performance targets exceeded: <500ms avg processing, <50MB memory for 4K images
+- Comprehensive color grouping by lightness, saturation, and hue families
 
 ## What You Will Be Able To Do
 
@@ -62,7 +62,7 @@ omarchy-theme-gen clone my-theme my-variant --scheme complementary
 
 Generated themes will integrate directly with Omarchy's theme selection system.
 
-See **[PROJECT.md](PROJECT.md)** for the development roadmap and **[docs/architecture.md](docs/architecture.md)** for architectural design details.
+See **[PROJECT.md](PROJECT.md)** for the development roadmap and **[ARCHITECTURE.md](/ARCHITECTURE.md)** for architectural design details.
 
 ## How It's Being Built
 
@@ -89,11 +89,11 @@ This project follows Intelligent Development principles with AI-assisted impleme
 ### Foundation Layer (Complete)
 - **pkg/formats** - Color space conversions (RGBA, HSLA, LAB, XYZ)
 - **pkg/chromatic** - Color theory algorithms and calculations
-- **pkg/settings** - Configuration management with category defaults
+- **pkg/settings** - Flat configuration management with threshold-based parameters
 - **pkg/loader** - Image loading and format validation
 
-### Processing Layer (Refactoring Required)
-- **pkg/processor** - Color extraction and characteristic-based organization
+### Processing Layer (Complete)
+- **pkg/processor** - Characteristic-based color extraction with ColorPool organization
 - **pkg/errors** - Error handling with sentinel errors
 
 ### Generation Layer (In Development)

@@ -21,22 +21,32 @@ const (
 func Load() (*Settings, error) {
 	v := viper.New()
 
-	v.SetConfigName(ConfigFile)
-	v.SetConfigType(ConfigFormat)
-
 	setDefaults(v)
 
-	v.AddConfigPath(filepath.Join(SystemDir, ConfigDir))
+	// Check for explicit config file path first
+	if configFile := os.Getenv("OMARCHY_CONFIG"); configFile != "" {
+		v.SetConfigFile(configFile)
+		if err := v.ReadInConfig(); err != nil {
+			// If explicit config file is specified but can't be read, return error
+			return nil, fmt.Errorf("error reading config file %s: %w", configFile, err)
+		}
+	} else {
+		// Use default config search paths
+		v.SetConfigName(ConfigFile)
+		v.SetConfigType(ConfigFormat)
 
-	if xdgConfig := os.Getenv(ConfigEnv); xdgConfig != "" {
-		v.AddConfigPath(filepath.Join(xdgConfig, ConfigDir))
-	}
+		v.AddConfigPath(filepath.Join(SystemDir, ConfigDir))
 
-	v.AddConfigPath(".")
+		if xdgConfig := os.Getenv(ConfigEnv); xdgConfig != "" {
+			v.AddConfigPath(filepath.Join(xdgConfig, ConfigDir))
+		}
 
-	if err := v.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("error reading config: %w", err)
+		v.AddConfigPath(".")
+
+		if err := v.ReadInConfig(); err != nil {
+			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+				return nil, fmt.Errorf("error reading config: %w", err)
+			}
 		}
 	}
 

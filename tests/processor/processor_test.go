@@ -49,7 +49,6 @@ func TestProcessImage_SimpleImage(t *testing.T) {
 	// Log comprehensive diagnostic information
 	t.Logf("Color Profile Results:")
 	t.Logf("  Mode: %s", profile.Mode)
-	t.Logf("  ColorScheme: %s", profile.ColorScheme)
 	t.Logf("  IsGrayscale: %t", profile.IsGrayscale)
 	t.Logf("  IsMonochromatic: %t", profile.IsMonochromatic)
 	t.Logf("  DominantHue: %.1f°", profile.DominantHue)
@@ -57,29 +56,32 @@ func TestProcessImage_SimpleImage(t *testing.T) {
 	t.Logf("  AvgLuminance: %.3f", profile.AvgLuminance)
 	t.Logf("  AvgSaturation: %.3f", profile.AvgSaturation)
 	
-	t.Logf("Image Colors Results:")
-	t.Logf("  TotalPixels: %d", profile.Colors.TotalPixels)
-	t.Logf("  UniqueColors: %d", profile.Colors.UniqueColors)
-	t.Logf("  CoverageRatio: %.3f", profile.Colors.CoverageRatio)
-	t.Logf("  Categories found: %d", len(profile.Colors.Categories))
-	t.Logf("  Category candidates: %d total", countCandidates(profile.Colors.CategoryCandidates))
+	t.Logf("ColorPool Results:")
+	t.Logf("  TotalPixels: %d", profile.Pool.TotalPixels)
+	t.Logf("  UniqueColors: %d", profile.Pool.UniqueColors)
+	t.Logf("  AllColors count: %d", len(profile.Pool.AllColors))
+	t.Logf("  DominantColors count: %d", len(profile.Pool.DominantColors))
+	t.Logf("  Dark colors: %d, Mid: %d, Light: %d", len(profile.Pool.ByLightness.Dark), len(profile.Pool.ByLightness.Mid), len(profile.Pool.ByLightness.Light))
+	t.Logf("  Gray: %d, Muted: %d, Normal: %d, Vibrant: %d", len(profile.Pool.BySaturation.Gray), len(profile.Pool.BySaturation.Muted), len(profile.Pool.BySaturation.Normal), len(profile.Pool.BySaturation.Vibrant))
+	t.Logf("  Hue families: %d", len(profile.Pool.ByHue))
 	
 	// Basic validation
-	if profile.Colors.TotalPixels != 9 {
-		t.Errorf("Expected 9 total pixels, got %d", profile.Colors.TotalPixels)
+	if profile.Pool.TotalPixels != 9 {
+		t.Errorf("Expected 9 total pixels, got %d", profile.Pool.TotalPixels)
 	}
 	
-	if profile.Colors.UniqueColors == 0 {
+	if profile.Pool.UniqueColors == 0 {
 		t.Error("Expected non-zero unique colors")
 	}
 	
-	if len(profile.Colors.Categories) == 0 {
-		t.Error("Expected at least one category to be assigned")
+	if len(profile.Pool.AllColors) == 0 {
+		t.Error("Expected non-zero extracted colors")
 	}
 	
-	// Verify background category is always present
-	if _, hasBackground := profile.Colors.Categories[processor.CategoryBackground]; !hasBackground {
-		t.Error("Background category should always be present")
+	// Verify characteristic organization worked
+	totalGrouped := len(profile.Pool.ByLightness.Dark) + len(profile.Pool.ByLightness.Mid) + len(profile.Pool.ByLightness.Light)
+	if totalGrouped == 0 {
+		t.Error("Expected colors to be grouped by lightness")
 	}
 }
 
@@ -111,9 +113,14 @@ func TestProcessImage_GrayscaleImage(t *testing.T) {
 		t.Errorf("Expected grayscale detection for gray image (avg sat: %.3f)", profile.AvgSaturation)
 	}
 	
-	// Background should still be detected
-	if _, hasBackground := profile.Colors.Categories[processor.CategoryBackground]; !hasBackground {
-		t.Error("Background category should be present even in grayscale images")
+	// Verify grayscale colors are properly grouped
+	if len(profile.Pool.BySaturation.Gray) == 0 {
+		t.Log("No colors classified as gray (saturation may be above threshold)")
+	}
+	
+	// Verify color extraction worked
+	if len(profile.Pool.AllColors) == 0 {
+		t.Error("Expected colors to be extracted even from grayscale images")
 	}
 }
 
@@ -139,7 +146,6 @@ func TestProcessImage_MonochromaticImage(t *testing.T) {
 	t.Logf("  IsMonochromatic: %t", profile.IsMonochromatic)
 	t.Logf("  DominantHue: %.1f° (expected ~240° for blue)", profile.DominantHue)
 	t.Logf("  HueVariance: %.1f° (tolerance: %.1f°)", profile.HueVariance, s.MonochromaticTolerance)
-	t.Logf("  ColorScheme: %s", profile.ColorScheme)
 	
 	// Should detect monochromatic pattern
 	if !profile.IsMonochromatic {
@@ -215,13 +221,6 @@ func createTestImage(width, height int, colors []color.RGBA) image.Image {
 	return img
 }
 
-func countCandidates(candidates map[processor.ColorCategory][]processor.ColorCandidate) int {
-	total := 0
-	for _, candidateList := range candidates {
-		total += len(candidateList)
-	}
-	return total
-}
 
 func abs(x float64) float64 {
 	if x < 0 {
