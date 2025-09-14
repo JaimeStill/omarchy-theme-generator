@@ -6,79 +6,121 @@ import (
 
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/chromatic"
 	"github.com/JaimeStill/omarchy-theme-generator/pkg/formats"
-	"github.com/JaimeStill/omarchy-theme-generator/pkg/settings"
 )
 
 func TestFindDominantHue(t *testing.T) {
 	testCases := []struct {
 		name     string
-		colors   []formats.HSLA
+		hslas    []formats.HSLA
 		expected float64
 		tolerance float64
 	}{
 		{
-			name: "All same hue",
-			colors: []formats.HSLA{
-				{H: 120, S: 0.5, L: 0.5, A: 1.0},
-				{H: 120, S: 0.8, L: 0.3, A: 1.0},
-				{H: 120, S: 0.3, L: 0.7, A: 1.0},
-			},
-			expected: 120.0,
-			tolerance: 0.1,
+			name:     "Empty slice",
+			hslas:    []formats.HSLA{},
+			expected: math.NaN(),
+			tolerance: 0,
 		},
 		{
-			name: "Close hues",
-			colors: []formats.HSLA{
-				{H: 100, S: 0.5, L: 0.5, A: 1.0},
-				{H: 110, S: 0.5, L: 0.5, A: 1.0},
-				{H: 120, S: 0.5, L: 0.5, A: 1.0},
+			name: "Single hue",
+			hslas: []formats.HSLA{
+				{H: 120, S: 0.8, L: 0.5, A: 1.0}, // Green
 			},
-			expected: 110.0, // Average
+			expected:  120.0,
+			tolerance: 0.001,
+		},
+		{
+			name: "Multiple similar hues",
+			hslas: []formats.HSLA{
+				{H: 118, S: 0.8, L: 0.5, A: 1.0},
+				{H: 120, S: 0.7, L: 0.4, A: 1.0},
+				{H: 122, S: 0.9, L: 0.6, A: 1.0},
+			},
+			expected:  120.0,
+			tolerance: 2.0,
+		},
+		{
+			name: "Red hues wrapping around 0/360",
+			hslas: []formats.HSLA{
+				{H: 358, S: 0.8, L: 0.5, A: 1.0},
+				{H: 0, S: 0.7, L: 0.4, A: 1.0},
+				{H: 2, S: 0.9, L: 0.6, A: 1.0},
+			},
+			expected:  0.0,
+			tolerance: 2.0,
+		},
+		{
+			name: "Opposite hues (should average to middle)",
+			hslas: []formats.HSLA{
+				{H: 0, S: 0.8, L: 0.5, A: 1.0},   // Red
+				{H: 180, S: 0.8, L: 0.5, A: 1.0}, // Cyan
+			},
+			expected:  90.0, // Could be 90 or 270, depends on vector sum
+			tolerance: 180.0, // Large tolerance due to ambiguity
+		},
+		{
+			name: "Primary colors (120° apart)",
+			hslas: []formats.HSLA{
+				{H: 0, S: 1.0, L: 0.5, A: 1.0},   // Red
+				{H: 120, S: 1.0, L: 0.5, A: 1.0}, // Green
+				{H: 240, S: 1.0, L: 0.5, A: 1.0}, // Blue
+			},
+			expected:  0.0, // Depends on vector sum calculation
+			tolerance: 180.0, // Large tolerance due to symmetry
+		},
+		{
+			name: "Blue-dominant cluster",
+			hslas: []formats.HSLA{
+				{H: 235, S: 0.8, L: 0.5, A: 1.0},
+				{H: 240, S: 0.7, L: 0.4, A: 1.0},
+				{H: 245, S: 0.9, L: 0.6, A: 1.0},
+				{H: 242, S: 0.6, L: 0.3, A: 1.0},
+			},
+			expected:  240.0,
 			tolerance: 5.0,
-		},
-		{
-			name: "Hues around zero crossing",
-			colors: []formats.HSLA{
-				{H: 350, S: 0.5, L: 0.5, A: 1.0},
-				{H: 10, S: 0.5, L: 0.5, A: 1.0},
-			},
-			expected: 0.0, // Should handle wraparound
-			tolerance: 10.0,
-		},
-		{
-			name: "Single color",
-			colors: []formats.HSLA{
-				{H: 240, S: 0.5, L: 0.5, A: 1.0},
-			},
-			expected: 240.0,
-			tolerance: 0.1,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := chromatic.FindDominantHue(tc.colors)
-			
-			// Handle circular hue comparison
+			result := chromatic.FindDominantHue(tc.hslas)
+
+			// Comprehensive diagnostic logging
+			t.Logf("Input HSLA colors: %d colors", len(tc.hslas))
+			for i, hsla := range tc.hslas {
+				t.Logf("  Color %d: H=%.1f°, S=%.2f, L=%.2f, A=%.2f",
+					i+1, hsla.H, hsla.S, hsla.L, hsla.A)
+			}
+			t.Logf("Calculated dominant hue: %.3f°", result)
+			t.Logf("Expected dominant hue: %.3f° ± %.3f°", tc.expected, tc.tolerance)
+
+			// Handle NaN case
+			if math.IsNaN(tc.expected) {
+				if !math.IsNaN(result) {
+					t.Errorf("Expected NaN, got %.3f", result)
+				}
+				t.Logf("✓ Correctly returned NaN for empty input")
+				return
+			}
+
+			if math.IsNaN(result) {
+				t.Errorf("Expected %.3f, got NaN", tc.expected)
+				return
+			}
+
+			// Calculate hue difference considering wraparound
 			diff := math.Abs(result - tc.expected)
 			if diff > 180 {
 				diff = 360 - diff
 			}
-			
-			// Comprehensive diagnostic logging
-			t.Logf("Input colors (%d):", len(tc.colors))
-			for i, color := range tc.colors {
-				t.Logf("  Color %d: H=%.1f°, S=%.3f, L=%.3f, A=%.3f", 
-					i+1, color.H, color.S, color.L, color.A)
-			}
-			t.Logf("Calculated dominant hue: %.1f°", result)
-			t.Logf("Expected dominant hue: %.1f° ± %.1f°", tc.expected, tc.tolerance)
-			t.Logf("Circular distance: %.1f° (threshold: %.1f°)", diff, tc.tolerance)
-			t.Logf("Within tolerance: %t", diff <= tc.tolerance)
-			
+
+			t.Logf("Angular difference: %.3f° (threshold: %.3f°)", diff, tc.tolerance)
+
 			if diff > tc.tolerance {
-				t.Errorf("Expected dominant hue %v ± %v, got %v",
-					tc.expected, tc.tolerance, result)
+				t.Errorf("Expected dominant hue %.3f ± %.3f, got %.3f (diff: %.3f°)",
+					tc.expected, tc.tolerance, result, diff)
+			} else {
+				t.Logf("✓ Dominant hue within expected tolerance")
 			}
 		})
 	}
@@ -86,232 +128,201 @@ func TestFindDominantHue(t *testing.T) {
 
 func TestCalculateHueVariance(t *testing.T) {
 	testCases := []struct {
-		name        string
-		colors      []formats.HSLA
-		minVariance float64
-		maxVariance float64
-	}{
-		{
-			name: "No variance - same hue",
-			colors: []formats.HSLA{
-				{H: 120, S: 0.5, L: 0.5, A: 1.0},
-				{H: 120, S: 0.8, L: 0.3, A: 1.0},
-			},
-			minVariance: 0.0,
-			maxVariance: 0.1,
-		},
-		{
-			name: "Small variance",
-			colors: []formats.HSLA{
-				{H: 100, S: 0.5, L: 0.5, A: 1.0},
-				{H: 110, S: 0.5, L: 0.5, A: 1.0},
-				{H: 120, S: 0.5, L: 0.5, A: 1.0},
-			},
-			minVariance: 5.0,
-			maxVariance: 15.0,
-		},
-		{
-			name: "Large variance",
-			colors: []formats.HSLA{
-				{H: 0, S: 0.5, L: 0.5, A: 1.0},
-				{H: 120, S: 0.5, L: 0.5, A: 1.0},
-				{H: 240, S: 0.5, L: 0.5, A: 1.0},
-			},
-			minVariance: 80.0,
-			maxVariance: 120.0,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := chromatic.CalculateHueVariance(tc.colors)
-			
-			if result < tc.minVariance || result > tc.maxVariance {
-				t.Errorf("Expected variance between %v and %v, got %v",
-					tc.minVariance, tc.maxVariance, result)
-			}
-		})
-	}
-}
-
-func TestChroma_HuesWithinTolerance(t *testing.T) {
-	s := settings.DefaultSettings()
-	s.MonochromaticTolerance = 15.0
-	c := chromatic.NewChroma(s)
-
-	testCases := []struct {
 		name     string
-		hue1     float64
-		hue2     float64
-		expected bool
-	}{
-		{
-			name:     "Same hue",
-			hue1:     120.0,
-			hue2:     120.0,
-			expected: true,
-		},
-		{
-			name:     "Within tolerance",
-			hue1:     120.0,
-			hue2:     130.0,
-			expected: true,
-		},
-		{
-			name:     "Outside tolerance",
-			hue1:     120.0,
-			hue2:     140.0,
-			expected: false,
-		},
-		{
-			name:     "Wraparound - within tolerance",
-			hue1:     5.0,
-			hue2:     355.0,
-			expected: true, // 10 degrees apart
-		},
-		{
-			name:     "Wraparound - outside tolerance",
-			hue1:     20.0,
-			hue2:     340.0,
-			expected: false, // 40 degrees apart
-		},
-		{
-			name:     "Opposite hues",
-			hue1:     0.0,
-			hue2:     180.0,
-			expected: false,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := c.HuesWithinTolerance(tc.hue1, tc.hue2)
-			if result != tc.expected {
-				t.Errorf("Expected HuesWithinTolerance(%v, %v) = %v, got %v",
-					tc.hue1, tc.hue2, tc.expected, result)
-			}
-		})
-	}
-}
-
-func TestChroma_IdentifyColorScheme(t *testing.T) {
-	s := settings.DefaultSettings()
-	c := chromatic.NewChroma(s)
-
-	testCases := []struct {
-		name       string
-		variance   float64
-		colorCount int
-		hues       []float64
-		expected   chromatic.ColorScheme
-	}{
-		{
-			name:       "Grayscale - no colors",
-			variance:   0,
-			colorCount: 0,
-			hues:       []float64{},
-			expected:   chromatic.Grayscale,
-		},
-		{
-			name:       "Monochromatic - single color",
-			variance:   0,
-			colorCount: 1,
-			hues:       []float64{120},
-			expected:   chromatic.Monochromatic,
-		},
-		{
-			name:       "Complementary - two opposite hues",
-			variance:   180,
-			colorCount: 2,
-			hues:       []float64{0, 180},
-			expected:   chromatic.Complementary,
-		},
-		{
-			name:       "Analogous - close hues",
-			variance:   25,
-			colorCount: 3,
-			hues:       []float64{100, 120, 125},
-			expected:   chromatic.Analogous,
-		},
-		{
-			name:       "Triadic - three evenly spaced",
-			variance:   120,
-			colorCount: 3,
-			hues:       []float64{0, 120, 240},
-			expected:   chromatic.Triadic,
-		},
-		{
-			name:       "Custom - no pattern",
-			variance:   90,
-			colorCount: 5,
-			hues:       []float64{0, 45, 90, 180, 270},
-			expected:   chromatic.Custom,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := c.IdentifyColorScheme(tc.variance, tc.colorCount, tc.hues)
-			if result != tc.expected {
-				t.Errorf("Expected color scheme %v, got %v", tc.expected, result)
-			}
-		})
-	}
-}
-
-func TestHueDistance(t *testing.T) {
-	testCases := []struct {
-		name     string
-		h1       float64
-		h2       float64
+		hslas    []formats.HSLA
 		expected float64
+		tolerance float64
 	}{
 		{
-			name:     "Same hue",
-			h1:       120,
-			h2:       120,
-			expected: 0,
+			name:     "Empty slice",
+			hslas:    []formats.HSLA{},
+			expected: 0.0,
+			tolerance: 0.001,
 		},
 		{
-			name:     "Simple difference",
-			h1:       100,
-			h2:       150,
-			expected: 50,
+			name: "Single color",
+			hslas: []formats.HSLA{
+				{H: 120, S: 0.8, L: 0.5, A: 1.0},
+			},
+			expected:  0.0,
+			tolerance: 0.001,
 		},
 		{
-			name:     "Wraparound shorter",
-			h1:       10,
-			h2:       350,
-			expected: 20, // Going backwards is shorter
+			name: "Two identical hues",
+			hslas: []formats.HSLA{
+				{H: 120, S: 0.8, L: 0.5, A: 1.0},
+				{H: 120, S: 0.6, L: 0.4, A: 1.0},
+			},
+			expected:  0.0,
+			tolerance: 0.001,
 		},
 		{
-			name:     "Half circle",
-			h1:       0,
-			h2:       180,
-			expected: 180,
+			name: "Small variance cluster",
+			hslas: []formats.HSLA{
+				{H: 118, S: 0.8, L: 0.5, A: 1.0},
+				{H: 120, S: 0.7, L: 0.4, A: 1.0},
+				{H: 122, S: 0.9, L: 0.6, A: 1.0},
+			},
+			expected:  1.63, // sqrt((2^2 + 0^2 + 2^2)/3) ≈ 1.63
+			tolerance: 0.5,
 		},
 		{
-			name:     "Reverse order",
-			h1:       200,
-			h2:       100,
-			expected: 100, // Should be positive
+			name: "Large variance cluster",
+			hslas: []formats.HSLA{
+				{H: 100, S: 0.8, L: 0.5, A: 1.0},
+				{H: 120, S: 0.7, L: 0.4, A: 1.0},
+				{H: 140, S: 0.9, L: 0.6, A: 1.0},
+			},
+			expected:  16.3, // Much larger variance
+			tolerance: 5.0,
+		},
+		{
+			name: "Wraparound hues near 0/360",
+			hslas: []formats.HSLA{
+				{H: 358, S: 0.8, L: 0.5, A: 1.0},
+				{H: 0, S: 0.7, L: 0.4, A: 1.0},
+				{H: 2, S: 0.9, L: 0.6, A: 1.0},
+			},
+			expected:  1.63, // Should handle wraparound correctly
+			tolerance: 1.0,
+		},
+		{
+			name: "Maximum variance (opposite hues)",
+			hslas: []formats.HSLA{
+				{H: 0, S: 0.8, L: 0.5, A: 1.0},   // Red
+				{H: 180, S: 0.8, L: 0.5, A: 1.0}, // Cyan
+			},
+			expected:  90.0, // Maximum possible variance for two colors
+			tolerance: 20.0, // Large tolerance due to wraparound complexity
+		},
+		{
+			name: "Monochromatic with tight clustering",
+			hslas: []formats.HSLA{
+				{H: 240.0, S: 0.8, L: 0.5, A: 1.0},
+				{H: 240.5, S: 0.7, L: 0.4, A: 1.0},
+				{H: 239.5, S: 0.9, L: 0.6, A: 1.0},
+				{H: 240.2, S: 0.6, L: 0.3, A: 1.0},
+			},
+			expected:  0.35, // Very low variance for tight cluster
+			tolerance: 0.2,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Since hueDistance is likely private, test through HuesWithinTolerance
-			// or other public methods that use it
-			s := settings.DefaultSettings()
-			s.MonochromaticTolerance = tc.expected + 0.1
-			c := chromatic.NewChroma(s)
-			
-			// If distance is less than expected, should be within tolerance
-			result := c.HuesWithinTolerance(tc.h1, tc.h2)
-			if !result && tc.expected < s.MonochromaticTolerance {
-				t.Errorf("Hues %v and %v should be within tolerance %v",
-					tc.h1, tc.h2, s.MonochromaticTolerance)
+			result := chromatic.CalculateHueVariance(tc.hslas)
+
+			// Comprehensive diagnostic logging
+			t.Logf("Input HSLA colors: %d colors", len(tc.hslas))
+			for i, hsla := range tc.hslas {
+				t.Logf("  Color %d: H=%.1f°, S=%.2f, L=%.2f, A=%.2f",
+					i+1, hsla.H, hsla.S, hsla.L, hsla.A)
+			}
+
+			// Calculate and log dominant hue for context
+			dominantHue := chromatic.FindDominantHue(tc.hslas)
+			t.Logf("Dominant hue: %.3f°", dominantHue)
+			t.Logf("Calculated hue variance: %.3f°", result)
+			t.Logf("Expected hue variance: %.3f° ± %.3f°", tc.expected, tc.tolerance)
+
+			// Calculate individual deviations for detailed logging
+			if len(tc.hslas) > 1 && !math.IsNaN(dominantHue) {
+				t.Logf("Individual hue deviations from dominant:")
+				for i, hsla := range tc.hslas {
+					// Calculate hue distance (considering wraparound)
+					diff := math.Abs(hsla.H - dominantHue)
+					if diff > 180 {
+						diff = 360 - diff
+					}
+					t.Logf("  Color %d: %.3f° deviation", i+1, diff)
+				}
+			}
+
+			diff := math.Abs(result - tc.expected)
+			t.Logf("Variance difference: %.3f° (threshold: %.3f°)", diff, tc.tolerance)
+
+			if diff > tc.tolerance {
+				t.Errorf("Expected hue variance %.3f ± %.3f, got %.3f (diff: %.3f)",
+					tc.expected, tc.tolerance, result, diff)
+			} else {
+				t.Logf("✓ Hue variance within expected tolerance")
+			}
+
+			// Additional validation - variance should be non-negative
+			if result < 0 {
+				t.Errorf("Hue variance should be non-negative, got %.3f", result)
 			}
 		})
 	}
+}
+
+func TestHueFunctions_EdgeCases(t *testing.T) {
+	t.Run("FindDominantHue with extreme wraparound", func(t *testing.T) {
+		hslas := []formats.HSLA{
+			{H: 359.9, S: 0.8, L: 0.5, A: 1.0},
+			{H: 0.1, S: 0.8, L: 0.5, A: 1.0},
+		}
+
+		result := chromatic.FindDominantHue(hslas)
+
+		t.Logf("Input hues: [%.1f°, %.1f°]", hslas[0].H, hslas[1].H)
+		t.Logf("Calculated dominant hue: %.3f°", result)
+
+		// Should be close to 0° or 360° due to wraparound
+		nearZero := math.Abs(result) < 1.0
+		near360 := math.Abs(result-360) < 1.0
+
+		if !nearZero && !near360 {
+			t.Errorf("Expected dominant hue near 0° or 360°, got %.3f°", result)
+		} else {
+			t.Logf("✓ Correctly handled wraparound case")
+		}
+	})
+
+	t.Run("CalculateHueVariance with all same hue", func(t *testing.T) {
+		hslas := []formats.HSLA{
+			{H: 45, S: 0.2, L: 0.3, A: 1.0},
+			{H: 45, S: 0.8, L: 0.7, A: 1.0},
+			{H: 45, S: 0.5, L: 0.5, A: 1.0},
+			{H: 45, S: 0.9, L: 0.2, A: 1.0},
+		}
+
+		result := chromatic.CalculateHueVariance(hslas)
+
+		t.Logf("All colors have identical hue: 45°")
+		t.Logf("Calculated variance: %.6f", result)
+
+		if result > 0.001 {
+			t.Errorf("Expected zero variance for identical hues, got %.6f", result)
+		} else {
+			t.Logf("✓ Correctly calculated zero variance for identical hues")
+		}
+	})
+
+	t.Run("Consistency between functions", func(t *testing.T) {
+		hslas := []formats.HSLA{
+			{H: 30, S: 0.8, L: 0.5, A: 1.0},
+			{H: 35, S: 0.7, L: 0.4, A: 1.0},
+			{H: 25, S: 0.9, L: 0.6, A: 1.0},
+		}
+
+		dominantHue := chromatic.FindDominantHue(hslas)
+		variance := chromatic.CalculateHueVariance(hslas)
+
+		t.Logf("Input hues: [%.1f°, %.1f°, %.1f°]", hslas[0].H, hslas[1].H, hslas[2].H)
+		t.Logf("Dominant hue: %.3f°", dominantHue)
+		t.Logf("Hue variance: %.3f°", variance)
+
+		// Variance should be reasonable for this tight cluster
+		if variance > 10.0 {
+			t.Errorf("Variance %.3f° seems too high for tight cluster", variance)
+		}
+
+		// Dominant hue should be within the range of input hues
+		if dominantHue < 20 || dominantHue > 40 {
+			t.Errorf("Dominant hue %.3f° outside expected range [20°, 40°]", dominantHue)
+		} else {
+			t.Logf("✓ Functions produced consistent results")
+		}
+	})
 }

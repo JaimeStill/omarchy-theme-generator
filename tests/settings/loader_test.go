@@ -24,15 +24,15 @@ func TestSettings_Load_NoConfigFile(t *testing.T) {
 	// Should be equivalent to default settings
 	defaults := settings.DefaultSettings()
 	
-	if s.GrayscaleThreshold != defaults.GrayscaleThreshold {
-		t.Errorf("Without config file, should use default GrayscaleThreshold")
+	if s.Chromatic.NeutralThreshold != defaults.Chromatic.NeutralThreshold {
+		t.Errorf("Without config file, should use default NeutralThreshold")
 	}
-	
-	if s.MinFrequency != defaults.MinFrequency {
+
+	if s.Processor.MinFrequency != defaults.Processor.MinFrequency {
 		t.Errorf("Without config file, should use default MinFrequency")
 	}
 
-	if s.LoaderMaxWidth != defaults.LoaderMaxWidth {
+	if s.Loader.MaxWidth != defaults.Loader.MaxWidth {
 		t.Errorf("Without config file, should use default LoaderMaxWidth")
 	}
 
@@ -45,20 +45,23 @@ func TestSettings_Load_WithConfigFile(t *testing.T) {
 	configPath := filepath.Join(tempDir, "test-settings.yaml")
 	
 	configContent := `
-grayscale_threshold: 0.08
-grayscale_image_threshold: 0.9
-monochromatic_tolerance: 25.0
-theme_mode_threshold: 0.6
-min_frequency: 0.002
-loader_max_width: 4096
-loader_max_height: 4096
-extraction:
-  max_colors_to_extract: 75
-  dominant_color_count: 8
-fallbacks:
-  default_dark: "#121212"
-  default_light: "#fafafa"
-  default_gray: "#888888"
+chromatic:
+  neutral_threshold: 0.08
+  color_merge_threshold: 25.0
+  dark_lightness_max: 0.4
+processor:
+  light_theme_threshold: 0.6
+  min_frequency: 0.002
+  max_ui_colors: 15
+loader:
+  max_width: 4096
+  max_height: 4096
+  allowed_formats: ["jpeg", "png"]
+formats:
+  quantization_bits: 6
+default_dark: "#121212"
+default_light: "#fafafa"
+default_gray: "#888888"
 `
 	
 	err := os.WriteFile(configPath, []byte(configContent), 0644)
@@ -89,30 +92,30 @@ fallbacks:
 	}
 	
 	t.Logf("Loaded settings from config file:")
-	t.Logf("  Grayscale threshold: %.3f", s.GrayscaleThreshold)
-	t.Logf("  Theme mode threshold: %.3f", s.ThemeModeThreshold)
-	t.Logf("  Loader max width: %d", s.LoaderMaxWidth)
-	t.Logf("  Extraction max colors: %d", s.Extraction.MaxColorsToExtract)
-	
+	t.Logf("  Neutral threshold: %.3f", s.Chromatic.NeutralThreshold)
+	t.Logf("  Light theme threshold: %.3f", s.Processor.LightThemeThreshold)
+	t.Logf("  Loader max width: %d", s.Loader.MaxWidth)
+	t.Logf("  Quantization bits: %d", s.Formats.QuantizationBits)
+
 	// Verify values were loaded from config
-	if s.GrayscaleThreshold != 0.08 {
-		t.Errorf("Expected grayscale threshold 0.08, got %.3f", s.GrayscaleThreshold)
-	}
-	
-	if s.ThemeModeThreshold != 0.6 {
-		t.Errorf("Expected theme mode threshold 0.6, got %.3f", s.ThemeModeThreshold)
-	}
-	
-	if s.LoaderMaxWidth != 4096 {
-		t.Errorf("Expected loader max width 4096, got %d", s.LoaderMaxWidth)
+	if s.Chromatic.NeutralThreshold != 0.08 {
+		t.Errorf("Expected neutral threshold 0.08, got %.3f", s.Chromatic.NeutralThreshold)
 	}
 
-	if s.Extraction.MaxColorsToExtract != 75 {
-		t.Errorf("Expected extraction max colors 75, got %d", s.Extraction.MaxColorsToExtract)
+	if s.Processor.LightThemeThreshold != 0.6 {
+		t.Errorf("Expected light theme threshold 0.6, got %.3f", s.Processor.LightThemeThreshold)
 	}
 
-	if s.Fallbacks.DefaultDark != "#121212" {
-		t.Errorf("Expected fallback dark color #121212, got %s", s.Fallbacks.DefaultDark)
+	if s.Loader.MaxWidth != 4096 {
+		t.Errorf("Expected loader max width 4096, got %d", s.Loader.MaxWidth)
+	}
+
+	if s.Formats.QuantizationBits != 6 {
+		t.Errorf("Expected quantization bits 6, got %d", s.Formats.QuantizationBits)
+	}
+
+	if s.DefaultDark != "#121212" {
+		t.Errorf("Expected default dark color #121212, got %s", s.DefaultDark)
 	}
 }
 
@@ -162,9 +165,9 @@ invalid_yaml: [
 func TestSettings_ViperIntegration(t *testing.T) {
 	// Test direct Viper integration
 	v := viper.New()
-	v.SetDefault("grayscale_threshold", 0.1)
-	v.SetDefault("min_frequency", 0.005)
-	v.SetDefault("loader_max_width", 2048)
+	v.SetDefault("chromatic.neutral_threshold", 0.1)
+	v.SetDefault("processor.min_frequency", 0.005)
+	v.SetDefault("loader.max_width", 2048)
 	
 	var testSettings settings.Settings
 	err := v.Unmarshal(&testSettings)
@@ -173,20 +176,20 @@ func TestSettings_ViperIntegration(t *testing.T) {
 	}
 	
 	t.Logf("Viper integration test:")
-	t.Logf("  Grayscale threshold: %.3f", testSettings.GrayscaleThreshold)
-	t.Logf("  Min frequency: %.6f", testSettings.MinFrequency)
-	t.Logf("  Loader max width: %d", testSettings.LoaderMaxWidth)
-	
-	if testSettings.GrayscaleThreshold != 0.1 {
-		t.Errorf("Expected grayscale threshold 0.1, got %.3f", testSettings.GrayscaleThreshold)
+	t.Logf("  Neutral threshold: %.3f", testSettings.Chromatic.NeutralThreshold)
+	t.Logf("  Min frequency: %.6f", testSettings.Processor.MinFrequency)
+	t.Logf("  Loader max width: %d", testSettings.Loader.MaxWidth)
+
+	if testSettings.Chromatic.NeutralThreshold != 0.1 {
+		t.Errorf("Expected neutral threshold 0.1, got %.3f", testSettings.Chromatic.NeutralThreshold)
 	}
-	
-	if testSettings.MinFrequency != 0.005 {
-		t.Errorf("Expected min frequency 0.005, got %.6f", testSettings.MinFrequency)
+
+	if testSettings.Processor.MinFrequency != 0.005 {
+		t.Errorf("Expected min frequency 0.005, got %.6f", testSettings.Processor.MinFrequency)
 	}
-	
-	if testSettings.LoaderMaxWidth != 2048 {
-		t.Errorf("Expected loader max width 2048, got %d", testSettings.LoaderMaxWidth)
+
+	if testSettings.Loader.MaxWidth != 2048 {
+		t.Errorf("Expected loader max width 2048, got %d", testSettings.Loader.MaxWidth)
 	}
 }
 
@@ -211,8 +214,8 @@ func TestSettings_ContextIntegration(t *testing.T) {
 	}
 	
 	t.Logf("Context integration successful")
-	t.Logf("  Original settings grayscale threshold: %.3f", s.GrayscaleThreshold)
-	t.Logf("  Retrieved settings grayscale threshold: %.3f", retrievedSettings.GrayscaleThreshold)
+	t.Logf("  Original settings neutral threshold: %.3f", s.Chromatic.NeutralThreshold)
+	t.Logf("  Retrieved settings neutral threshold: %.3f", retrievedSettings.Chromatic.NeutralThreshold)
 }
 
 func TestSettings_ConfigPaths(t *testing.T) {
@@ -288,31 +291,31 @@ func TestSettings_ConfigPaths(t *testing.T) {
 func TestSettings_StructTags(t *testing.T) {
 	// Test that mapstructure tags work correctly
 	configData := map[string]interface{}{
-		"grayscale_threshold":              0.07,
-		"grayscale_image_threshold":        0.85,
-		"monochromatic_tolerance":          18.0,
-		"monochromatic_weight_threshold":   0.15,
-		"theme_mode_threshold":             0.55,
-		"min_frequency":                    0.0005,
-		"loader_max_width":                 6144,
-		"loader_max_height":                6144,
-		"lightness_dark_max":               0.3,
-		"lightness_light_min":              0.8,
-		"saturation_gray_max":              0.04,
-		"hue_sector_count":                 16,
-		"hue_sector_size":                  22.5,
-		"extraction": map[string]interface{}{
-			"max_colors_to_extract":      80,
-			"dominant_color_count":       12,
-			"min_color_diversity":        0.4,
-			"adaptive_grouping":          false,
-			"preserve_natural_clusters":  false,
+		"chromatic": map[string]interface{}{
+			"neutral_threshold":              0.07,
+			"color_merge_threshold":          18.0,
+			"dark_lightness_max":             0.3,
+			"light_lightness_min":            0.8,
+			"muted_saturation_max":           0.25,
+			"vibrant_saturation_min":         0.75,
 		},
-		"fallbacks": map[string]interface{}{
-			"default_dark":  "#181818",
-			"default_light": "#f0f0f0",
-			"default_gray":  "#909090",
+		"processor": map[string]interface{}{
+			"min_frequency":                  0.0005,
+			"light_theme_threshold":          0.55,
+			"max_ui_colors":                  25,
+			"min_cluster_weight":             0.01,
 		},
+		"loader": map[string]interface{}{
+			"max_width":                      6144,
+			"max_height":                     6144,
+			"allowed_formats":                []string{"jpeg", "png", "webp"},
+		},
+		"formats": map[string]interface{}{
+			"quantization_bits":              6,
+		},
+		"default_dark":  "#181818",
+		"default_light": "#f0f0f0",
+		"default_gray":  "#909090",
 	}
 	
 	v := viper.New()
@@ -327,29 +330,29 @@ func TestSettings_StructTags(t *testing.T) {
 	}
 	
 	t.Logf("Struct tag validation:")
-	t.Logf("  Grayscale threshold: %.3f (expected 0.07)", s.GrayscaleThreshold)
-	t.Logf("  Hue sector count: %d (expected 16)", s.HueSectorCount)
-	t.Logf("  Extraction max colors: %d (expected 80)", s.Extraction.MaxColorsToExtract)
-	t.Logf("  Fallback dark: %s (expected #181818)", s.Fallbacks.DefaultDark)
-	
+	t.Logf("  Neutral threshold: %.3f (expected 0.07)", s.Chromatic.NeutralThreshold)
+	t.Logf("  Loader max width: %d (expected 6144)", s.Loader.MaxWidth)
+	t.Logf("  Processor max UI colors: %d (expected 25)", s.Processor.MaxUIColors)
+	t.Logf("  Default dark: %s (expected #181818)", s.DefaultDark)
+
 	// Verify unmarshal worked correctly
-	if s.GrayscaleThreshold != 0.07 {
-		t.Errorf("Expected grayscale threshold 0.07, got %.3f", s.GrayscaleThreshold)
+	if s.Chromatic.NeutralThreshold != 0.07 {
+		t.Errorf("Expected neutral threshold 0.07, got %.3f", s.Chromatic.NeutralThreshold)
 	}
-	
-	if s.HueSectorCount != 16 {
-		t.Errorf("Expected hue sector count 16, got %d", s.HueSectorCount)
+
+	if s.Loader.MaxWidth != 6144 {
+		t.Errorf("Expected loader max width 6144, got %d", s.Loader.MaxWidth)
 	}
-	
-	if s.Extraction.MaxColorsToExtract != 80 {
-		t.Errorf("Expected extraction max colors 80, got %d", s.Extraction.MaxColorsToExtract)
+
+	if s.Processor.MaxUIColors != 25 {
+		t.Errorf("Expected processor max UI colors 25, got %d", s.Processor.MaxUIColors)
 	}
-	
-	if s.Fallbacks.DefaultDark != "#181818" {
-		t.Errorf("Expected fallback dark #181818, got %s", s.Fallbacks.DefaultDark)
+
+	if s.DefaultDark != "#181818" {
+		t.Errorf("Expected default dark #181818, got %s", s.DefaultDark)
 	}
-	
-	if s.Extraction.AdaptiveGrouping {
-		t.Errorf("Expected adaptive grouping false, got %t", s.Extraction.AdaptiveGrouping)
+
+	if s.Formats.QuantizationBits != 6 {
+		t.Errorf("Expected quantization bits 6, got %d", s.Formats.QuantizationBits)
 	}
 }

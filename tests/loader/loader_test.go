@@ -100,8 +100,8 @@ func TestLoader_LoadImage_InvalidFormat(t *testing.T) {
 func TestLoader_LoadImage_OversizedImage(t *testing.T) {
 	s := settings.DefaultSettings()
 	// Set very small max dimensions to test validation
-	s.LoaderMaxWidth = 10
-	s.LoaderMaxHeight = 10
+	s.Loader.MaxWidth = 10
+	s.Loader.MaxHeight = 10
 	l := loader.NewFileLoader(s)
 	
 	// Use a large existing test image (most are much larger than 10x10)
@@ -120,9 +120,9 @@ func TestLoader_LoadImage_OversizedImage(t *testing.T) {
 	// If it succeeds, check if it was resized
 	if loadedImg != nil {
 		bounds := loadedImg.Bounds()
-		if bounds.Dx() > s.LoaderMaxWidth || bounds.Dy() > s.LoaderMaxHeight {
+		if bounds.Dx() > s.Loader.MaxWidth || bounds.Dy() > s.Loader.MaxHeight {
 			t.Errorf("Image exceeds max dimensions: %dx%d > %dx%d",
-				bounds.Dx(), bounds.Dy(), s.LoaderMaxWidth, s.LoaderMaxHeight)
+				bounds.Dx(), bounds.Dy(), s.Loader.MaxWidth, s.Loader.MaxHeight)
 		}
 	}
 }
@@ -272,7 +272,7 @@ func TestLoader_MemorySafety(t *testing.T) {
 func TestLoader_FormatValidation(t *testing.T) {
 	s := settings.DefaultSettings()
 	// Restrict to only PNG files
-	s.LoaderAllowedFormats = []string{"png"}
+	s.Loader.AllowedFormats = []string{"png"}
 	l := loader.NewFileLoader(s)
 	
 	ctx := context.Background()

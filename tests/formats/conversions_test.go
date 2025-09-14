@@ -603,6 +603,179 @@ func TestRoundTripConversions(t *testing.T) {
 	}
 }
 
+func TestQuantizeColor(t *testing.T) {
+	testCases := []struct {
+		name        string
+		input       color.RGBA
+		bits        uint8
+		expected    color.RGBA
+		description string
+	}{
+		{
+			name:     "5-bit quantization (default)",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     5,
+			expected: color.RGBA{R: 124, G: 204, B: 60, A: 255}, // (120+4, 200+4, 56+4)
+			description: "5-bit quantization reduces precision to 32 levels per channel",
+		},
+		{
+			name:     "4-bit quantization",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     4,
+			expected: color.RGBA{R: 120, G: 200, B: 56, A: 255}, // (112+8, 192+8, 48+8)
+			description: "4-bit quantization reduces precision to 16 levels per channel",
+		},
+		{
+			name:     "3-bit quantization (aggressive)",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     3,
+			expected: color.RGBA{R: 112, G: 208, B: 48, A: 255}, // (96+16, 192+16, 32+16)
+			description: "3-bit quantization reduces precision to 8 levels per channel",
+		},
+		{
+			name:     "8-bit quantization (no change)",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     8,
+			expected: color.RGBA{R: 127, G: 200, B: 63, A: 255}, // (127+0, 200+0, 63+0)
+			description: "8-bit quantization preserves original precision",
+		},
+		{
+			name:     "Pure colors quantized",
+			input:    color.RGBA{R: 255, G: 0, B: 128, A: 255},
+			bits:     5,
+			expected: color.RGBA{R: 252, G: 4, B: 132, A: 255}, // (248+4, 0+4, 128+4)
+			description: "Colors quantize to nearest levels with rounding",
+		},
+		{
+			name:     "Black quantized",
+			input:    color.RGBA{R: 0, G: 0, B: 0, A: 255},
+			bits:     5,
+			expected: color.RGBA{R: 4, G: 4, B: 4, A: 255}, // (0+4, 0+4, 0+4)
+			description: "Black quantizes to lowest level plus rounding offset",
+		},
+		{
+			name:     "White quantization",
+			input:    color.RGBA{R: 255, G: 255, B: 255, A: 255},
+			bits:     5,
+			expected: color.RGBA{R: 252, G: 252, B: 252, A: 255}, // (248+4, 248+4, 248+4)
+			description: "White quantizes to highest quantization level",
+		},
+		{
+			name:     "Invalid bits (too high) defaults to 5",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     10, // Invalid - should default to 5
+			expected: color.RGBA{R: 124, G: 204, B: 60, A: 255}, // Same as 5-bit
+			description: "Invalid bit count should default to 5-bit quantization",
+		},
+		{
+			name:     "Invalid bits (too low) defaults to 5",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 255},
+			bits:     0, // Invalid - should default to 5
+			expected: color.RGBA{R: 124, G: 204, B: 60, A: 255}, // Same as 5-bit
+			description: "Invalid bit count should default to 5-bit quantization",
+		},
+		{
+			name:     "Alpha preserved",
+			input:    color.RGBA{R: 127, G: 200, B: 63, A: 128},
+			bits:     5,
+			expected: color.RGBA{R: 124, G: 204, B: 60, A: 255}, // Alpha always set to 255
+			description: "Alpha channel should always be set to 255",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := formats.QuantizeColor(tc.input, tc.bits)
+
+			// Log comprehensive diagnostic information
+			t.Logf("Test: %s", tc.name)
+			t.Logf("Input RGBA: (%d,%d,%d,%d)", tc.input.R, tc.input.G, tc.input.B, tc.input.A)
+			t.Logf("Quantization bits: %d", tc.bits)
+			t.Logf("Expected RGBA: (%d,%d,%d,%d)", tc.expected.R, tc.expected.G, tc.expected.B, tc.expected.A)
+			t.Logf("Actual RGBA: (%d,%d,%d,%d)", actual.R, actual.G, actual.B, actual.A)
+			t.Logf("Differences: R=%d G=%d B=%d A=%d",
+				abs(int(tc.expected.R)-int(actual.R)),
+				abs(int(tc.expected.G)-int(actual.G)),
+				abs(int(tc.expected.B)-int(actual.B)),
+				abs(int(tc.expected.A)-int(actual.A)))
+			t.Logf("Description: %s", tc.description)
+
+			// Calculate quantization levels for validation
+			if tc.bits >= 1 && tc.bits <= 8 {
+				levels := 1 << tc.bits // 2^bits
+				t.Logf("Quantization levels: %d (step size: %.1f)", levels, 256.0/float64(levels))
+			}
+
+			// Compare with expected values
+			if actual.R != tc.expected.R {
+				t.Errorf("Red component mismatch: expected %d, got %d", tc.expected.R, actual.R)
+			}
+			if actual.G != tc.expected.G {
+				t.Errorf("Green component mismatch: expected %d, got %d", tc.expected.G, actual.G)
+			}
+			if actual.B != tc.expected.B {
+				t.Errorf("Blue component mismatch: expected %d, got %d", tc.expected.B, actual.B)
+			}
+			if actual.A != tc.expected.A {
+				t.Errorf("Alpha component mismatch: expected %d, got %d", tc.expected.A, actual.A)
+			}
+
+			// Validate that quantization reduces precision
+			if tc.bits < 8 {
+				// Verify that the result uses fewer distinct values
+				t.Logf("Quantization validation: %d-bit should reduce precision from 256 to %d levels",
+					tc.bits, 1<<tc.bits)
+			}
+		})
+	}
+}
+
+func TestQuantizeColor_ConsistentBehavior(t *testing.T) {
+	// Test that quantization is consistent and reversible at the same bit depth
+	testColors := []color.RGBA{
+		{R: 0, G: 0, B: 0, A: 255},       // Black
+		{R: 255, G: 255, B: 255, A: 255}, // White
+		{R: 128, G: 128, B: 128, A: 255}, // Gray
+		{R: 255, G: 0, B: 0, A: 255},     // Red
+		{R: 64, G: 192, B: 128, A: 255},  // Mixed color
+		{R: 200, G: 100, B: 50, A: 255},  // Another mixed color
+	}
+
+	bitDepths := []uint8{3, 4, 5, 6, 7, 8}
+
+	for _, bits := range bitDepths {
+		for i, color := range testColors {
+			t.Run(fmt.Sprintf("Consistency_Bits%d_Color%d", bits, i), func(t *testing.T) {
+				// Quantize the same color multiple times
+				result1 := formats.QuantizeColor(color, bits)
+				result2 := formats.QuantizeColor(color, bits)
+				result3 := formats.QuantizeColor(result1, bits) // Quantize an already quantized color
+
+				t.Logf("Testing %d-bit quantization consistency", bits)
+				t.Logf("Original: (%d,%d,%d,%d)", color.R, color.G, color.B, color.A)
+				t.Logf("First quantization: (%d,%d,%d,%d)", result1.R, result1.G, result1.B, result1.A)
+				t.Logf("Second quantization: (%d,%d,%d,%d)", result2.R, result2.G, result2.B, result2.A)
+				t.Logf("Re-quantized: (%d,%d,%d,%d)", result3.R, result3.G, result3.B, result3.A)
+
+				// Results should be identical
+				if result1 != result2 {
+					t.Errorf("Quantization not consistent: first=%+v, second=%+v", result1, result2)
+				}
+
+				// Re-quantizing should not change the result
+				if result1 != result3 {
+					t.Errorf("Re-quantization changed result: original=%+v, re-quantized=%+v", result1, result3)
+				}
+
+				// Alpha should always be 255
+				if result1.A != 255 {
+					t.Errorf("Alpha not preserved: expected 255, got %d", result1.A)
+				}
+			})
+		}
+	}
+}
+
 // Helper functions
 func hueDifference(h1, h2 float64) float64 {
 	// Calculate the shortest distance between two hue values (handling 360° wraparound)

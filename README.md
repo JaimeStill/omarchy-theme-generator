@@ -1,56 +1,147 @@
 # Omarchy Theme Generator
 
 > [!IMPORTANT]
-> This project is still early in development. The core processing pipeline is complete, but the CLI application and theme generation features are not yet implemented.
+> This project is in active development. The color extraction and analysis foundation is complete, but the CLI application and theme generation features are not yet implemented.
 
-Color extraction and analysis engine for generating Omarchy themes from images using characteristic-based color organization and flexible palette mapping.
+Color extraction and analysis system for generating Omarchy themes from images using characteristic-based color organization.
 
 ## What This Tool Is
 
-The Omarchy Theme Generator is a Go-based color analysis system that extracts and organizes colors from images by their intrinsic properties (lightness, saturation, hue). It provides a rich pool of colors that can be flexibly mapped to generate themes ranging from minimal (2-4 colors) to extended (30+ colors) configurations for all Omarchy components.
+The Omarchy Theme Generator is a Go-based color analysis system that extracts and organizes colors from images by their intrinsic properties (lightness, saturation, hue). It provides a foundation for generating themes ranging from minimal to extended configurations for the Omarchy desktop environment.
+
+## Current Implementation Status
+
+### ✅ Complete Foundation
+The core processing pipeline is fully implemented and tested:
+
+- **Color Extraction**: ColorCluster-based system with frequency weighting
+- **Image Processing**: JPEG, PNG support with validation and format detection
+- **Color Analysis**: HSLA, LAB, XYZ color space conversions and calculations
+- **Performance**: <500ms average processing time, <50MB memory usage
+- **Color Theory**: Similarity detection, contrast calculations, accessibility metrics
+
+### 🔄 In Development
+- **Theme Generation**: Semantic color mapping and component generation
+- **CLI Interface**: Command-line application for end users
+- **Palette Strategies**: Color scheme application and theme optimization
 
 ## What You Can Currently Do
 
-### Test and Validate Color Processing
-The test infrastructure provides comprehensive coverage of the processing pipeline:
-- **[tests/](tests/)** - Unit test suite with diagnostic logging for all packages
-- **[tests/integration/](tests/integration/)** - End-to-end pipeline validation
-- **[tests/benchmarks/](tests/benchmarks/)** - Performance benchmarking suite
-
-### Analyze Images with Development Tools
-Analysis and testing tools for development and validation:
-- **[tools/analyze-images/](tools/analyze-images/)** - Image analysis and documentation generation
-- **[tools/performance-test/](tools/performance-test/)** - Performance testing and statistical analysis
-- **[tests/images/README.md](tests/images/README.md)** - Demonstration of current processing pipeline output
-
-### Process Images Through the Pipeline
-The core processing engine can be tested directly:
+### Process Images Through the Analysis Pipeline
+Test the color extraction system directly:
 
 ```bash
-# Run image analysis
-go run tools/analyze-images/main.go
-
-# Run performance tests
-go run tools/performance-test/main.go
-
-# Run unit tests
+# Run comprehensive unit tests
 go test ./tests/... -v
 
-# Run benchmarks
+# Run performance benchmarks
 go test ./tests/benchmarks -bench=. -benchmem
+
+# Generate image analysis documentation
+go run tools/analyze-images/main.go
+
+# Run performance validation
+go run tools/performance-test/main.go
 ```
 
-**Current Capabilities:**
-- Characteristic-based color extraction with ColorPool organization
-- Statistical analysis (chromatic diversity, contrast range, hue variance)
-- Color scheme identification and profile detection (grayscale, monochromatic)
-- Performance targets exceeded: <500ms avg processing, <50MB memory for 4K images
-- Comprehensive color grouping by lightness, saturation, and hue families
+### Analyze Color Processing Results
+The processing pipeline currently extracts:
 
-## What You Will Be Able To Do
+- **ColorCluster structures** with UI-relevant metadata (weight, lightness, characteristics)
+- **Theme mode detection** (Light/Dark based on weighted luminance)
+- **Color characteristics** (neutral, vibrant, muted classifications)
+- **Processing statistics** and performance metrics
 
-### Complete Theme Generation (In Development)
-Future CLI application with theme generation:
+See **[tests/images/README.md](tests/images/README.md)** for examples of current processing output.
+
+## Architecture Status
+
+### Foundation Layer (Complete ✅)
+- **pkg/formats** - Color space conversions (RGBA, HSLA, LAB, XYZ)
+- **pkg/chromatic** - Color theory algorithms and calculations
+- **pkg/settings** - Configuration management with Viper integration
+- **pkg/loader** - Image loading with format validation
+- **pkg/errors** - Comprehensive error handling with sentinel errors
+
+### Processing Layer (Complete ✅)
+- **pkg/processor** - ColorCluster-based extraction with characteristic analysis
+
+### Generation Layer (Planned 🔄)
+- **pkg/palette** - Semantic color mapping (not yet implemented)
+- **pkg/theme** - Component-specific configuration generation (not yet implemented)
+
+### Application Layer (Planned 🔄)
+- **cmd/omarchy-theme-gen** - CLI interface (not yet implemented)
+
+## Performance Characteristics
+
+Validated performance on real-world images:
+- **Small images** (~2MP): ~84ms processing, ~17MB memory
+- **Large images** (~15MP): ~533ms processing, ~118MB memory
+- **Success rate**: 100% across diverse image types and formats
+- **Meets targets**: <2s processing, <100MB memory for all tested images
+
+## Development and Testing
+
+### Requirements
+- Go 1.25+
+- No external dependencies (pure Go implementation)
+- Linux/Unix environment (developed and tested on Linux)
+
+### Development Commands
+```bash
+# Run all tests with verbose output
+go test ./tests/... -v
+
+# Run performance benchmarks
+go test ./tests/benchmarks -bench=. -benchmem
+
+# Validate code quality
+go vet ./...
+go fmt ./...
+
+# Generate image analysis documentation
+go run tools/analyze-images/main.go
+
+# Run comprehensive performance tests
+go run tools/performance-test/main.go
+```
+
+### Test Infrastructure
+- **[tests/](tests/)** - Comprehensive unit test suite with diagnostic logging
+- **[tests/benchmarks/](tests/benchmarks/)** - Performance validation against targets
+- **[tools/](tools/)** - Analysis and validation tools for development
+- **[tests/images/](tests/images/)** - Test image collection with analysis results
+
+## Current ColorProfile Output
+
+The processor generates ColorProfile structures containing:
+
+```go
+type ColorProfile struct {
+    Mode       ThemeMode      // Light or Dark theme recommendation
+    Colors     []ColorCluster // Distinct colors sorted by weight
+    HasColor   bool          // Whether image contains significant color
+    ColorCount int           // Number of distinct colors found
+}
+
+type ColorCluster struct {
+    color.RGBA                // Representative color
+    Weight      float64       // Combined frequency weight (0.0-1.0)
+    Lightness   float64       // HSL lightness for UI decisions
+    Saturation  float64       // HSL saturation
+    Hue         float64       // Hue in degrees (0-360)
+    IsNeutral   bool         // Grayscale or very low saturation
+    IsDark      bool         // Low lightness (< 0.3)
+    IsLight     bool         // High lightness (> 0.7)
+    IsMuted     bool         // Low saturation
+    IsVibrant   bool         // High saturation
+}
+```
+
+## Future CLI Design (Planned)
+
+Once generation layers are implemented:
 
 ```bash
 # Generate Omarchy theme from image
@@ -58,96 +149,26 @@ omarchy-theme-gen generate --image wallpaper.jpg --name "my-theme"
 
 # Clone and modify existing themes
 omarchy-theme-gen clone my-theme my-variant --scheme complementary
+
+# Set theme properties
+omarchy-theme-gen set-mode my-theme --mode dark
+omarchy-theme-gen set-scheme my-theme --scheme triadic
 ```
 
-Generated themes will integrate directly with Omarchy's theme selection system.
+## Development Approach
 
-See **[PROJECT.md](PROJECT.md)** for the development roadmap and **[ARCHITECTURE.md](/ARCHITECTURE.md)** for architectural design details.
+This project follows Intelligent Development principles:
+- **[docs/development-methodology.md](docs/development-methodology.md)** - Development practices
+- **[docs/testing-strategy.md](docs/testing-strategy.md)** - Testing standards
+- **[CLAUDE.md](CLAUDE.md)** - Project context and AI-assisted development guidelines
+- **[PROJECT.md](PROJECT.md)** - Detailed roadmap and session logs
 
-## How It's Being Built
+## Project Status and Roadmap
 
-This project follows Intelligent Development principles with AI-assisted implementation:
-
-### Development Methodology
-- **[docs/development-methodology.md](docs/development-methodology.md)** - Development principles and practices
-- **[docs/testing-strategy.md](docs/testing-strategy.md)** - Testing standards and requirements
-- **[CLAUDE.md](CLAUDE.md)** - Project context for AI-assisted development
-
-### AI-Assisted Development
-- **[.claude/agents/](.claude/agents/)** - Specialized agents for development tasks
-- User-driven development with AI implementation assistance
-- Test-driven development with comprehensive coverage requirements
-
-### Architecture & Design
-- Layered architecture with separation of concerns
-- Settings-as-Methods pattern for configuration management
-- Public Infrastructure Testing standard for API coverage
-- Comprehensive diagnostic logging in all tests
-
-## Current Architecture Status
-
-### Foundation Layer (Complete)
-- **pkg/formats** - Color space conversions (RGBA, HSLA, LAB, XYZ)
-- **pkg/chromatic** - Color theory algorithms and calculations
-- **pkg/settings** - Flat configuration management with threshold-based parameters
-- **pkg/loader** - Image loading and format validation
-
-### Processing Layer (Complete)
-- **pkg/processor** - Characteristic-based color extraction with ColorPool organization
-- **pkg/errors** - Error handling with sentinel errors
-
-### Generation Layer (In Development)
-- **pkg/palette** - Semantic color mapping and theme strategy application
-- **pkg/theme** - Component-specific configuration generation
-
-### Application Layer (Planned)
-- **cmd/omarchy-theme-gen** - CLI application interface
-
-## Performance Characteristics
-
-Benchmark results on Intel i7-9700K:
-- Small images (2.1MP): ~84ms processing, 16.6MB memory
-- Large images (14.7MP): ~533ms processing, 118MB memory
-- All images meet <2s processing and <100MB memory targets
-- Typical category coverage: 25-30% of 27 categories
-
-## Development Commands
-
-```bash
-# Run test suite
-go test ./tests/... -v
-
-# Run benchmarks
-go test ./tests/benchmarks -bench=. -benchmem
-
-# Run integration tests
-go test ./tests/integration -v
-
-# Code validation
-go vet ./...
-go fmt ./...
-
-# Generate image analysis
-go run tools/analyze-images/main.go
-
-# Run performance tests
-go run tools/performance-test/main.go
-```
-
-## Requirements
-
-- Go 1.25+
-- No external dependencies (pure Go implementation)
-- Linux/Unix environment (developed on Linux)
-
-## Example Processing Output
-
-See **[tests/images/README.md](tests/images/README.md)** for examples of the processing pipeline output:
-
-- Category-based color extraction results
-- Color analysis with theme mode detection
-- Performance metrics and processing times
-- Color scheme identification
+For detailed development status, architectural decisions, and future phases:
+- **[PROJECT.md](PROJECT.md)** - Complete project roadmap and status tracking
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architectural design and technical decisions
+- **[THEMES.md](THEMES.md)** - Analysis of Omarchy theme requirements and structure
 
 ## Acknowledgments
 

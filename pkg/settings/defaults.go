@@ -8,41 +8,45 @@ import (
 )
 
 func setDefaults(v *viper.Viper) {
-	v.SetDefault("grayscale_threshold", 0.05)
-	v.SetDefault("grayscale_image_threshold", 0.8)
-	v.SetDefault("monochromatic_tolerance", 15.0)
-	v.SetDefault("monochromatic_weight_threshold", 0.1)
-	v.SetDefault("theme_mode_threshold", 0.5)
-	v.SetDefault("min_frequency", 0.0001)
+	// Foundation layer settings - anchored to lowest-level package ownership
 
-	v.SetDefault("loader_max_width", 8192)
-	v.SetDefault("loader_max_height", 8192)
-	v.SetDefault("loader_allowed_formats", []string{
+	// Loader settings
+	v.SetDefault("loader.max_width", 8192)
+	v.SetDefault("loader.max_height", 8192)
+	v.SetDefault("loader.allowed_formats", []string{
 		"jpeg",
 		"jpg",
 		"png",
 		"webp",
 	})
 
-	v.SetDefault("lightness_dark_max", 0.25)
-	v.SetDefault("lightness_light_min", 0.75)
+	// Formats settings
+	v.SetDefault("formats.quantization_bits", 5) // 32 levels per channel
 
-	v.SetDefault("saturation_gray_max", 0.05)
-	v.SetDefault("saturation_muted_max", 0.25)
-	v.SetDefault("saturation_normal_max", 0.70)
+	// Chromatic settings
+	v.SetDefault("chromatic.color_merge_threshold", 15.0)       // Delta-E threshold for color similarity
+	v.SetDefault("chromatic.neutral_threshold", 0.1)           // 10% saturation threshold for neutrals
+	v.SetDefault("chromatic.neutral_lightness_threshold", 0.08) // 8% lightness difference for neutral clustering
+	v.SetDefault("chromatic.dark_lightness_max", 0.3)           // 30% maximum lightness for dark classification
+	v.SetDefault("chromatic.light_lightness_min", 0.7)          // 70% minimum lightness for light classification
+	v.SetDefault("chromatic.muted_saturation_max", 0.3)         // 30% maximum saturation for muted classification
+	v.SetDefault("chromatic.vibrant_saturation_min", 0.7)       // 70% minimum saturation for vibrant classification
 
-	v.SetDefault("hue_sector_count", 12)
-	v.SetDefault("hue_sector_size", 30.0)
+	// Processing layer settings
+	v.SetDefault("processor.min_frequency", 0.0001)              // 0.01% minimum frequency
+	v.SetDefault("processor.min_cluster_weight", 0.005)          // 0.5% minimum cluster weight
+	v.SetDefault("processor.min_ui_color_weight", 0.01)          // 1% minimum for UI inclusion
+	v.SetDefault("processor.max_ui_colors", 20)                  // Maximum colors for UI palette
+	v.SetDefault("processor.pure_black_threshold", 0.01)         // 1% lightness threshold for pure black
+	v.SetDefault("processor.pure_white_threshold", 0.99)         // 99% lightness threshold for pure white
+	v.SetDefault("processor.light_theme_threshold", 0.5)         // 50% lightness threshold for light theme
+	v.SetDefault("processor.theme_mode_max_clusters", 5)         // Maximum clusters to consider for theme mode
+	v.SetDefault("processor.significant_color_threshold", 0.1)   // 10% weight threshold for significant color content
 
-	v.SetDefault("extraction.max_colors_to_extract", 100000)
-	v.SetDefault("extraction.dominant_color_count", 10)
-	v.SetDefault("extraction.min_color_diversity", 0.1)
-	v.SetDefault("extraction.adaptive_grouping", true)
-	v.SetDefault("extraction.preserve_natural_clusters", true)
-
-	v.SetDefault("fallbacks.default_dark", "#1a1a1a")
-	v.SetDefault("fallbacks.default_light", "#f0f0f0")
-	v.SetDefault("fallbacks.default_gray", "#808080")
+	// Global settings
+	v.SetDefault("default_dark", "#1a1a1a")
+	v.SetDefault("default_light", "#f0f0f0")
+	v.SetDefault("default_gray", "#808080")
 }
 
 func DefaultSettings() *Settings {

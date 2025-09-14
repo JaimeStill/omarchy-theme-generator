@@ -279,3 +279,24 @@ func sRGBGamma(value float64) float64 {
 	}
 	return 1.055*math.Pow(value, 1.0/2.4) - 0.055
 }
+
+// QuantizeColor reduces color precision to merge very similar colors.
+// The bits parameter specifies precision (1-8 bits per channel).
+// Lower values create fewer distinct colors but may lose detail.
+// Commonly used values: 5 bits = 32 levels, 6 bits = 64 levels.
+func QuantizeColor(c color.RGBA, bits uint8) color.RGBA {
+	if bits < 1 || bits > 8 {
+		bits = 5 // Default to 5-bit precision
+	}
+
+	shift := 8 - bits
+	mask := uint8(0xFF << shift)
+	step := uint8(1 << shift)
+
+	return color.RGBA{
+		R: (c.R & mask) + (step >> 1),
+		G: (c.G & mask) + (step >> 1),
+		B: (c.B & mask) + (step >> 1),
+		A: 255, // Preserve full alpha
+	}
+}

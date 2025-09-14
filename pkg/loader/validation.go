@@ -1,6 +1,7 @@
 package loader
 
 import (
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -46,6 +47,16 @@ func ValidateImageFormatName(formatName string, supportedFormats []string) error
 }
 
 func ValidateImageDimensions(width, height, maxWidth, maxHeight int) error {
+	// Check for invalid dimensions first
+	if width <= 0 || height <= 0 {
+		return &errors.ImageDimensionError{
+			Width:     width,
+			Height:    height,
+			MaxWidth:  maxWidth,
+			MaxHeight: maxHeight,
+		}
+	}
+
 	if maxWidth > 0 && width > maxWidth {
 		return &errors.ImageDimensionError{
 			Width:     width,
@@ -68,6 +79,10 @@ func ValidateImageDimensions(width, height, maxWidth, maxHeight int) error {
 }
 
 func ValidateImageInfo(info *ImageInfo, maxWidth, maxHeight int, supportedFormats []string) error {
+	if info == nil {
+		return fmt.Errorf("image info cannot be nil")
+	}
+
 	if err := ValidateImageFormatName(info.Format, supportedFormats); err != nil {
 		return &errors.ImageFormatError{
 			Path:      info.Path,

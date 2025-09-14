@@ -115,61 +115,71 @@ func BenchmarkProcessImage_Large(b *testing.B) {
 	}
 }
 
-// BenchmarkColorExtraction benchmarks the color extraction specifically
-func BenchmarkColorExtraction(b *testing.B) {
+// BenchmarkColorClustering benchmarks the color clustering pipeline specifically
+func BenchmarkColorClustering(b *testing.B) {
 	s := settings.DefaultSettings()
 	p := processor.New(s)
 	l := loader.NewFileLoader(s)
 	ctx := context.Background()
-	
+
 	// Use a diverse test image
 	imagePath := filepath.Join("..", "images", "nebula.jpeg")
-	
+
 	img, err := l.LoadImage(ctx, imagePath)
 	if err != nil {
 		b.Fatalf("Failed to load test image: %v", err)
 	}
-	
-	b.Logf("Benchmarking color extraction with nebula.jpeg")
-	
+
+	b.Logf("Benchmarking color clustering with nebula.jpeg")
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		profile, err := p.ProcessImage(img)
 		if err != nil {
 			b.Fatalf("Processing failed: %v", err)
 		}
-		
-		// Ensure colors were extracted and organized
-		if len(profile.Pool.AllColors) == 0 {
-			b.Fatalf("No colors extracted")
+
+		// Ensure colors were clustered successfully
+		if len(profile.Colors) == 0 {
+			b.Fatalf("No color clusters generated")
+		}
+
+		// Validate clustering quality
+		if profile.ColorCount != len(profile.Colors) {
+			b.Fatalf("ColorCount mismatch: %d vs %d", profile.ColorCount, len(profile.Colors))
 		}
 	}
 }
 
-// BenchmarkColorSpaceConversions benchmarks color space conversion performance
-func BenchmarkColorSpaceConversions(b *testing.B) {
+// BenchmarkThemeModeCalculation benchmarks theme mode detection performance
+func BenchmarkThemeModeCalculation(b *testing.B) {
 	s := settings.DefaultSettings()
 	p := processor.New(s)
 	l := loader.NewFileLoader(s)
 	ctx := context.Background()
-	
+
 	// Use a colorful test image
 	imagePath := filepath.Join("..", "images", "warm.jpeg")
-	
+
 	img, err := l.LoadImage(ctx, imagePath)
 	if err != nil {
 		b.Fatalf("Failed to load test image: %v", err)
 	}
-	
-	b.Logf("Benchmarking color space conversions with warm.jpeg")
-	
+
+	b.Logf("Benchmarking theme mode calculation with warm.jpeg")
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
-		_, err := p.ProcessImage(img)
+		profile, err := p.ProcessImage(img)
 		if err != nil {
 			b.Fatalf("Processing failed: %v", err)
+		}
+
+		// Validate theme mode was calculated
+		if profile.Mode != processor.Light && profile.Mode != processor.Dark {
+			b.Fatalf("Invalid theme mode: %s", profile.Mode)
 		}
 	}
 }

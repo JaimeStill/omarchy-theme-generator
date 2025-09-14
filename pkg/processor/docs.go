@@ -1,38 +1,40 @@
 // Package processor provides unified image processing and color analysis
-// for theme generation. It implements a single-pass pipeline that extracts,
-// analyzes, and organizes colors by their intended role in theme generation.
+// for theme generation. It implements a characteristic-based clustering pipeline
+// that extracts, analyzes, and organizes colors by visual properties and frequency.
 //
-// The processor combines what were previously separate analysis, extraction,
-// and strategy packages into a cohesive processing pipeline optimized for
-// performance and maintainability.
+// The processor combines color extraction, frequency analysis, and characteristic
+// classification into a cohesive pipeline optimized for performance and
+// downstream theme generation flexibility.
 //
 // Key Features:
-//   - Single-pass processing pipeline
-//   - ColorProfile composition with embedded ImageColors
-//   - Role-based color assignment (background/foreground/primary/secondary/accent)
-//   - Integrated analysis (grayscale, monochromatic, color scheme detection)
-//   - Theme mode detection based on luminance analysis
-//   - WCAG compliance validation with automatic fallbacks
+//   - Characteristic-based ColorCluster system with lightness, saturation, and hue grouping
+//   - Frequency-weighted color extraction sorted by visual importance
+//   - Theme mode detection based on weighted luminance analysis
+//   - Configurable clustering thresholds and UI color limits
 //   - Performance optimization: <2s for 4K images, <100MB memory
 //
 // Usage:
 //
 //	settings := settings.DefaultSettings()
 //	processor := processor.New(settings)
-//	
+//
 //	profile, err := processor.ProcessImage(img)
 //	if err != nil {
 //	    return err
 //	}
-//	
-//	// Access extracted colors by role
-//	bg := profile.Colors.Background
-//	fg := profile.Colors.Foreground
-//	primary := profile.Colors.Primary
-//	
+//
+//	// Access color clusters sorted by weight (highest first)
+//	colors := profile.Colors  // []ColorCluster
+//	dominant := colors[0]     // Most prominent color
+//
+//	// Access cluster characteristics
+//	if dominant.IsNeutral && dominant.IsDark {
+//	    // Handle dark neutral color
+//	}
+//
 //	// Access analysis metadata
-//	mode := profile.Mode // Light or Dark
-//	isGrayscale := profile.IsGrayscale
+//	mode := profile.Mode       // Light or Dark
+//	hasColor := profile.HasColor // False for grayscale images
 //
 // The processor enforces the settings-as-methods architectural pattern,
 // requiring all operations to be performed through configured processor

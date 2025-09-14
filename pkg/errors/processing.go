@@ -62,6 +62,20 @@ type ImageDimensionError struct {
 
 // Error returns a human-readable description of the dimension constraint violation.
 func (e *ImageDimensionError) Error() string {
+	// Handle invalid dimensions (zero or negative)
+	if e.Width <= 0 || e.Height <= 0 {
+		return fmt.Sprintf("invalid dimensions: %dx%d must be positive", e.Width, e.Height)
+	}
+
+	// Handle size limit violations
+	if e.Width > e.MaxWidth && e.MaxWidth > 0 {
+		return fmt.Sprintf("width %d exceeds maximum %d", e.Width, e.MaxWidth)
+	}
+	if e.Height > e.MaxHeight && e.MaxHeight > 0 {
+		return fmt.Sprintf("height %d exceeds maximum %d", e.Height, e.MaxHeight)
+	}
+
+	// Fallback for general dimension errors
 	return fmt.Sprintf("image dimensions %dx%d exceed maximum %dx%d", e.Width, e.Height, e.MaxWidth, e.MaxHeight)
 }
 

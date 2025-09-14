@@ -2,7 +2,7 @@
 
 ## System Architecture
 
-The omarchy-theme-generator uses a layered architecture with clear dependencies and separation of concerns, implementing a characteristic-based color extraction system with frequency weighting and flexible color pool organization.
+The omarchy-theme-generator uses a layered architecture with clear dependencies and separation of concerns, implementing a characteristic-based color extraction system with frequency weighting and cluster-based organization.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -34,6 +34,7 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 - RGB↔HSLA, LAB, XYZ color space conversions with full alpha support
 - Hex string parsing and formatting (ToHex, ParseHex, ParseHexA for HEXA)
 - HSLA type with complete alpha channel integration
+- QuantizeColor function for color clustering and similarity detection
 - Pure functions with no external dependencies
 - Optimized for repeated color space conversions
 
@@ -42,13 +43,14 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 - Contrast ratio calculations with WCAG compliance validation
 - Hue analysis, chroma manipulation, and perceptual distance calculations
 - Color derivation algorithms for palette generation
+- Color similarity detection using Delta-E and perceptual distance
 - Dependencies: pkg/formats
 
-**pkg/settings** - Flat configuration management
-- Simplified settings structure with ~20 core parameters
-- Threshold-based configuration (grayscale, monochromatic, lightness, saturation)
-- Extraction settings controlling color pool behavior
-- Hue organization parameters (sector count, sector size)
+**pkg/settings** - Hierarchical configuration management
+- Settings structure with extraction, clustering, and theme parameters
+- Threshold-based configuration (grayscale detection, clustering tolerances)
+- Extraction settings controlling color frequency and filtering
+- UI-specific thresholds (lightness, saturation, vibrancy boundaries)
 - Fallback color configurations for edge cases
 - Dependencies: Viper configuration library
 
@@ -61,43 +63,46 @@ The omarchy-theme-generator uses a layered architecture with clear dependencies 
 
 ### Processing Layer
 
-**pkg/processor** - Characteristic-based color extraction system
-- **ColorPool organization**: Lightness, saturation, and hue-based grouping
+**pkg/processor** - Characteristic-based color extraction and clustering
+- **ColorCluster organization**: Representative colors with pre-calculated characteristics
 - **Frequency weighting**: Colors weighted by pixel frequency and perceptual importance
-- **Statistical analysis**: Chromatic diversity, contrast range, hue variance calculations
-- **ColorProfile composition**: Comprehensive metadata with embedded ColorPool
+- **Clustering algorithm**: Groups similar colors into distinct visual clusters
+- **UI-optimized filtering**: Removes colors unsuitable for theme generation
 - **Theme mode detection**: Light/dark classification based on luminance analysis
-- **Flexible extraction**: Supports 2-30+ color requirements for diverse themes
-- **Profile detection**: Grayscale, monochromatic, and color scheme identification
+- **Grayscale detection**: Identifies images with insufficient color saturation
 - **Performance optimized**: Concurrent processing with <2s/100MB targets
 - Dependencies: pkg/formats, pkg/chromatic, pkg/settings, pkg/loader
 
-## Characteristic-Based Extraction System
+## ColorCluster-Based Extraction System
 
-### Three-Dimensional Color Organization
+### Color Clustering Approach
 
-The processor organizes colors by natural characteristics rather than semantic categories:
+The processor extracts colors through a clustering algorithm that groups perceptually similar colors:
 
-#### Lightness Groups
-- **Dark** (L < 0.25): Suitable for dark theme backgrounds and deep accents
-- **Mid** (0.25 ≤ L < 0.75): Primary colors for foregrounds and main accents  
-- **Light** (L ≥ 0.75): Light theme backgrounds and highlight colors
+#### ColorCluster Structure
+```go
+type ColorCluster struct {
+    color.RGBA                   // The representative color
+    Weight      float64          // Combined weight (0.0-1.0)
+    Lightness   float64          // Pre-calculated HSL lightness for efficiency
+    Saturation  float64          // Pre-calculated HSL saturation for efficiency
+    Hue         float64          // Hue in degrees (0-360)
+    IsNeutral   bool            // Grayscale or very low saturation
+    IsDark      bool            // L < 0.3
+    IsLight     bool            // L > 0.7
+    IsMuted     bool            // S < 0.3
+    IsVibrant   bool            // S > 0.7
+}
+```
 
-#### Saturation Groups
-- **Gray** (S < 0.05): Neutral colors for backgrounds and subtle elements
-- **Muted** (0.05 ≤ S < 0.25): Subdued colors for secondary elements
-- **Normal** (0.25 ≤ S < 0.70): Standard saturation for most theme elements
-- **Vibrant** (S ≥ 0.70): High-impact colors for accents and highlights
-
-#### Hue Families  
-- **Sectored organization**: Configurable hue sectors (default: 12 sectors × 30°)
-- **Natural clustering**: Colors grouped by hue proximity
-- **Relationship preservation**: Maintains harmony and contrast relationships
-- **Flexible mapping**: Supports various color scheme strategies
+#### Characteristic Flags
+- **IsNeutral**: Colors with minimal saturation suitable for backgrounds and text
+- **IsDark/IsLight**: Lightness-based classification for theme mode compatibility
+- **IsMuted/IsVibrant**: Saturation-based classification for accent vs primary usage
 
 ### Frequency-Weighted Analysis
 
-Colors are evaluated based on perceptual importance rather than arbitrary scoring:
+Colors are evaluated based on perceptual importance and visual weight:
 
 ```go
 type WeightedColor struct {
@@ -107,31 +112,22 @@ type WeightedColor struct {
 }
 ```
 
-### Statistical Metrics
+### ColorProfile Output
 
-The system computes comprehensive color statistics for theme analysis:
+The system returns a minimal, focused structure for theme generation:
 
 ```go
-type ColorStatistics struct {
-    HueHistogram       []float64           // Distribution across hue sectors
-    LightnessHistogram []float64           // Distribution across lightness ranges
-    SaturationGroups   map[string]float64  // Ratios for each saturation group
-    
-    PrimaryHue         float64             // Most dominant hue direction
-    SecondaryHue       float64             // Second most dominant hue
-    TertiaryHue        float64             // Third most dominant hue
-    ChromaticDiversity float64             // Color entropy (0-1)
-    ContrastRange      float64             // Luminance range (0-1)
-    
-    HueVariance        float64             // Hue spread measurement
-    LightnessSpread    float64             // Balance across lightness groups
-    SaturationSpread   float64             // Distribution across saturation groups
+type ColorProfile struct {
+    Mode       ThemeMode      // Light or Dark theme base
+    Colors     []ColorCluster // Distinct colors, sorted by weight
+    HasColor   bool          // False if image is essentially grayscale
+    ColorCount int           // Number of distinct colors found
 }
 ```
 
 ## Processing Pipeline
 
-The processor implements a streamlined three-stage pipeline with characteristic-based organization:
+The processor implements a streamlined clustering-based pipeline:
 
 ```
 Image Input
@@ -144,79 +140,32 @@ Image Input
           │
           ▼
 ┌─────────────────────┐
-│  Color Extraction   │ ← Concurrent frequency analysis
-│  Frequency Weighting│   Minimum threshold filtering
+│  Color Extraction   │ ← Frequency analysis with sampling
+│  Minimum Threshold │   Filter colors below frequency threshold
 └─────────┬───────────┘
           │
           ▼
 ┌─────────────────────┐
-│Characteristic Group │ ← Lightness/Saturation/Hue grouping
-│  ColorPool Build    │   Relationship preservation
+│  Color Clustering   │ ← Group similar colors into clusters
+│  Similarity-Based  │   Use Delta-E and perceptual distance
 └─────────┬───────────┘
           │
           ▼
 ┌─────────────────────┐
-│ Statistical Analysis│ ← Diversity, contrast, variance metrics
-│  Profile Detection  │   Grayscale/monochromatic detection
+│  UI Filtering       │ ← Remove unsuitable colors
+│  Characteristic     │   Filter by lightness/saturation criteria
+│  Flag Calculation   │
+└─────────┬───────────┘
+          │
+          ▼
+┌─────────────────────┐
+│ Theme Mode & Stats  │ ← Light/dark mode determination
+│ Profile Generation  │   Grayscale detection and final sorting
 └─────────┬───────────┘
           │
           ▼
     ColorProfile
- (Pool + Statistics)
-```
-
-## Data Structures
-
-### ColorProfile Composition
-
-The processor returns comprehensive analysis with embedded ColorPool:
-
-```go
-type ColorProfile struct {
-    Mode            ThemeMode             // Light or Dark theme classification
-    IsGrayscale     bool                 // Saturation-based classification (< 0.05)
-    IsMonochromatic bool                 // Hue variance analysis (±15° tolerance)
-    DominantHue     float64              // Primary hue direction (0-360°)
-    HueVariance     float64              // Color spread measurement
-    AvgLuminance    float64              // Overall brightness (0.0-1.0)
-    AvgSaturation   float64              // Overall color intensity (0.0-1.0)
-    Pool            ColorPool            // Characteristic-based organization
-}
-```
-
-### ColorPool Organization
-
-Colors are organized by natural characteristics with comprehensive statistics:
-
-```go
-type ColorPool struct {
-    AllColors      []WeightedColor    // All extracted colors sorted by weight
-    DominantColors []WeightedColor    // Top dominant colors by frequency
-    
-    ByLightness  LightnessGroups     // Dark, Mid, Light groupings
-    BySaturation SaturationGroups    // Gray, Muted, Normal, Vibrant groupings
-    ByHue        HueFamilies         // Hue sector organization
-    
-    TotalPixels  uint32              // Source image pixel count
-    UniqueColors int                 // Distinct colors extracted
-    
-    Statistics   ColorStatistics     // Computed analysis metrics
-}
-
-type LightnessGroups struct {
-    Dark  []WeightedColor    // L < 0.25
-    Mid   []WeightedColor    // 0.25 ≤ L < 0.75  
-    Light []WeightedColor    // L ≥ 0.75
-}
-
-type SaturationGroups struct {
-    Gray    []WeightedColor  // S < 0.05
-    Muted   []WeightedColor  // 0.05 ≤ S < 0.25
-    Normal  []WeightedColor  // 0.25 ≤ S < 0.70
-    Vibrant []WeightedColor  // S ≥ 0.70
-}
-
-type HueFamilies map[int][]WeightedColor  // Sector → Colors
+   (Clusters Only)
 ```
 
 ## Architectural Patterns
@@ -229,26 +178,26 @@ All public functions requiring configuration are methods on package configuratio
 // ✅ Correct: Method on configuration structure
 func (p *Processor) ProcessImage(img image.Image) (*ColorProfile, error)
 
-// ✅ Correct: Private helper with settings from calling method  
-func (p *Processor) calculateStatistics(pool ColorPool) ColorStatistics
+// ✅ Correct: Private helper with settings from calling method
+func (p *Processor) clusterColors(weighted []WeightedColor) []ColorCluster
 ```
 
 ### Characteristic-First Design
 
-The architecture prioritizes natural color organization over premature semantic assignment:
+The architecture prioritizes natural color characteristics over premature semantic assignment:
 
-- **Natural grouping**: Colors grouped by perceptual characteristics (L, S, H)
-- **Relationship preservation**: Maintains harmony and contrast relationships
-- **Flexible mapping**: Supports various theme generation strategies
-- **No premature semantics**: Avoids early assignment to specific UI roles
-- **Statistical richness**: Comprehensive metrics for downstream processing
+- **Representative clustering**: Groups similar colors into distinct visual clusters
+- **Pre-calculated characteristics**: Lightness, saturation, hue computed once
+- **Boolean flags**: Efficient UI-relevant categorization (neutral, dark, light, muted, vibrant)
+- **No semantic roles**: Avoids premature assignment to specific UI components
+- **Weight-based sorting**: Colors ordered by visual importance
 
 ### Separation of Concerns
 
 Clear distinction between extraction, semantic mapping, and theme generation:
 
-- **pkg/processor**: Extracts and organizes colors by characteristics
-- **pkg/palette (future)**: Maps colors to semantic roles based on requirements
+- **pkg/processor**: Extracts and clusters colors by visual characteristics
+- **pkg/palette (future)**: Maps ColorClusters to semantic roles based on requirements
 - **pkg/theme (future)**: Generates component-specific configurations
 
 ### Dependency Management
@@ -264,59 +213,58 @@ Application Layer: All packages (future)
 
 ## Performance Characteristics
 
-The characteristic-based system maintains exceptional performance:
+The ColorCluster-based system maintains exceptional performance:
 
 | Metric | Target | Achieved | Status |
 |--------|--------|----------|--------|
 | 4K Processing | <2s | ~500ms avg | ✅ 75% faster than target |
 | Memory Usage | <100MB | ~12MB avg | ✅ 88% under limit |
 | Peak Memory | <100MB | ~45MB max | ✅ 55% under limit |
-| Color Extraction | Variable | 2-100+ colors | ✅ Flexible by requirements |
+| Color Extraction | Variable | 2-50 clusters | ✅ Suitable for theme generation |
 
 ### Algorithmic Complexity
 
-- **Color extraction**: O(n) single-pass pixel analysis with concurrent processing
-- **Characteristic grouping**: O(n) linear sorting into lightness/saturation/hue groups
-- **Statistical analysis**: O(n) for most metrics, O(n log n) for dominant color ranking
-- **Total complexity**: O(n log n) dominated by dominant color selection
+- **Color extraction**: O(n) single-pass pixel analysis with sampling optimization
+- **Color clustering**: O(n²) pairwise distance calculations with early termination
+- **UI filtering**: O(n) linear pass through clusters
+- **Characteristic calculation**: O(n) pre-computation of HSL values and flags
+- **Total complexity**: O(n²) dominated by clustering algorithm
 
 ### Memory Efficiency
 
-- **Bounded extraction**: Configurable maximum colors extracted (default: 100)
-- **WeightedColor optimization**: Embedded RGBA reduces pointer indirection
-- **Concurrent processing**: Worker pools prevent excessive goroutine creation
-- **Progressive filtering**: Early termination when minimum thresholds not met
+- **Bounded clustering**: Practical limit of ~50 clusters prevents excessive memory usage
+- **Pre-calculated characteristics**: Avoids repeated HSL conversions
+- **Embedded RGBA**: ColorCluster embeds color.RGBA to reduce pointer indirection
+- **Sampling optimization**: Large images processed with pixel sampling
 
 ## Quality Assurance
 
-### Statistical Metrics
+### Theme Suitability
 
-The system provides comprehensive quality assessment:
+The system ensures extracted colors are appropriate for UI themes:
 
-- **Chromatic Diversity**: Entropy-based color distribution measurement (0-1)
-- **Contrast Range**: Luminance span across all extracted colors (0-1)  
-- **Lightness Spread**: Balance across dark, mid, and light groupings
-- **Saturation Spread**: Distribution across gray, muted, normal, vibrant groups
-- **Hue Variance**: Angular spread of non-grayscale colors
+- **Lightness filtering**: Removes colors too similar in lightness for contrast
+- **Saturation thresholds**: Maintains distinction between neutral and colorful elements
+- **Weight-based ranking**: Prioritizes visually important colors from the source image
+- **Grayscale detection**: Identifies images unsuitable for colorful themes
 
 ### Profile Detection
 
 Automatic classification for edge cases and special images:
 
-- **Grayscale Detection**: Average saturation below configurable threshold
-- **Monochromatic Detection**: Hue variance within tolerance range
-- **Theme Mode Classification**: Based on weighted average luminance
-- **Color Scheme Detection**: Integration with pkg/chromatic harmony analysis
+- **Grayscale Detection**: HasColor flag based on overall saturation analysis
+- **Theme Mode Classification**: Light/Dark based on weighted average lightness
+- **Color Count Tracking**: Number of distinct clusters for downstream processing
 
 ## Design Principles
 
-1. **Characteristic-First Architecture**: Natural color organization over premature semantic assignment
-2. **Frequency-Weighted Analysis**: Perceptual importance drives color selection
-3. **Statistical Richness**: Comprehensive metrics enable sophisticated downstream processing  
-4. **Performance Preservation**: Streamlined pipeline within <2s/100MB constraints
-5. **Flexible Extraction**: Supports diverse color requirements (2-30+ colors)
-6. **Separation of Concerns**: Clear distinction between extraction and semantic mapping
-7. **Relationship Preservation**: Maintains color harmony and contrast relationships
-8. **Future-Proof Design**: Characteristic organization supports various theme strategies
+1. **Clustering-Based Architecture**: Group similar colors into distinct visual clusters
+2. **Frequency-Weighted Selection**: Visual importance drives color prioritization
+3. **Pre-calculated Characteristics**: Efficient access to lightness, saturation, hue properties
+4. **UI-Optimized Filtering**: Remove colors unsuitable for theme generation
+5. **Minimal Output Structure**: Focus on essential data for downstream processing
+6. **Performance Preservation**: Maintain <2s/100MB constraints through optimized algorithms
+7. **Clear Separation**: Distinct phases for extraction, clustering, and filtering
+8. **Future-Proof Design**: ColorCluster structure supports various theme generation strategies
 
-This architecture successfully delivers flexible color extraction capabilities while maintaining exceptional performance and enabling sophisticated theme generation through downstream semantic mapping.
+This architecture successfully delivers focused color extraction capabilities through visual clustering while maintaining exceptional performance and providing a clean interface for downstream theme generation processes.

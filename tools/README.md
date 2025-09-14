@@ -28,7 +28,7 @@ go run tools/analyze-images/main.go --help
 Creates `README.md` in the specified images directory with comprehensive analysis including:
 
 - **Image metadata** - Dimensions, pixel count, file format
-- **Color extraction results** - All role-based colors with hex values and visual swatches
+- **Color extraction results** - ColorCluster analysis with hex values and visual swatches
 - **Color profile analysis** - Theme mode, color scheme, grayscale/monochromatic detection
 - **Visual color swatches** - HTML color squares for easy visualization
 
@@ -41,13 +41,13 @@ Creates `README.md` in the specified images directory with comprehensive analysi
 
 **Dimensions**: 2880 x 1800 px
 
-### Image Colors
+### Color Clusters
 
-| Function | Value | Color |
-|----------|-------|-------|
-| Background | `#1a1a1a` | <span style="..."></span> |
-| Foreground | `#f0f0f0` | <span style="..."></span> |
-| Primary | `#ff6b35` | <span style="..."></span> |
+| Weight | Hex | Characteristics | Color |
+|--------|-----|----------------|-------|
+| 45.2% | `#1a1a1a` | Dark, Neutral | <span style="..."></span> |
+| 28.7% | `#f0f0f0` | Light, Neutral | <span style="..."></span> |
+| 18.1% | `#ff6b35` | Vibrant, Orange | <span style="..."></span> |
 
 ### Color Profile
 

@@ -7,45 +7,57 @@ type contextKey string
 const settingsKey contextKey = "settings"
 
 type Settings struct {
-	// Core extraction settings
-	GrayscaleThreshold           float64 `mapstructure:"grayscale_threshold"`
-	GrayscaleImageThreshold      float64 `mapstructure:"grayscale_image_threshold"`
-	MonochromaticTolerance       float64 `mapstructure:"monochromatic_tolerance"`
-	MonochromaticWeightThreshold float64 `mapstructure:"monochromatic_weight_threshold"`
-	ThemeModeThreshold           float64 `mapstructure:"theme_mode_threshold"`
-	MinFrequency                 float64 `mapstructure:"min_frequency"`
+	// Foundation layer settings (anchored to lowest-level package ownership)
+	Loader    LoaderSettings    `mapstructure:"loader"`
+	Formats   FormatsSettings   `mapstructure:"formats"`
+	Chromatic ChromaticSettings `mapstructure:"chromatic"`
 
-	// Loader settings
-	LoaderMaxWidth       int      `mapstructure:"loader_max_width"`
-	LoaderMaxHeight      int      `mapstructure:"loader_max_height"`
-	LoaderAllowedFormats []string `mapstructure:"loader_allowed_formats"`
+	// Processing layer settings
+	Processor ProcessorSettings `mapstructure:"processor"`
 
-	LightnessDarkMax  float64 `mapstructure:"lightness_dark_max"`
-	LightnessLightMin float64 `mapstructure:"lightness_light_min"`
-
-	SaturationGrayMax   float64 `mapstructure:"saturation_gray_max"`
-	SaturationMutedMax  float64 `mapstructure:"saturation_muted_max"`
-	SaturationNormalMax float64 `mapstructure:"saturation_normal_max"`
-
-	HueSectorCount int     `mapstructure:"hue_sector_count"`
-	HueSectorSize  float64 `mapstructure:"hue_sector_size"`
-
-	Extraction ExtractionSettings `mapstructure:"extraction"`
-	Fallbacks  FallbackSettings   `mapstructure:"fallbacks"`
+	// Global settings
+	DefaultDark  string `mapstructure:"default_dark"`  // Fallback dark color
+	DefaultLight string `mapstructure:"default_light"` // Fallback light color
+	DefaultGray  string `mapstructure:"default_gray"`  // Fallback gray color
 }
 
-type ExtractionSettings struct {
-	MaxColorsToExtract      int     `mapstructure:"max_colors_to_extract"`
-	DominantColorCount      int     `mapstructure:"dominant_color_count"`
-	MinColorDiversity       float64 `mapstructure:"min_color_diversity"`
-	AdaptiveGrouping        bool    `mapstructure:"adaptive_grouping"`
-	PreserveNaturalClusters bool    `mapstructure:"preserve_natural_clusters"`
+type LoaderSettings struct {
+	MaxWidth       int      `mapstructure:"max_width"`       // Maximum image width
+	MaxHeight      int      `mapstructure:"max_height"`      // Maximum image height
+	AllowedFormats []string `mapstructure:"allowed_formats"` // Supported image formats
 }
 
-type FallbackSettings struct {
-	DefaultDark  string `mapstructure:"default_dark"`
-	DefaultLight string `mapstructure:"default_light"`
-	DefaultGray  string `mapstructure:"default_gray"`
+type FormatsSettings struct {
+	QuantizationBits int `mapstructure:"quantization_bits"` // Color precision (1-8 bits per channel)
+}
+
+type ChromaticSettings struct {
+	ColorMergeThreshold       float64 `mapstructure:"color_merge_threshold"`       // LAB distance for color similarity
+	NeutralThreshold          float64 `mapstructure:"neutral_threshold"`          // Saturation threshold for neutral colors
+	NeutralLightnessThreshold float64 `mapstructure:"neutral_lightness_threshold"` // Lightness difference threshold for neutral clustering
+	DarkLightnessMax          float64 `mapstructure:"dark_lightness_max"`          // Maximum lightness for dark classification
+	LightLightnessMin         float64 `mapstructure:"light_lightness_min"`         // Minimum lightness for light classification
+	MutedSaturationMax        float64 `mapstructure:"muted_saturation_max"`        // Maximum saturation for muted classification
+	VibrantSaturationMin      float64 `mapstructure:"vibrant_saturation_min"`      // Minimum saturation for vibrant classification
+}
+
+type ProcessorSettings struct {
+	// Color extraction
+	MinFrequency float64 `mapstructure:"min_frequency"` // Minimum frequency to consider
+
+	// Clustering
+	MinClusterWeight float64 `mapstructure:"min_cluster_weight"` // Minimum weight to keep cluster
+
+	// UI filtering
+	MinUIColorWeight         float64 `mapstructure:"min_ui_color_weight"`         // Minimum weight for UI inclusion
+	MaxUIColors              int     `mapstructure:"max_ui_colors"`               // Maximum colors for UI palette
+	PureBlackThreshold       float64 `mapstructure:"pure_black_threshold"`        // Lightness threshold for pure black
+	PureWhiteThreshold       float64 `mapstructure:"pure_white_threshold"`        // Lightness threshold for pure white
+
+	// Theme analysis
+	LightThemeThreshold       float64 `mapstructure:"light_theme_threshold"`       // Lightness threshold for light theme
+	ThemeModeMaxClusters      int     `mapstructure:"theme_mode_max_clusters"`     // Maximum clusters to consider for theme mode
+	SignificantColorThreshold float64 `mapstructure:"significant_color_threshold"` // Weight threshold for significant color content
 }
 
 func WithSettings(ctx context.Context, s *Settings) context.Context {

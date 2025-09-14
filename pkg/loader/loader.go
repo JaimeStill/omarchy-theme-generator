@@ -60,9 +60,9 @@ func NewFileLoader(s *settings.Settings) *FileLoader {
 	}
 
 	return &FileLoader{
-		supportedFormats: s.LoaderAllowedFormats,
-		maxHeight:        s.LoaderMaxHeight,
-		maxWidth:         s.LoaderMaxWidth,
+		supportedFormats: s.Loader.AllowedFormats,
+		maxHeight:        s.Loader.MaxHeight,
+		maxWidth:         s.Loader.MaxWidth,
 	}
 }
 

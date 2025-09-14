@@ -11,17 +11,29 @@ const (
 	Dark  ThemeMode = "Dark"
 )
 
-type ColorProfile struct {
-	Mode            ThemeMode
-	IsGrayscale     bool
-	IsMonochromatic bool
-	DominantHue     float64
-	HueVariance     float64
-	AvgLuminance    float64
-	AvgSaturation   float64
-	Pool            ColorPool
+// ColorCluster represents a visually distinct color group with UI-relevant metadata
+type ColorCluster struct {
+	color.RGBA                   // The representative color
+	Weight      float64          // Combined weight (0.0-1.0)
+	Lightness   float64          // Pre-calculated HSL lightness for efficiency
+	Saturation  float64          // Pre-calculated HSL saturation for efficiency
+	Hue         float64          // Hue in degrees (0-360)
+	IsNeutral   bool            // Grayscale or very low saturation
+	IsDark      bool            // L < 0.3
+	IsLight     bool            // L > 0.7
+	IsMuted     bool            // S < 0.3
+	IsVibrant   bool            // S > 0.7
 }
 
+// ColorProfile is the minimal data needed for theme generation
+type ColorProfile struct {
+	Mode       ThemeMode      // Light or Dark theme base
+	Colors     []ColorCluster // Distinct colors, sorted by weight
+	HasColor   bool          // False if image is essentially grayscale
+	ColorCount int           // Number of distinct colors found
+}
+
+// WeightedColor is an internal type for processing
 type WeightedColor struct {
 	color.RGBA
 	Frequency uint32
@@ -34,66 +46,4 @@ func NewWeightedColor(c color.RGBA, freq, total uint32) WeightedColor {
 		Frequency: freq,
 		Weight:    float64(freq) / float64(total),
 	}
-}
-
-type ColorPool struct {
-	AllColors      []WeightedColor
-	DominantColors []WeightedColor
-
-	ByLightness  LightnessGroups
-	BySaturation SaturationGroups
-	ByHue        HueFamilies
-
-	TotalPixels  uint32
-	UniqueColors int
-
-	Statistics ColorStatistics
-}
-
-type LightnessGroups struct {
-	Dark  []WeightedColor
-	Mid   []WeightedColor
-	Light []WeightedColor
-}
-
-func NewLightnessGroups() LightnessGroups {
-	return LightnessGroups{
-		Dark:  make([]WeightedColor, 0),
-		Mid:   make([]WeightedColor, 0),
-		Light: make([]WeightedColor, 0),
-	}
-}
-
-type SaturationGroups struct {
-	Gray    []WeightedColor
-	Muted   []WeightedColor
-	Normal  []WeightedColor
-	Vibrant []WeightedColor
-}
-
-func NewSaturationGroups() SaturationGroups {
-	return SaturationGroups{
-		Gray:    make([]WeightedColor, 0),
-		Muted:   make([]WeightedColor, 0),
-		Normal:  make([]WeightedColor, 0),
-		Vibrant: make([]WeightedColor, 0),
-	}
-}
-
-type HueFamilies map[int][]WeightedColor
-
-type ColorStatistics struct {
-	HueHistogram       []float64
-	LightnessHistogram []float64
-	SaturationGroups   map[string]float64
-
-	PrimaryHue         float64
-	SecondaryHue       float64
-	TertiaryHue        float64
-	ChromaticDiversity float64
-	ContrastRange      float64
-
-	HueVariance      float64
-	LightnessSpread  float64
-	SaturationSpread float64
 }

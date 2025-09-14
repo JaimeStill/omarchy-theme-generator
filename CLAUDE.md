@@ -14,7 +14,7 @@ Go-based CLI tool that generates Omarchy themes from images using characteristic
 - **Architecture design**: `ARCHITECTURE.md` - Layered architecture and technical decisions
 - **Development process**: `docs/development-methodology.md` - Intelligent Development principles
 - **Testing approach**: `docs/testing-strategy.md` - Unit test patterns
-- **Omarchy integration**: `OMARCHY.md` - Theme format standards and requirements
+- **Omarchy integration**: `OMARCHY.md` and `THEMES.md` - Theme format standards and requirements
 - **Progress tracking**: `PROJECT.md` - Roadmap and session logs
 - **Public overview**: `README.md` - User-facing documentation
 
@@ -26,6 +26,7 @@ Go-based CLI tool that generates Omarchy themes from images using characteristic
 5. Reference existing implementations: "See pkg/formats/hsla.go"
 6. Keep explanations technically precise
 7. **All unit tests MUST include diagnostic logging** - Use `t.Logf()` to output calculation metrics, expected vs actual values, thresholds, and intermediate results for debugging
+8. **Minimal comments policy** - Only include comments that objectively describe technical functionality. Do not include development context, architectural decisions, or implementation rationale in code comments. Such context belongs in documentation files.
 
 ## Architectural Patterns
 
@@ -80,10 +81,10 @@ if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
 - **Refactoring Complete**: pkg/processor transformed from semantic to characteristic-based organization
 
 ### ✅ Processing Layer (Complete)
-- **pkg/processor**: Characteristic-based color extraction system with ColorPool organization
-- **Architecture Implemented**: ColorPool with lightness/saturation/hue grouping
+- **pkg/processor**: Characteristic-based color extraction system with ColorCluster organization
+- **Architecture Implemented**: ColorCluster array with frequency weighting and characteristic classification
 - **Performance Maintained**: <2s/100MB targets achieved with improved efficiency
-- **Statistical Analysis**: Chromatic diversity, contrast range, hue variance calculations
+- **Test Suite Complete**: 100% test coverage with comprehensive diagnostic logging
 
 ### 🔄 Next Development Phases
 - **Phase 1**: ✅ pkg/processor refactoring (Complete)
@@ -102,15 +103,15 @@ if saturation < 0.05 { // Should be: if saturation < a.grayscaleThreshold {
 - **Vocabulary precision**: IsGrayscale (saturation < 0.05) vs IsMonochromatic (±15° hue tolerance)
 - **Early termination algorithm**: Monochromatic detection with 80% threshold
 - **Color Storage**: HEXA format (#RRGGBBAA) in theme-gen.json for human readability
-- **Color Bridge**: ParseHexA function to convert HEXA → color.RGBA
+- **Color Bridge**: ParseHexA function planned for HEXA → color.RGBA conversion (not yet implemented)
 
 ### New Architectural Decisions ✅
 - **Characteristic-Based Organization**: ✅ Replaced 27-category system with lightness/saturation/hue grouping
-- **Flexible Color Pool**: ✅ ColorPool structure supporting 2-100+ color requirements
+- **ColorCluster System**: ✅ ColorCluster array supporting 2-100+ color requirements
 - **Three-Stage Pipeline**: ✅ processor (extract) → palette (map) → theme (generate)
-- **Statistical Richness**: ✅ Comprehensive metrics for downstream processing
+- **Minimal Data Model**: ✅ Streamlined ColorProfile supporting flexible downstream processing
 - **Frequency Weighting**: ✅ Colors weighted by perceptual importance
-- **Performance Optimized**: ✅ Concurrent processing with worker pools
+- **Performance Optimized**: ✅ Efficient clustering algorithms achieving <2s targets
 - **Separation of Concerns**: ✅ No premature semantic assignment during extraction
 
 ## Commands

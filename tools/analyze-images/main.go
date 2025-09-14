@@ -117,108 +117,142 @@ func main() {
 // writeColorPalette creates a clean color palette showcase
 func writeColorPalette(readme *strings.Builder, profile *processor.ColorProfile) {
 	readme.WriteString("### Color Palette\n\n")
-	
-	// Show dominant colors in a clean grid
-	if len(profile.Pool.DominantColors) > 0 {
-		readme.WriteString("**Dominant Colors**\n\n")
+
+	// Show color clusters in a clean grid
+	if len(profile.Colors) > 0 {
+		readme.WriteString("**Color Clusters**\n\n")
 		maxColors := 12 // Show top 12 colors in a nice grid
-		if maxColors > len(profile.Pool.DominantColors) {
-			maxColors = len(profile.Pool.DominantColors)
+		if maxColors > len(profile.Colors) {
+			maxColors = len(profile.Colors)
 		}
-		
+
 		// Create a visual grid of color swatches
 		for i := 0; i < maxColors; i++ {
-			wc := profile.Pool.DominantColors[i]
-			hex := formats.ToHex(wc.RGBA)
+			cluster := profile.Colors[i]
+			hex := formats.ToHex(cluster.RGBA)
 			visual := renderColorSwatch(hex)
 			readme.WriteString(visual + " ")
-			
+
 			// Add line break every 6 colors for clean grid
 			if (i+1)%6 == 0 {
 				readme.WriteString("\n")
 			}
 		}
 		readme.WriteString("\n\n")
-		
+
 		// Color details table
-		readme.WriteString("| Color | Hex | Frequency | Weight |\n")
-		readme.WriteString("|-------|-----|-----------|--------|\n")
+		readme.WriteString("| Color | Hex | Weight | Lightness | Characteristics |\n")
+		readme.WriteString("|-------|-----|--------|-----------|----------------|\n")
 		for i := 0; i < maxColors; i++ {
-			wc := profile.Pool.DominantColors[i]
-			hex := formats.ToHex(wc.RGBA)
+			cluster := profile.Colors[i]
+			hex := formats.ToHex(cluster.RGBA)
 			visual := renderColorSwatch(hex)
-			readme.WriteString(fmt.Sprintf("| %s | `%s` | %d | %.4f |\n",
-				visual, hex, wc.Frequency, wc.Weight))
+			characteristics := getCharacteristics(cluster)
+			readme.WriteString(fmt.Sprintf("| %s | `%s` | %.4f | %.3f | %s |\n",
+				visual, hex, cluster.Weight, cluster.Lightness, characteristics))
 		}
 		readme.WriteString("\n")
 	}
 }
 
-func writeLightnessGroups(readme *strings.Builder, groups processor.LightnessGroups) {
+func writeLightnessGroups(readme *strings.Builder, profile *processor.ColorProfile) {
 	readme.WriteString("#### Lightness Groups\n\n")
 	readme.WriteString("| Group | Count | Colors |\n")
 	readme.WriteString("|-------|--------|--------|\n")
 
-	if len(groups.Dark) > 0 {
-		colors := formatColorList(groups.Dark, 5)
-		readme.WriteString(fmt.Sprintf("| Dark | %d | %s |\n", len(groups.Dark), colors))
+	var darkColors, midColors, lightColors []processor.ColorCluster
+	for _, cluster := range profile.Colors {
+		if cluster.IsDark {
+			darkColors = append(darkColors, cluster)
+		} else if cluster.IsLight {
+			lightColors = append(lightColors, cluster)
+		} else {
+			midColors = append(midColors, cluster)
+		}
 	}
 
-	if len(groups.Mid) > 0 {
-		colors := formatColorList(groups.Mid, 5)
-		readme.WriteString(fmt.Sprintf("| Mid | %d | %s |\n", len(groups.Mid), colors))
+	if len(darkColors) > 0 {
+		colors := formatClusterList(darkColors, 5)
+		readme.WriteString(fmt.Sprintf("| Dark | %d | %s |\n", len(darkColors), colors))
 	}
 
-	if len(groups.Light) > 0 {
-		colors := formatColorList(groups.Light, 5)
-		readme.WriteString(fmt.Sprintf("| Light | %d | %s |\n", len(groups.Light), colors))
+	if len(midColors) > 0 {
+		colors := formatClusterList(midColors, 5)
+		readme.WriteString(fmt.Sprintf("| Mid | %d | %s |\n", len(midColors), colors))
+	}
+
+	if len(lightColors) > 0 {
+		colors := formatClusterList(lightColors, 5)
+		readme.WriteString(fmt.Sprintf("| Light | %d | %s |\n", len(lightColors), colors))
 	}
 
 	readme.WriteString("\n")
 }
 
-func writeSaturationGroups(readme *strings.Builder, groups processor.SaturationGroups) {
+func writeSaturationGroups(readme *strings.Builder, profile *processor.ColorProfile) {
 	readme.WriteString("#### Saturation Groups\n\n")
 	readme.WriteString("| Group | Count | Colors |\n")
 	readme.WriteString("|-------|--------|--------|\n")
 
-	if len(groups.Gray) > 0 {
-		colors := formatColorList(groups.Gray, 5)
-		readme.WriteString(fmt.Sprintf("| Gray | %d | %s |\n", len(groups.Gray), colors))
+	var neutralColors, mutedColors, normalColors, vibrantColors []processor.ColorCluster
+	for _, cluster := range profile.Colors {
+		if cluster.IsNeutral {
+			neutralColors = append(neutralColors, cluster)
+		} else if cluster.IsMuted {
+			mutedColors = append(mutedColors, cluster)
+		} else if cluster.IsVibrant {
+			vibrantColors = append(vibrantColors, cluster)
+		} else {
+			normalColors = append(normalColors, cluster)
+		}
 	}
 
-	if len(groups.Muted) > 0 {
-		colors := formatColorList(groups.Muted, 5)
-		readme.WriteString(fmt.Sprintf("| Muted | %d | %s |\n", len(groups.Muted), colors))
+	if len(neutralColors) > 0 {
+		colors := formatClusterList(neutralColors, 5)
+		readme.WriteString(fmt.Sprintf("| Neutral | %d | %s |\n", len(neutralColors), colors))
 	}
 
-	if len(groups.Normal) > 0 {
-		colors := formatColorList(groups.Normal, 5)
-		readme.WriteString(fmt.Sprintf("| Normal | %d | %s |\n", len(groups.Normal), colors))
+	if len(mutedColors) > 0 {
+		colors := formatClusterList(mutedColors, 5)
+		readme.WriteString(fmt.Sprintf("| Muted | %d | %s |\n", len(mutedColors), colors))
 	}
 
-	if len(groups.Vibrant) > 0 {
-		colors := formatColorList(groups.Vibrant, 5)
-		readme.WriteString(fmt.Sprintf("| Vibrant | %d | %s |\n", len(groups.Vibrant), colors))
+	if len(normalColors) > 0 {
+		colors := formatClusterList(normalColors, 5)
+		readme.WriteString(fmt.Sprintf("| Normal | %d | %s |\n", len(normalColors), colors))
+	}
+
+	if len(vibrantColors) > 0 {
+		colors := formatClusterList(vibrantColors, 5)
+		readme.WriteString(fmt.Sprintf("| Vibrant | %d | %s |\n", len(vibrantColors), colors))
 	}
 
 	readme.WriteString("\n")
 }
 
-func writeHueFamilies(readme *strings.Builder, families processor.HueFamilies) {
-	if len(families) == 0 {
+func writeHueFamilies(readme *strings.Builder, profile *processor.ColorProfile) {
+	if len(profile.Colors) == 0 {
 		return
 	}
 
-	readme.WriteString("#### Hue Families\n\n")
+	readme.WriteString("#### Hue Distribution\n\n")
 	readme.WriteString("| Hue Range | Count | Colors |\n")
 	readme.WriteString("|-----------|--------|--------|\n")
 
-	for sector, colors := range families {
-		if len(colors) > 0 {
-			hueStart := float64(sector) * 30.0
-			hueEnd := hueStart + 30.0
-			colorList := formatColorList(colors, 5)
+	// Group colors by 60-degree hue ranges
+	hueFamilies := make(map[int][]processor.ColorCluster)
+	for _, cluster := range profile.Colors {
+		if !cluster.IsNeutral { // Only include colored clusters
+			hueRange := int(cluster.Hue) / 60
+			hueFamilies[hueRange] = append(hueFamilies[hueRange], cluster)
+		}
+	}
+
+	for sector := 0; sector < 6; sector++ {
+		if colors, exists := hueFamilies[sector]; exists && len(colors) > 0 {
+			hueStart := float64(sector) * 60.0
+			hueEnd := hueStart + 60.0
+			colorList := formatClusterList(colors, 5)
 			readme.WriteString(fmt.Sprintf("| %.0f°-%.0f° | %d | %s |\n", hueStart, hueEnd, len(colors), colorList))
 		}
 	}
@@ -226,82 +260,83 @@ func writeHueFamilies(readme *strings.Builder, families processor.HueFamilies) {
 	readme.WriteString("\n")
 }
 
-func writeDominantColors(readme *strings.Builder, dominantColors []processor.WeightedColor) {
-	if len(dominantColors) == 0 {
+func writeColorClusters(readme *strings.Builder, clusters []processor.ColorCluster) {
+	if len(clusters) == 0 {
 		return
 	}
 
-	readme.WriteString("#### Dominant Colors\n\n")
-	readme.WriteString("| Rank | Hex | Visual | Frequency | Weight |\n")
-	readme.WriteString("|------|-----|--------|-----------|--------|\n")
+	readme.WriteString("#### Color Clusters\n\n")
+	readme.WriteString("| Rank | Hex | Visual | Weight | Characteristics |\n")
+	readme.WriteString("|------|-----|--------|--------|----------------|\n")
 
-	for i, wc := range dominantColors {
+	for i, cluster := range clusters {
 		if i >= 10 { // Show top 10
 			break
 		}
-		hex := formats.ToHex(wc.RGBA)
+		hex := formats.ToHex(cluster.RGBA)
 		visual := renderColorBlock(hex)
-		readme.WriteString(fmt.Sprintf("| %d | `%s` | %s | %d | %.4f |\n",
-			i+1, hex, visual, wc.Frequency, wc.Weight))
+		characteristics := getCharacteristics(cluster)
+		readme.WriteString(fmt.Sprintf("| %d | `%s` | %s | %.4f | %s |\n",
+			i+1, hex, visual, cluster.Weight, characteristics))
 	}
 
-	if len(dominantColors) > 10 {
-		readme.WriteString(fmt.Sprintf("| ... | +%d more | | | |\n", len(dominantColors)-10))
+	if len(clusters) > 10 {
+		readme.WriteString(fmt.Sprintf("| ... | +%d more | | | |\n", len(clusters)-10))
 	}
 
 	readme.WriteString("\n")
 }
 
-func formatColorList(colors []processor.WeightedColor, maxShow int) string {
-	if len(colors) == 0 {
+func formatClusterList(clusters []processor.ColorCluster, maxShow int) string {
+	if len(clusters) == 0 {
 		return "-"
 	}
 
 	var result strings.Builder
-	for i, wc := range colors {
+	for i, cluster := range clusters {
 		if i >= maxShow {
-			if len(colors) > maxShow {
-				result.WriteString(fmt.Sprintf(" +%d more", len(colors)-maxShow))
+			if len(clusters) > maxShow {
+				result.WriteString(fmt.Sprintf(" +%d more", len(clusters)-maxShow))
 			}
 			break
 		}
 		if i > 0 {
 			result.WriteString(" ")
 		}
-		hex := formats.ToHex(wc.RGBA)
+		hex := formats.ToHex(cluster.RGBA)
 		visual := renderColorBlock(hex)
 		result.WriteString(visual)
 	}
 	return result.String()
 }
 
-// writeDetailedColorBreakdown adds a detailed section showing all colors by characteristic groups
+// writeDetailedColorBreakdown adds a detailed section showing all color clusters
 func writeDetailedColorBreakdown(readme *strings.Builder, profile *processor.ColorProfile, maxColorsShown int) {
 	readme.WriteString("### Detailed Color Breakdown\n\n")
 
-	// Show all colors in each group with their weights and frequencies
-	if len(profile.Pool.AllColors) > 0 {
-		readme.WriteString("#### All Extracted Colors\n\n")
-		readme.WriteString("| Rank | Hex | Visual | Frequency | Weight | Lightness | Saturation |\n")
-		readme.WriteString("|------|-----|--------|-----------|--------|-----------|------------|\n")
+	// Show all color clusters with their characteristics
+	if len(profile.Colors) > 0 {
+		readme.WriteString("#### All Color Clusters\n\n")
+		readme.WriteString("| Rank | Hex | Visual | Weight | Lightness | Saturation | Hue | Characteristics |\n")
+		readme.WriteString("|------|-----|--------|--------|-----------|------------|-----|----------------|\n")
 
-		maxShow := maxColorsShown * 3 // Show more colors in detail
-		if maxShow > len(profile.Pool.AllColors) {
-			maxShow = len(profile.Pool.AllColors)
+		maxShow := len(profile.Colors) // Show all clusters
+		if maxColorsShown > 0 && maxColorsShown < maxShow {
+			maxShow = maxColorsShown
 		}
 
 		for i := 0; i < maxShow; i++ {
-			wc := profile.Pool.AllColors[i]
-			hex := formats.ToHex(wc.RGBA)
+			cluster := profile.Colors[i]
+			hex := formats.ToHex(cluster.RGBA)
 			visual := renderColorBlock(hex)
-			hsla := formats.RGBAToHSLA(wc.RGBA)
+			characteristics := getCharacteristics(cluster)
 
-			readme.WriteString(fmt.Sprintf("| %d | `%s` | %s | %d | %.4f | %.3f | %.3f |\n",
-				i+1, hex, visual, wc.Frequency, wc.Weight, hsla.L, hsla.S))
+			readme.WriteString(fmt.Sprintf("| %d | `%s` | %s | %.4f | %.3f | %.3f | %.0f° | %s |\n",
+				i+1, hex, visual, cluster.Weight, cluster.Lightness, cluster.Saturation, cluster.Hue, characteristics))
 		}
 
-		if len(profile.Pool.AllColors) > maxShow {
-			readme.WriteString(fmt.Sprintf("| ... | +%d more | | | | | |\n", len(profile.Pool.AllColors)-maxShow))
+		if len(profile.Colors) > maxShow {
+			readme.WriteString(fmt.Sprintf("| ... | +%d more | | | | | | |\n", len(profile.Colors)-maxShow))
 		}
 
 		readme.WriteString("\n")
@@ -311,41 +346,56 @@ func writeDetailedColorBreakdown(readme *strings.Builder, profile *processor.Col
 // writeStatisticalMetrics shows key metrics in a compact format
 func writeStatisticalMetrics(readme *strings.Builder, profile *processor.ColorProfile) {
 	readme.WriteString("### Analysis Metrics\n\n")
-	
+
+	// Calculate characteristics distribution
+	var darkColors, lightColors, neutralColors, vibrantColors int
+	var totalWeight float64
+	var avgHue, avgSaturation, avgLightness float64
+
+	for _, cluster := range profile.Colors {
+		if cluster.IsDark {
+			darkColors++
+		}
+		if cluster.IsLight {
+			lightColors++
+		}
+		if cluster.IsNeutral {
+			neutralColors++
+		}
+		if cluster.IsVibrant {
+			vibrantColors++
+		}
+		totalWeight += cluster.Weight
+		avgHue += cluster.Hue * cluster.Weight
+		avgSaturation += cluster.Saturation * cluster.Weight
+		avgLightness += cluster.Lightness * cluster.Weight
+	}
+
+	if totalWeight > 0 {
+		avgHue /= totalWeight
+		avgSaturation /= totalWeight
+		avgLightness /= totalWeight
+	}
+
 	// Create two-column layout for better space usage
 	readme.WriteString("| Property | Value | Property | Value |\n")
 	readme.WriteString("|----------|-------|----------|-------|\n")
-	
-	stats := profile.Pool.Statistics
-	readme.WriteString(fmt.Sprintf("| **Chromatic Diversity** | %.3f | **Contrast Range** | %.3f |\n",
-		stats.ChromaticDiversity, stats.ContrastRange))
-	readme.WriteString(fmt.Sprintf("| **Primary Hue** | %.0f° | **Hue Variance** | %.1f° |\n",
-		stats.PrimaryHue, stats.HueVariance))
-	readme.WriteString(fmt.Sprintf("| **Lightness Spread** | %.3f | **Saturation Spread** | %.3f |\n",
-		stats.LightnessSpread, stats.SaturationSpread))
-	readme.WriteString(fmt.Sprintf("| **Total Colors** | %d | **Total Pixels** | %d |\n",
-		profile.Pool.UniqueColors, profile.Pool.TotalPixels))
-	
-	readme.WriteString("\n")
-}
 
-func writeProfileAnalysis(readme *strings.Builder, profile *processor.ColorProfile) {
-	readme.WriteString("### Profile Analysis\n\n")
-	readme.WriteString("| Property | Value | Description |\n")
-	readme.WriteString("|----------|-------|-------------|\n")
-
-	readme.WriteString(fmt.Sprintf("| Mode | %s | Theme mode based on average luminance |\n", profile.Mode))
-	readme.WriteString(fmt.Sprintf("| Dominant Hue | %.1f° | Most frequent hue direction |\n", profile.DominantHue))
-	readme.WriteString(fmt.Sprintf("| Hue Variance | %.1f° | Color hue spread |\n", profile.HueVariance))
-	readme.WriteString(fmt.Sprintf("| Average Luminance | %.3f | Overall brightness |\n", profile.AvgLuminance))
-	readme.WriteString(fmt.Sprintf("| Average Saturation | %.3f | Overall color intensity |\n", profile.AvgSaturation))
-	readme.WriteString(fmt.Sprintf("| Grayscale? | %t | Low saturation dominance |\n", profile.IsGrayscale))
-	readme.WriteString(fmt.Sprintf("| Monochromatic? | %t | Single hue dominance |\n", profile.IsMonochromatic))
-	readme.WriteString(fmt.Sprintf("| Total Colors | %d | Unique colors extracted |\n", profile.Pool.UniqueColors))
-	readme.WriteString(fmt.Sprintf("| Total Pixels | %d | Image size processed |\n", profile.Pool.TotalPixels))
+	readme.WriteString(fmt.Sprintf("| **Color Count** | %d | **Has Color** | %t |\n",
+		profile.ColorCount, profile.HasColor))
+	readme.WriteString(fmt.Sprintf("| **Dark Colors** | %d | **Light Colors** | %d |\n",
+		darkColors, lightColors))
+	readme.WriteString(fmt.Sprintf("| **Neutral Colors** | %d | **Vibrant Colors** | %d |\n",
+		neutralColors, vibrantColors))
+	readme.WriteString(fmt.Sprintf("| **Avg Hue** | %.0f° | **Avg Saturation** | %.3f |\n",
+		avgHue, avgSaturation))
+	readme.WriteString(fmt.Sprintf("| **Avg Lightness** | %.3f | **Theme Mode** | %s |\n",
+		avgLightness, profile.Mode))
 
 	readme.WriteString("\n")
 }
+
+// Removed writeProfileAnalysis - replaced by writeProfileSummary and writeStatisticalMetrics
 
 // writeProfileSummary creates a concise profile overview
 func writeProfileSummary(readme *strings.Builder, profile *processor.ColorProfile) {
@@ -353,27 +403,36 @@ func writeProfileSummary(readme *strings.Builder, profile *processor.ColorProfil
 	readme.WriteString("| Property | Value |\n")
 	readme.WriteString("|----------|-------|\n")
 	readme.WriteString(fmt.Sprintf("| **Theme Mode** | %s |\n", profile.Mode))
-	readme.WriteString(fmt.Sprintf("| **Dominant Hue** | %.1f° |\n", profile.DominantHue))
-	readme.WriteString(fmt.Sprintf("| **Average Luminance** | %.3f |\n", profile.AvgLuminance))
-	readme.WriteString(fmt.Sprintf("| **Average Saturation** | %.3f |\n", profile.AvgSaturation))
-	readme.WriteString(fmt.Sprintf("| **Is Grayscale** | %t |\n", profile.IsGrayscale))
-	readme.WriteString(fmt.Sprintf("| **Is Monochromatic** | %t |\n", profile.IsMonochromatic))
+	readme.WriteString(fmt.Sprintf("| **Color Count** | %d |\n", profile.ColorCount))
+	readme.WriteString(fmt.Sprintf("| **Has Color** | %t |\n", profile.HasColor))
+	readme.WriteString(fmt.Sprintf("| **Total Clusters** | %d |\n", len(profile.Colors)))
+
+	if len(profile.Colors) > 0 {
+		topColor := profile.Colors[0]
+		hex := formats.ToHex(topColor.RGBA)
+		visual := renderColorBlock(hex)
+		readme.WriteString(fmt.Sprintf("| **Top Color** | %s `%s` (%.1f%%) |\n",
+			visual, hex, topColor.Weight*100))
+	}
 	readme.WriteString("\n")
 }
 
 // writeCharacteristicBreakdown shows detailed color organization
 func writeCharacteristicBreakdown(readme *strings.Builder, profile *processor.ColorProfile, maxShown int) {
 	readme.WriteString("### Characteristic Breakdown\n\n")
-	
+
 	// Lightness distribution
-	writeLightnessGroups(readme, profile.Pool.ByLightness)
-	
+	writeLightnessGroups(readme, profile)
+
 	// Saturation distribution
-	writeSaturationGroups(readme, profile.Pool.BySaturation)
-	
+	writeSaturationGroups(readme, profile)
+
 	// Hue families
-	writeHueFamilies(readme, profile.Pool.ByHue)
-	
+	writeHueFamilies(readme, profile)
+
+	// Color clusters
+	writeColorClusters(readme, profile.Colors)
+
 	// Detailed color breakdown if requested
 	writeDetailedColorBreakdown(readme, profile, maxShown)
 }
@@ -404,4 +463,31 @@ func renderColorBlock(hexColor string) string {
 
 	// Return markdown image tag with placehold.co URL
 	return fmt.Sprintf("![%s](https://placehold.co/30x30/%s/%s.png)", hexColor, cleanHex, cleanHex)
+}
+
+// getCharacteristics returns a string describing the color cluster's characteristics
+func getCharacteristics(cluster processor.ColorCluster) string {
+	var characteristics []string
+
+	if cluster.IsDark {
+		characteristics = append(characteristics, "Dark")
+	}
+	if cluster.IsLight {
+		characteristics = append(characteristics, "Light")
+	}
+	if cluster.IsNeutral {
+		characteristics = append(characteristics, "Neutral")
+	}
+	if cluster.IsMuted {
+		characteristics = append(characteristics, "Muted")
+	}
+	if cluster.IsVibrant {
+		characteristics = append(characteristics, "Vibrant")
+	}
+
+	if len(characteristics) == 0 {
+		return "Normal"
+	}
+
+	return strings.Join(characteristics, ", ")
 }

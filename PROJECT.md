@@ -18,7 +18,7 @@
 - LAB and XYZ color space implementations for advanced color analysis
 - **Status**: ✅ Complete with comprehensive unit tests
 
-#### pkg/chromatic  
+#### pkg/chromatic
 - Color theory foundation and harmony detection
 - Contrast ratio and perceptual distance calculations
 - Hue analysis and chroma manipulation utilities
@@ -41,12 +41,11 @@
 
 ### Processing Layer (Complete)
 
-#### pkg/processor - Color Extraction and Organization
-- **Current state**: ✅ Characteristic-based color organization with ColorPool
-- **Architecture**: ColorPool with lightness/saturation/hue grouping
+#### pkg/processor - Color Extraction and Clustering
+- **ColorCluster system**: ✅ Individual colors with UI-relevant metadata
+- **ColorProfile output**: ✅ Mode, Colors[]ColorCluster, HasColor, ColorCount
 - **Frequency-based extraction**: ✅ Optimized approach with concurrent processing
-- **Color pool organization**: ✅ WeightedColor with embedded RGBA for performance
-- **Statistical analysis**: ✅ Chromatic diversity, contrast range, hue variance
+- **Characteristic analysis**: ✅ Pre-computed lightness, saturation, hue, UI flags
 - **Theme mode detection**: ✅ Light/dark based on weighted luminance analysis
 - **Performance optimized**: ✅ <500ms avg processing, improved efficiency
 - **Status**: ✅ Complete with comprehensive test coverage
@@ -86,106 +85,129 @@
 
 ---
 
-## ✅ Processor Refactoring Complete & 🔄 Next Phase: Theme Generation
+## 🔄 Next Development Phase: Theme Generation Pipeline
 
-### Phase 1: pkg/processor Refactoring ✅ Complete
-**Purpose**: ✅ Transformed from semantic categorization to characteristic-based organization
+### Current ColorCluster Architecture
 
-**Completed Changes**:
-- **Removed 27-category system**: ✅ Eliminated premature role assignment
-- **Implemented ColorPool structure**: ✅ Organized by lightness, saturation, hue
-- **Added statistical analysis**: ✅ Comprehensive metrics and diversity calculations
-- **Enhanced performance**: ✅ Concurrent processing, improved efficiency
-- **Maintained targets**: ✅ Exceeded <2s processing, <100MB memory targets
-
-**New Data Structures**:
+**Available ColorCluster Properties**:
 ```go
-type ColorPool struct {
-    DominantColors  []WeightedColor
-    ByLightness     LightnessGroups  // dark/mid/light
-    BySaturation    SaturationGroups // vibrant/normal/muted/gray
-    ByHue           HueFamilies      // 12 hue sectors
-    ContrastPairs   []ColorPair
-    HarmonyGroups   []ColorGroup
+type ColorCluster struct {
+    color.RGBA                   // The representative color
+    Weight      float64          // Combined weight (0.0-1.0)
+    Lightness   float64          // Pre-calculated HSL lightness
+    Saturation  float64          // Pre-calculated HSL saturation
+    Hue         float64          // Hue in degrees (0-360)
+    IsNeutral   bool            // Grayscale or very low saturation
+    IsDark      bool            // L < 0.3
+    IsLight     bool            // L > 0.7
+    IsMuted     bool            // S < 0.3
+    IsVibrant   bool            // S > 0.7
 }
 ```
 
-**Estimated Development**: 2-3 sessions
+**Current ColorProfile Output**:
+```go
+type ColorProfile struct {
+    Mode       ThemeMode      // Light or Dark theme base
+    Colors     []ColorCluster // Distinct colors, sorted by weight
+    HasColor   bool          // False if image is essentially grayscale
+    ColorCount int           // Number of distinct colors found
+}
+```
 
-### Phase 2: pkg/palette - Semantic Color Mapping
-**Purpose**: Map color pool to theme component requirements
+### Phase 1: pkg/palette - Color Selection and Role Assignment
+**Purpose**: Transform ColorCluster arrays into semantic color roles
+
+**Technical Approach**:
+- **Input**: `ColorProfile` with pre-characterized `[]ColorCluster`
+- **Color Selection**: Use existing cluster properties (Weight, Lightness, etc.)
+- **Role Assignment**: Map clusters to UI roles (background, foreground, accents)
+- **Component Awareness**: Generate different palettes for different component needs
 
 **Key Responsibilities**:
-- **Consume ColorPool** from refactored pkg/processor
-- **Apply theme strategies**: Vibrant, muted, minimal, artistic
-- **Component-aware selection**: Different strategies for minimal/standard/extended needs
-- **Semantic role assignment**: Map colors to terminal, UI, accent roles
-- **Handle edge cases**: Grayscale, monochromatic images
+- Background/foreground selection based on lightness and mode
+- Accent color selection using weight and vibrancy
+- Terminal color mapping using hue distribution
+- WCAG contrast validation using pkg/chromatic
+- Handle edge cases (low ColorCount, no vibrant colors)
 
-**Component Requirements**:
-- Minimal (2-4 colors): waybar, hyprland, mako
-- Standard (10-16 colors): alacritty terminal palette
-- Extended (20-30+ colors): btop gradients
+**Component Requirements** (from OMARCHY.md analysis):
+- **Minimal (2-4 colors)**: waybar, hyprland, mako, swayosd, walker
+- **Standard (8-16 colors)**: alacritty terminal palette
+- **Extended (20-30+ colors)**: btop gradients and system indicators
 
-**Dependencies**: pkg/formats, pkg/chromatic, pkg/processor
+**Realistic Complexity**: Medium - leverages existing ColorCluster metadata
+**Estimated Development**: 2-3 sessions
+
+### Phase 2: pkg/theme - Configuration File Generation
+**Purpose**: Generate Omarchy-compatible configuration files
+
+**Technical Approach**:
+- **Input**: Semantic color palettes from pkg/palette
+- **Template System**: Pre-defined templates for each component type
+- **Format Conversion**: HEXA → hex, RGB, RGBA per component requirements
+- **File Generation**: Atomic writing of all theme files
+
+**Key Responsibilities**:
+- Template rendering for 9+ component types (see OMARCHY.md)
+- Color format conversion (hex, rgb(), rgba()) per component
+- File structure creation (theme-name/, backgrounds/)
+- Metadata generation (theme-gen.json)
+- Light/dark mode indicators (light.mode file)
+
+**Format Requirements** (from OMARCHY.md):
+- `alacritty.toml`: Hex strings (`"#24273a"`)
+- `hyprland.conf`: RGB functions (`rgb(c6d0f5)`)
+- `hyprlock.conf`: RGBA decimals (`rgba(36, 39, 58, 1.0)`)
+- CSS files: Standard hex (`#24273a`)
+- `btop.theme`: Hex strings (`"#cad3f5"`)
+
+**Realistic Complexity**: Medium - well-defined format requirements
 **Estimated Development**: 3-4 sessions
 
-### Phase 3: pkg/theme - Configuration Generation
-**Purpose**: Generate Omarchy-specific configuration files
-
-**Key Responsibilities**:
-- Component-specific templates (alacritty.toml, waybar.css, etc.)
-- Format conversions (hex, RGB, RGBA)
-- Neovim theme mapping
-- Icon theme selection based on dominant hue
-- Metadata generation (theme-gen.json)
-
-**Dependencies**: pkg/formats, pkg/palette
-**Estimated Development**: 2-3 sessions
-
-### cmd/omarchy-theme-gen - CLI Application (Not Implemented)
+### Phase 3: cmd/omarchy-theme-gen - CLI Application
 **Purpose**: User-facing command-line interface
 
-**Key Responsibilities**:
-- `generate` - Create theme from image
-- `set-scheme` - Apply color theory schemes  
-- `set-mode` - Switch light/dark modes
-- `clone` - Duplicate and modify existing themes
-- Settings and preferences management
+**Key Commands**:
+- `generate --image photo.jpg` - Create theme from image
+- `set-scheme <theme> --scheme complementary` - Apply color schemes
+- `set-mode <theme> --mode light` - Toggle light/dark modes
+- `clone <source> <new-name>` - Duplicate and modify themes
 
-**Dependencies**: All packages
-**Estimated Development**: 1-2 sessions
+**Technical Approach**:
+- Cobra CLI framework for command structure
+- Pipeline integration (loader → processor → palette → theme)
+- Configuration management and validation
+- Error handling and user feedback
+
+**Realistic Complexity**: Low-medium - mostly integration work
+**Estimated Development**: 2-3 sessions
 
 ---
 
-## Architectural Transformation Summary
+## Architecture Evolution Summary
 
-### Eliminated Packages (Performance Improvement: 40-60%)
-- ❌ **pkg/analysis** → Merged into pkg/processor
-- ❌ **pkg/extractor** → Merged into pkg/processor
-- ❌ **pkg/strategies** → Eliminated (frequency-only approach)
+### Completed Architectural Decisions ✅
+- **Unified Processing**: Combined extraction and analysis into pkg/processor
+- **ColorCluster System**: Individual color objects with pre-computed UI metadata
+- **Settings-as-Methods**: All configuration passed through method receivers
+- **Performance-First**: Concurrent processing with early optimization
+- **Foundation Layer**: Complete color space and theory implementations
 
-### Unified Processing Benefits
-- **Single-pass pipeline**: Eliminates multi-stage processing overhead
-- **Reduced memory allocation**: One-time image processing with immediate analysis
-- **Simplified dependencies**: Clear linear dependency chain
-- **Improved maintainability**: All image processing logic in single cohesive package
-- **Enhanced testability**: Complete processing validation with real images
-
-### ColorProfile Composition Pattern
+### Current Data Flow
 ```go
-type ColorProfile struct {
-    Mode            ThemeMode       // Light/Dark theme pairing
-    ColorScheme     ColorScheme     // Detected color scheme type
-    IsGrayscale     bool           // Saturation-based classification
-    IsMonochromatic bool           // Hue variance analysis
-    DominantHue     float64        // Primary color direction
-    HueVariance     float64        // Color diversity metric
-    AvgLuminance    float64        // Overall brightness
-    AvgSaturation   float64        // Overall color intensity
-    Colors          ImageColors    // Embedded role-based colors
-}
+Image → pkg/loader → pkg/processor → ColorProfile{Mode, Colors[]ColorCluster}
+                                           ↓
+                     pkg/palette → SemanticPalette{bg, fg, accents, terminal}
+                                           ↓
+                     pkg/theme → Omarchy configuration files + metadata
 ```
+
+### ColorCluster Advantages
+- **Pre-computed characteristics**: Lightness, saturation, hue calculated once
+- **UI-specific flags**: IsDark, IsLight, IsMuted, IsVibrant for quick selection
+- **Weight-based ordering**: Natural prioritization for role assignment
+- **Standard color.RGBA**: Direct compatibility with existing color functions
 
 ---
 
@@ -196,20 +218,21 @@ type ColorProfile struct {
 - Eliminates hidden dependencies and improves testability
 - Enforced across all foundation and processing packages
 
-### Characteristic-Based Color Organization (Pending Refactor)
-- **Current**: 27-category semantic assignment (too rigid)
-- **Target**: Organization by intrinsic properties (lightness/saturation/hue)
-- **Benefit**: Flexible mapping to any component requirements
-- **Support**: All theme personalities (vibrant/muted/minimal/artistic)
+### ColorCluster Architecture ✅
+- Individual color objects with UI-relevant metadata
+- Pre-computed characteristics eliminate repeated calculations
+- Flexible foundation supports multiple theme generation strategies
+- Natural integration with existing color theory algorithms
 
 ### Performance-First Architecture ✅
-- Single-pass processing eliminates unnecessary abstraction layers
-- Frequency-based extraction chosen over complex saliency algorithms
-- Memory-efficient image handling with immediate analysis
+- Single-pass processing with concurrent color extraction
+- Frequency-based approach chosen for reliability and speed
+- Memory-efficient handling with early filtering and clustering
+- Exceeds performance targets (<500ms vs <2s target)
 
-### WCAG Compliance ✅
-- Automatic contrast validation with 4.5:1 minimum ratio
-- Fallback color application for compliance assurance
+### WCAG Compliance Foundation ✅
+- Built-in contrast validation using pkg/chromatic
+- ColorCluster flags support accessibility-aware selection
 - Real-world validation with diverse test image set
 
 ---
@@ -278,35 +301,56 @@ omarchy-theme-generator/
 
 ---
 
-## Implementation Roadmap
+## Development Roadmap
 
-### Immediate Priority (Phase 1)
-1. **pkg/processor Refactoring**: Transform to characteristic-based organization
-   - Remove 27-category semantic assignments
-   - Implement ColorPool with lightness/saturation/hue grouping
-   - Add contrast pairs and harmony group tracking
-   - Update tests to validate new organization
+### Phase 1: pkg/palette Implementation (Next - 2-3 sessions)
+**Goal**: Transform ColorCluster arrays into semantic color roles
 
-### Medium Priority (Phase 2) 
-2. **pkg/palette Implementation**: Semantic color mapping engine
-   - Component-aware selection strategies
-   - Theme personality support (vibrant/muted/minimal/artistic)
-   - Edge case handling (grayscale/monochromatic)
-   - Integration with existing pkg/chromatic algorithms
+**Key Deliverables**:
+- Background/foreground selection algorithms using ColorCluster properties
+- Terminal color mapping (8-16 ANSI colors) using hue distribution
+- Accent color selection balancing weight and vibrancy
+- Component-specific palette generation (minimal/standard/extended)
+- WCAG contrast validation integration
 
-### Future Priority (Phase 3)
-3. **pkg/theme Implementation**: Omarchy configuration generation
-   - Component-specific templates and format handling
-   - Neovim theme mapping and icon selection
-   - Metadata generation for theme management
+**Success Metrics**:
+- Generate appropriate palettes from existing ColorProfile output
+- Handle edge cases (grayscale, monochromatic, low color count)
+- Maintain performance targets with palette generation
 
-4. **CLI Application**: Complete user interface
-5. **Integration Testing**: End-to-end validation with real themes
+### Phase 2: pkg/theme Implementation (Following - 3-4 sessions)
+**Goal**: Generate Omarchy-compatible configuration files
 
-### Key Success Criteria
-- **Flexibility**: Generate 2-30+ color schemes from same input
-- **Quality**: Match or exceed manual theme quality
-- **Performance**: Maintain <2s processing times
-- **Compatibility**: Generate all 12 Omarchy component types
+**Key Deliverables**:
+- Template system for 9+ Omarchy component types
+- Color format conversion (HEXA → hex, RGB, RGBA)
+- File structure creation and metadata generation
+- Light/dark mode file indicators
+- Integration with pkg/palette semantic roles
 
-The foundation is solid and performance-validated. The architectural shift to characteristic-based organization will enable flexible theme generation matching the diversity found in existing Omarchy themes.
+**Success Metrics**:
+- Generate valid Omarchy theme directories
+- Proper color format conversion per component
+- Complete theme-gen.json metadata
+
+### Phase 3: CLI Integration (Final - 2-3 sessions)
+**Goal**: Complete user-facing application
+
+**Key Deliverables**:
+- Command-line interface with generate/modify/clone operations
+- Pipeline integration (loader → processor → palette → theme)
+- Configuration management and validation
+- Error handling and user feedback
+
+**Success Metrics**:
+- End-to-end theme generation from single command
+- Proper error handling and user guidance
+- Integration testing with real images
+
+### Project Success Criteria
+- **Technical**: Generate all Omarchy component types from ColorProfile input
+- **Performance**: Maintain existing <500ms processing times
+- **Quality**: Output validates against Omarchy theme requirements
+- **Usability**: Single command generates complete, working themes
+
+The ColorCluster architecture provides a solid foundation for flexible theme generation. Each phase builds on validated components and real Omarchy requirements.
