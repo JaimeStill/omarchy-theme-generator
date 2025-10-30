@@ -1,7 +1,7 @@
 # Omarchy Theme Generator
 
 > [!IMPORTANT]
-> This project is in active development. The color extraction and analysis foundation is complete, but the CLI application and theme generation features are not yet implemented.
+> My day job took over and I lost bandwidth to engage with this project. These were some fun concepts to work through and learn from. I learned a lot working on this.
 
 Color extraction and analysis system for generating Omarchy themes from images using characteristic-based color organization.
 
